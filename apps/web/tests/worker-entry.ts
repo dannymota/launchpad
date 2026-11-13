@@ -5,9 +5,12 @@ import type { Env } from "@app/backend";
 import { createRouter, type Pages } from "../worker/router";
 import { PRODUCT_HEADER, PRODUCTS, type ProductName } from "./products";
 
+// An HTML document, as a real page is, carrying what it was asked for in a script tag.
 const pages: Pages = {
   fetch(request) {
-    return Response.json({ page: new URL(request.url).pathname, origin: request.headers.get("x-app-origin") });
+    const seen = JSON.stringify({ page: new URL(request.url).pathname, origin: request.headers.get("x-app-origin") });
+    const html = `<!doctype html><html><head><title>Stub</title></head><body><script id="seen" type="application/json">${seen}</script><script>window.ran = true</script></body></html>`;
+    return new Response(html, { headers: { "content-type": "text/html; charset=utf-8" } });
   },
 };
 

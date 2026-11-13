@@ -1,4 +1,4 @@
-import { productOf, signInMethods } from "@app/backend";
+import { captchaOn, productOf, signInMethods } from "@app/backend";
 import { Card } from "@astryxdesign/core/Card";
 import { Center } from "@astryxdesign/core/Center";
 import { VStack } from "@astryxdesign/core/Layout";
@@ -44,5 +44,6 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
   if (!methods.emailCode && !methods.google && !methods.apple) {
     return <Notice title="Sign-in isn't set up yet">Check back soon.</Notice>;
   }
-  return <SignInForm next={next} methods={methods} />;
+  const turnstileSiteKey = captchaOn(env) ? (env.TURNSTILE_SITE_KEY ?? null) : null;
+  return <SignInForm next={next} methods={methods} turnstileSiteKey={turnstileSiteKey} />;
 }

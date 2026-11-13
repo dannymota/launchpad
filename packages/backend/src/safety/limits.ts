@@ -18,6 +18,10 @@ export const LIMITS = {
   socialIp: { attempts: 30, windowSeconds: 900 },
   // Everything else under /api/auth: reading the session, listing and ending sessions.
   sessionIp: { attempts: 300, windowSeconds: 300 },
+  // Mail costs money and reputation. One recipient gets at most this many a day, and the whole
+  // product sends at most this many a day, whatever asks for them.
+  emailRecipientDay: { attempts: 10, windowSeconds: 86_400 },
+  emailTotalDay: { attempts: 500, windowSeconds: 86_400 },
 } as const;
 export type LimitName = keyof typeof LIMITS;
 

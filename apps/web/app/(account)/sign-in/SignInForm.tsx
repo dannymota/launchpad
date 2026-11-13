@@ -11,6 +11,7 @@ import { Heading, Text } from "@astryxdesign/core/Text";
 import { TextInput } from "@astryxdesign/core/TextInput";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { TurnstileWidget } from "./TurnstileWidget";
 
 const CODE_LENGTH = 6;
 
@@ -20,7 +21,14 @@ interface Methods {
   apple: boolean;
 }
 
-export function SignInForm({ next, methods }: { next: string; methods: Methods }) {
+export function SignInForm(props: {
+  next: string;
+  methods: Methods;
+  /** Set when the code request is checked by Cloudflare Turnstile. */
+  turnstileSiteKey: string | null;
+}) {
+  const { next, methods, turnstileSiteKey } = props;
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -30,7 +38,10 @@ export function SignInForm({ next, methods }: { next: string; methods: Methods }
   const sendCode = async () => {
     setBusy(true);
     setError(null);
-    const result = await authClient.emailOtp.sendVerificationOtp({ email: email.trim(), type: "sign-in" });
+    const result = await authClient.emailOtp.sendVerificationOtp(
+      { email: email.trim(), type: "sign-in" },
+      turnstileToken ? { headers: { "x-turnstile-token": turnstileToken } } : undefined,
+    );
     setBusy(false);
     if (result.error) {
       setError("We couldn't send a code. Check the address and try again.");
@@ -111,6 +122,10 @@ export function SignInForm({ next, methods }: { next: string; methods: Methods }
                 )
               )}
 
+              {step === "email" && methods.emailCode && turnstileSiteKey && (
+                <TurnstileWidget siteKey={turnstileSiteKey} onToken={setTurnstileToken} />
+              )}
+
               {(methods.emailCode || step === "code") && (
                 <Button
                   label={step === "email" ? "Send code" : "Sign in"}
@@ -118,7 +133,11 @@ export function SignInForm({ next, methods }: { next: string; methods: Methods }
                   size="lg"
                   type="submit"
                   isLoading={busy}
-                  isDisabled={step === "email" ? !email.trim() : code.trim().length !== CODE_LENGTH}
+                  isDisabled={
+                    step === "email"
+                      ? !email.trim() || Boolean(turnstileSiteKey && !turnstileToken)
+                      : code.trim().length !== CODE_LENGTH
+                  }
                 />
               )}
               {step === "code" && (

@@ -2,7 +2,7 @@
 // Nothing here is secret; the endpoint is public so a deploy can be checked from outside.
 
 import { productOf } from "../core/product";
-import { emailMode, type SignInMethods, signInMethods } from "../core/runtime";
+import { captchaOn, emailMode, type SignInMethods, signInMethods } from "../core/runtime";
 import type { Env } from "../env";
 import { accessConfigured } from "../safety/access";
 
@@ -14,7 +14,8 @@ export interface Health {
   email: ReturnType<typeof emailMode>;
   /** The access preset in force, and whether Cloudflare Access is set up to enforce it. */
   access: { preset: string; configured: boolean };
-  signIn: SignInMethods;
+  /** `captcha`: the email-code form needs a Turnstile token, which a native app cannot get. */
+  signIn: SignInMethods & { captcha: boolean };
 }
 
 export function health(env: Env): Health {
@@ -24,6 +25,6 @@ export function health(env: Env): Health {
     version: env.CF_VERSION_METADATA?.id || "dev",
     email: emailMode(env),
     access: { preset: productOf(env).access.preset, configured: accessConfigured(env) },
-    signIn: signInMethods(env),
+    signIn: { ...signInMethods(env), captcha: captchaOn(env) },
   };
 }

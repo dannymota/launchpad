@@ -27,7 +27,9 @@
     // Cloudflare Access: the team domain ("acme.cloudflareaccess.com") and this Worker's
     // application audience tags, comma-separated. Empty = internal areas answer 404 to everyone.
     "ACCESS_TEAM_DOMAIN": "",
-    "ACCESS_AUD": ""
+    "ACCESS_AUD": "",
+    // Cloudflare Turnstile on the sign-in code form. Set with TURNSTILE_SECRET_KEY (a secret) to turn it on.
+    "TURNSTILE_SITE_KEY": ""
   },
   // No ids: wrangler finds the database by name and provisions the KV namespace on first deploy.
   "d1_databases": [
@@ -39,5 +41,14 @@
   ],
   "kv_namespaces": [{ "binding": "OAUTH_KV" }],
   "version_metadata": { "binding": "CF_VERSION_METADATA" },
-  "observability": { "enabled": true }
+  // A per-client cap on API and MCP requests, counted at the edge. Sign-in has its own,
+  // stricter limits in D1 (packages/backend/src/safety/limits.ts).
+  "ratelimits": [{ "name": "API_LIMITER", "namespace_id": "1001", "simple": { "limit": 300, "period": 60 } }],
+  // Daily clean-up of expired sessions, codes and limit counters (packages/backend/src/api/scheduled.ts).
+  "triggers": { "crons": ["17 4 * * *"] },
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "invocation_logs": true, "head_sampling_rate": 1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.1 }
+  }
 }

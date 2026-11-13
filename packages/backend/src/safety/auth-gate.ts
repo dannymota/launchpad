@@ -4,6 +4,7 @@
 import { type SignInMethods, signInMethods } from "../core/runtime";
 import type { Env } from "../env";
 import { clientAddress, clientNetwork, consumeLimit, type LimitName } from "./limits";
+import { passesTurnstile } from "./turnstile";
 
 type Method = "GET" | "POST";
 interface Route {
@@ -16,6 +17,8 @@ interface Route {
   perNetwork?: readonly LimitName[];
   /** The route exists only while one of these sign-in methods is on. */
   needs?: readonly (keyof SignInMethods)[];
+  /** The route sends mail to an address the caller chose, so it is checked by Turnstile when that is on. */
+  captcha?: boolean;
 }
 
 const ROUTES: Record<string, Route> = {
@@ -30,6 +33,7 @@ const ROUTES: Record<string, Route> = {
     perEmail: ["codeEmail"],
     perNetwork: ["codeNetworkDay"],
     needs: ["emailCode"],
+    captcha: true,
   },
   "/sign-in/email-otp": { methods: ["POST"], perIp: ["signInIp"], perEmail: ["signInEmail"], needs: ["emailCode"] },
   "/sign-in/social": { methods: ["POST"], perIp: ["socialIp"], needs: ["google", "apple"] },
@@ -72,7 +76,15 @@ export async function authGate(request: Request, env: Env, basePath: string): Pr
     if (email) for (const name of route.perEmail) checks.push(consumeLimit(env, name, email));
   }
   const refused = (await Promise.all(checks)).find((result) => !result.allowed);
-  if (!refused) return null;
+  if (!refused) {
+    if (route.captcha && !(await passesTurnstile(request, env))) {
+      return Response.json(
+        { code: "CAPTCHA_FAILED", message: "We couldn't confirm you're a person. Reload the page and try again." },
+        { status: 403, headers: { "cache-control": "no-store" } },
+      );
+    }
+    return null;
+  }
   return Response.json(
     { code: "RATE_LIMITED", message: "Too many attempts. Wait a few minutes, then try again." },
     { status: 429, headers: { "retry-after": String(refused.retryAfterSeconds), "cache-control": "no-store" } },

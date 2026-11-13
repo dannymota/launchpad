@@ -50,6 +50,12 @@ export interface Env {
   /** The iOS app's bundle id, so tokens from the native Apple sheet are accepted. */
   APPLE_APP_BUNDLE_ID?: string;
 
+  /** Cloudflare Turnstile on the sign-in code form. Both set = on. The site key is public. */
+  TURNSTILE_SITE_KEY?: string;
+  TURNSTILE_SECRET_KEY?: string;
+  /** A per-client request limit for the API and MCP endpoints, counted at the edge. */
+  API_LIMITER?: { limit(options: { key: string }): Promise<{ success: boolean }> };
+
   /** Local runs only: treat every request as this Cloudflare Access email. Ignored when deployed. */
   DEV_ACCESS_EMAIL?: string;
   /** Local runs only: try another access preset ("public-product", ...) without editing the config. */

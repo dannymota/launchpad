@@ -3,8 +3,8 @@
 A template for starting products. Copy it, describe the idea, and build on a base where sign-in,
 the API, an MCP server and the deploy path already work.
 
-**Status: under construction.** Phases 1 and 2 of `docs/PLAN.md` are done: the skeleton, and
-sign-in with the access rules that decide who can reach what.
+**Status: under construction.** Phases 1 to 3 of `docs/PLAN.md` are done: the skeleton, sign-in
+with the access rules that decide who can reach what, and the Worker's general protections.
 
 ## What works today
 
@@ -22,6 +22,9 @@ sign-in with the access rules that decide who can reach what.
 - Account pages: where you are signed in, sign out a device, delete the account. An admin page to
   list and ban accounts, always behind Cloudflare Access.
 - Connecting an assistant: OAuth 2.1 with a consent page bound to the signed-in person.
+- Protections on every request: a content security policy with a per-page script nonce, refusal of
+  writes from other sites, a request size limit, an edge rate limit on the API, daily caps on mail,
+  optional Cloudflare Turnstile on the sign-in form, and a daily clean-up of expired data.
 - Checks: Biome, TypeScript, a boundary test for the repo layout, and Workers-runtime tests.
 
 ## Run it
