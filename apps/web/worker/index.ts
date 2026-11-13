@@ -1,12 +1,12 @@
 // The Worker entry. Every HTTP request arrives here; router.ts decides who answers it.
 import type { Env } from "@app/backend";
 import pages from "vinext/server/fetch-handler";
-import { handleRequest, type Pages } from "./router";
+import { createRouter, type Pages } from "./router";
 
 export * from "vinext/server/fetch-handler";
 
+const handle = createRouter({ pages: pages as Pages });
+
 export default {
-  fetch(request, env, ctx) {
-    return handleRequest(request, env, ctx, pages as Pages);
-  },
+  fetch: handle,
 } satisfies ExportedHandler<Env>;

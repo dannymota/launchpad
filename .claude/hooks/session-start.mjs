@@ -17,12 +17,17 @@ if (!existsSync(at("node_modules"))) {
   notes.push(install.status === 0 ? "Installed dependencies." : `npm ci failed: ${install.stderr.trim().slice(-400)}`);
 }
 
-// A local-only signing secret, so `npm run dev` and the local Worker start. Never committed.
+// Local-only settings, never committed: a random signing secret, and who to be in place of
+// Cloudflare Access, which does not exist on a developer machine.
 if (!existsSync(at("apps/web/.dev.vars"))) {
-  writeFileSync(at("apps/web/.dev.vars"), `BETTER_AUTH_SECRET=${randomBytes(36).toString("base64")}\n`, {
-    mode: 0o600,
-  });
-  notes.push("Created apps/web/.dev.vars with a random local secret.");
+  const lines = [
+    "APP_ENV=local",
+    `BETTER_AUTH_SECRET=${randomBytes(36).toString("base64")}`,
+    "DEV_ACCESS_EMAIL=dev@example.com",
+    "ADMIN_EMAILS=dev@example.com",
+  ];
+  writeFileSync(at("apps/web/.dev.vars"), `${lines.join("\n")}\n`, { mode: 0o600 });
+  notes.push("Created apps/web/.dev.vars: a random local secret, and dev@example.com as the local Access identity.");
 }
 
 if (existsSync(at("node_modules")) && !existsSync(at("apps/web/.wrangler/state/v3/d1"))) {

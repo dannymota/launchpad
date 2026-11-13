@@ -5,6 +5,7 @@
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
 import { Center } from "@astryxdesign/core/Center";
+import { Divider } from "@astryxdesign/core/Divider";
 import { VStack } from "@astryxdesign/core/Layout";
 import { Heading, Text } from "@astryxdesign/core/Text";
 import { TextInput } from "@astryxdesign/core/TextInput";
@@ -13,7 +14,13 @@ import { authClient } from "@/lib/auth-client";
 
 const CODE_LENGTH = 6;
 
-export function SignInForm({ next }: { next: string }) {
+interface Methods {
+  emailCode: boolean;
+  google: boolean;
+  apple: boolean;
+}
+
+export function SignInForm({ next, methods }: { next: string; methods: Methods }) {
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -46,6 +53,13 @@ export function SignInForm({ next }: { next: string }) {
     window.location.assign(next);
   };
 
+  const social = async (provider: "google" | "apple") => {
+    setError(null);
+    const result = await authClient.signIn.social({ provider, callbackURL: next });
+    if (result.error) setError("That sign-in didn't start. Try again.");
+  };
+  const hasSocial = methods.google || methods.apple;
+
   return (
     <Center axis="both" padding={6} minHeight="100dvh">
       <VStack gap={4} hAlign="center" width="100%" maxWidth={400}>
@@ -62,25 +76,15 @@ export function SignInForm({ next }: { next: string }) {
                   {step === "email" ? "Sign in" : "Enter your code"}
                 </Heading>
                 <Text type="body" color="secondary" size="sm" justify="center">
-                  {step === "email"
-                    ? "We'll email you a code. No password needed."
-                    : `We sent a ${CODE_LENGTH}-digit code to ${email.trim()}.`}
+                  {step === "code"
+                    ? `We sent a ${CODE_LENGTH}-digit code to ${email.trim()}.`
+                    : methods.emailCode
+                      ? "We'll email you a code. No password needed."
+                      : "Choose how to sign in."}
                 </Text>
               </VStack>
 
-              {step === "email" ? (
-                <TextInput
-                  label="Email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={setEmail}
-                  size="lg"
-                  autoComplete="email"
-                  hasAutoFocus
-                  status={error ? { type: "error", message: error } : undefined}
-                />
-              ) : (
+              {step === "code" ? (
                 <TextInput
                   label="Code"
                   value={code}
@@ -91,16 +95,32 @@ export function SignInForm({ next }: { next: string }) {
                   hasAutoFocus
                   status={error ? { type: "error", message: error } : undefined}
                 />
+              ) : (
+                methods.emailCode && (
+                  <TextInput
+                    label="Email"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={setEmail}
+                    size="lg"
+                    autoComplete="email"
+                    hasAutoFocus
+                    status={error ? { type: "error", message: error } : undefined}
+                  />
+                )
               )}
 
-              <Button
-                label={step === "email" ? "Send code" : "Sign in"}
-                variant="primary"
-                size="lg"
-                type="submit"
-                isLoading={busy}
-                isDisabled={step === "email" ? !email.trim() : code.trim().length !== CODE_LENGTH}
-              />
+              {(methods.emailCode || step === "code") && (
+                <Button
+                  label={step === "email" ? "Send code" : "Sign in"}
+                  variant="primary"
+                  size="lg"
+                  type="submit"
+                  isLoading={busy}
+                  isDisabled={step === "email" ? !email.trim() : code.trim().length !== CODE_LENGTH}
+                />
+              )}
               {step === "code" && (
                 <Button
                   label="Use a different email"
@@ -110,6 +130,25 @@ export function SignInForm({ next }: { next: string }) {
                     setError(null);
                   }}
                 />
+              )}
+
+              {step === "email" && hasSocial && (
+                <>
+                  {methods.emailCode && <Divider label="Or continue with" />}
+                  <VStack gap={3} hAlign="stretch">
+                    {methods.apple && (
+                      <Button label="Continue with Apple" size="lg" clickAction={() => social("apple")} />
+                    )}
+                    {methods.google && (
+                      <Button label="Continue with Google" size="lg" clickAction={() => social("google")} />
+                    )}
+                  </VStack>
+                  {!methods.emailCode && error && (
+                    <Text color="secondary" size="sm" justify="center">
+                      {error}
+                    </Text>
+                  )}
+                </>
               )}
             </VStack>
           </form>

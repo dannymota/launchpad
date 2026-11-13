@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./contract": "./src/contract/index.ts",
-    "./client": "./src/client.ts"
+    "./client": "./src/client.ts",
+    "./product": "./src/product/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit --incremental false"

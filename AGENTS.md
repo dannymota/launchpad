@@ -15,15 +15,18 @@ MCP servers, with a place for a mobile app. Copy it per project. `docs/PLAN.md` 
 | `npm run build` then `npm start -w @app/web` | Build, then run the built Worker on port 8787                                |
 | `npm run mcp:test`                           | End-to-end OAuth and MCP check against the running local Worker              |
 
-Local sign-in needs no mail: the code is in the `email_outbox` table.
+Local runs read `apps/web/.dev.vars` (created at session start). `DEV_ACCESS_EMAIL` stands in for
+Cloudflare Access; `DEV_PRESET=public-product` tries the launched setup, where sign-in is an emailed
+code that lands in the `email_outbox` table instead of being sent.
 
 ## Layout
 
 ```
-apps/web        pages (vinext, Astryx) and worker/: the one Worker that serves every request
-apps/mcp        MCP servers and the OAuth provider in front of them
+product/          product.config.ts: name, domains, access preset, signup mode, sign-in methods
+apps/web          pages (vinext, Astryx) and worker/: the one Worker that serves every request
+apps/mcp          MCP servers and the OAuth provider in front of them
 packages/backend  all server logic: db/ core/ safety/ integrations/ accounts/ features/ modules/ api/
-packages/shared   zod schemas, the API contract, the typed client. Runs anywhere.
+packages/shared   zod schemas, the API contract, the typed client, the access map. Runs anywhere.
 scripts/ tests/ docs/
 ```
 
@@ -32,6 +35,15 @@ scripts/ tests/ docs/
 - **One action, defined once.** Add a procedure to `packages/shared/src/contract`, implement it in
   `packages/backend/src/api/router.ts`. That gives the typed client, the REST endpoint and, once
   listed in `apps/mcp/servers/main/scopes.ts`, an MCP tool. Do not add route handlers under `app/api`.
+- **Every path belongs to an area** with two settings: public or internal (Cloudflare Access), and
+  whether it needs a sign-in (`packages/shared/src/product/access.ts`). A page outside `/app`,
+  `/settings`, `/admin` and `/labs` is part of the site, which is public after launch. Unfinished
+  pages go under `/labs`; admin pages under `/admin`. In the contract, `public.*` is what the public
+  site calls and `admin.*` is admin-only; their REST paths start with `/public/` and `/admin/`.
+- **Ask who the person is in one way.** Pages: `requireUser()` or `pagePrincipal()`. Procedures: the
+  `signedIn`, `inPerson` or `adminOnly` middleware. Never read cookies or Access headers yourself.
+- **A table that holds a person's data references `auth_user` with `onDelete: "cascade"`**, so
+  deleting the account deletes it.
 - **Only `packages/backend` touches the database**, and other code imports it only as `@app/backend`.
   Pages call `api()` from `apps/web/lib/server.ts`; browsers use `createApiClient`.
 - **Backend layers import downward only**: `db → core → safety → integrations → accounts → features →

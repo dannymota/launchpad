@@ -1,6 +1,10 @@
 // The implementation of packages/shared/src/contract. One entry per contract procedure;
 // `os.router` fails to compile when one is missing or has the wrong shape.
-import { os, signedIn } from "./base";
+import { deleteAccount, listSessions, revokeSession } from "../accounts/account";
+import { listUsers, setBanned } from "../accounts/admin";
+import { adminOnly, inPerson, os, signedIn, userErrors } from "./base";
+
+const ok = { ok: true as const };
 
 export const router = os.router({
   system: {
@@ -12,6 +16,28 @@ export const router = os.router({
       email: context.principal.email,
       name: context.principal.name,
     })),
+    sessions: {
+      list: os.account.sessions.list.use(inPerson).handler(async ({ context }) => ({
+        sessions: await listSessions(context.env, context.principal),
+      })),
+      revoke: os.account.sessions.revoke.use(inPerson).handler(async ({ context, input }) => {
+        await revokeSession(context.env, context.principal, input.id);
+        return ok;
+      }),
+    },
+    delete: os.account.delete.use(inPerson).handler(async ({ context }) => {
+      await userErrors(() => deleteAccount(context.env, context.principal));
+      return ok;
+    }),
+  },
+  admin: {
+    users: {
+      list: os.admin.users.list.use(adminOnly).handler(({ context, input }) => listUsers(context.env, input)),
+      setBanned: os.admin.users.setBanned.use(adminOnly).handler(async ({ context, input }) => {
+        await userErrors(() => setBanned(context.env, context.principal, input.userId, input.banned));
+        return ok;
+      }),
+    },
   },
 });
 

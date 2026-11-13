@@ -69,6 +69,8 @@ const WORKSPACES: Record<string, string> = {
   "@app/shared": "packages/shared/src/index.ts",
   "@app/shared/contract": "packages/shared/src/contract/index.ts",
   "@app/shared/client": "packages/shared/src/client.ts",
+  "@app/shared/product": "packages/shared/src/product/index.ts",
+  "@app/product": "product/product.config.ts",
   "@app/theme": "packages/theme/src/tokens.ts",
   "@app/mcp": "apps/mcp/index.ts",
 };
@@ -87,7 +89,7 @@ function resolve(spec: string, from: string): string | null {
   return null;
 }
 
-const SOURCES = [...walk("apps"), ...walk("packages"), ...walk("scripts"), ...walk("tests")];
+const SOURCES = [...walk("apps"), ...walk("packages"), ...walk("product"), ...walk("scripts"), ...walk("tests")];
 const specs = new Map(SOURCES.map((file) => [file, runtimeImports(file)]));
 const graph = new Map(
   SOURCES.map((file) => [
@@ -100,7 +102,7 @@ const edges = (keep: (file: string, target: string) => boolean) =>
     targets.filter((target) => keep(file, target)).map((target) => `${file} -> ${target}`),
   );
 const packageUses = (file: string, pattern: RegExp) => (specs.get(file) ?? []).filter((spec) => pattern.test(spec));
-const surfaceOf = (file: string) => /^(apps\/[^/]+|packages\/[^/]+)\//.exec(file)?.[1] ?? "";
+const surfaceOf = (file: string) => /^(apps\/[^/]+|packages\/[^/]+|product)\//.exec(file)?.[1] ?? "";
 
 describe("the checker itself", () => {
   it("reads the imports it judges", () => {
@@ -153,6 +155,17 @@ describe("surfaces", () => {
         !/^packages\/(shared|theme)\//.test(target),
     );
     expect(reaching).toEqual([]);
+  });
+});
+
+describe("the product config", () => {
+  it("is plain data: it imports only the shared package", () => {
+    const files = SOURCES.filter((file) => file.startsWith("product/"));
+    expect(files.length).toBeGreaterThan(0);
+    const other = files.flatMap((file) =>
+      (specs.get(file) ?? []).filter((spec) => !spec.startsWith("@app/shared")).map((spec) => `${file} -> ${spec}`),
+    );
+    expect(other).toEqual([]);
   });
 });
 

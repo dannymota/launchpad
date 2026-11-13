@@ -9,7 +9,8 @@
   "workspaces": [
     "apps/web",
     "apps/mcp",
-    "packages/*"
+    "packages/*",
+    "product"
   ],
   "scripts": {
     "dev": "npm run dev -w @app/web",

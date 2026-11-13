@@ -7,10 +7,11 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit --incremental false",
+    "typecheck": "tsc --noEmit --incremental false && tsc -p tsconfig.test.json --noEmit --incremental false",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
+    "@app/product": "*",
     "@app/shared": "*",
     "@better-auth/drizzle-adapter": "1.7.23",
     "@orpc/openapi": "2.0.0-beta.50",

@@ -7,7 +7,7 @@ import { McpRegistrar } from "@orpc/mcp";
 import { SERVER_NAME, SERVER_VERSION, TOOLS } from "./scopes";
 
 const registrar = new McpRegistrar(router, {
-  filter: (_procedure, path) => path.join(".") in TOOLS,
+  filter: (_procedure, path) => Object.hasOwn(TOOLS, path.join(".")),
 });
 
 export interface Connection {

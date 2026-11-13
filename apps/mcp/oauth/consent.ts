@@ -4,9 +4,10 @@
 //                  and sends the browser to the consent page (an Astryx page in apps/web).
 // POST /authorize  records the decision and returns the browser to the assistant.
 //
-// The signed-in person comes from the Better Auth session. A handle started by one account
+// Who the person is comes from the Worker's router: a session, or the Cloudflare Access
+// email where the product takes that as the sign-in. A handle started by one account
 // cannot be approved by another: the binding row is checked and deleted in one statement.
-import { bindConsent, createGrant, type Env, sessionPrincipal, takeConsent } from "@app/backend";
+import { bindConsent, createGrant, type Env, requestPrincipal, takeConsent } from "@app/backend";
 import { isScope, REQUIRED_SCOPE } from "@app/shared";
 import { AuthorizationError, CimdFetchError } from "@cloudflare/workers-oauth-provider";
 import { SERVER_NAME } from "../servers/main/scopes";
@@ -63,7 +64,7 @@ export async function authorize(request: Request, env: Env): Promise<Response> {
   const provider = env.OAUTH_PROVIDER;
   if (!provider) return new Response("Not found", { status: 404 });
   const url = new URL(request.url);
-  const principal = await sessionPrincipal(env, url.origin, request.headers);
+  const principal = await requestPrincipal(env, request.headers);
 
   try {
     if (request.method === "GET") {

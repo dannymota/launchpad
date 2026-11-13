@@ -1,3 +1,18 @@
-# Local secrets for `npm run dev`. Copy to .dev.vars (git-ignored); `npm run setup` does this for you.
-# Any random string of 32 or more characters: openssl rand -base64 32
+# Local settings for `npm run dev`. Copy to .dev.vars (git-ignored). A new session creates it for you.
+
+# Marks this as a developer machine: plain-http cookies and mail kept in the email_outbox table.
+APP_ENV=local
+
+# Signs sessions. Any random string of 32 or more characters: openssl rand -base64 32
 BETTER_AUTH_SECRET=
+
+# There is no Cloudflare Access on your machine, so say who you are. Internal areas (the whole
+# product under the default "private" preset) open as this email. Remove it to see what an
+# outsider sees.
+DEV_ACCESS_EMAIL=you@example.com
+
+# Admins, when verified by Cloudflare Access. Use the same address to see /admin locally.
+ADMIN_EMAILS=you@example.com
+
+# Try the product as it will be after launch, without editing product/product.config.ts:
+# DEV_PRESET=public-product

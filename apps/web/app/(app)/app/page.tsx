@@ -1,16 +1,17 @@
 // The signed-in product's home (Astryx template: blank). /feature adds the first real screen.
+import { Button } from "@astryxdesign/core/Button";
 import { Code } from "@astryxdesign/core/Code";
 import { HStack, Layout, LayoutContent, VStack } from "@astryxdesign/core/Layout";
 import { List, ListItem } from "@astryxdesign/core/List";
 import { Heading, Text } from "@astryxdesign/core/Text";
 import type { Metadata } from "next";
 import { api, requireUser } from "@/lib/server";
-import { SignOutButton } from "./SignOutButton";
+import { SignOutButton } from "../../_components/SignOutButton";
 
 export const metadata: Metadata = { title: "Home" };
 
 export default async function AppHome() {
-  await requireUser("/app");
+  const principal = await requireUser("/app");
   // The same procedure the mobile app and assistants call, run in-process.
   const me = await api().account.whoami();
 
@@ -27,8 +28,9 @@ export default async function AppHome() {
               <ListItem label="Email" endContent={<Text>{me.email}</Text>} />
               <ListItem label="Account ID" endContent={<Code>{me.id}</Code>} />
             </List>
-            <HStack>
-              <SignOutButton />
+            <HStack gap={3}>
+              <Button label="Settings" href="/settings" />
+              <SignOutButton identity={principal.via === "access" ? "access" : "session"} />
             </HStack>
           </VStack>
         </LayoutContent>

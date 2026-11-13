@@ -2,6 +2,7 @@
 // consent bound to the signed-in person, token exchange, and API procedures called as MCP tools.
 import { beforeAll, describe, expect, it } from "vitest";
 import { Browser, migrate, ORIGIN, signIn } from "./harness";
+import type { ProductName } from "./products";
 
 const REDIRECT_URI = "http://127.0.0.1:53682/callback";
 const ASSISTANT = "https://assistant.example";
@@ -15,8 +16,8 @@ const base64url = (bytes: ArrayBuffer | Uint8Array) =>
     .replace(/=+$/, "");
 
 /** An assistant: it registers itself and holds the PKCE secret for one authorization. */
-async function newClient(scope = "app:read offline_access") {
-  const machine = new Browser();
+async function newClient(scope = "app:read offline_access", product?: ProductName) {
+  const machine = new Browser({ product });
   const registered = await machine.fetch("/oauth/register", {
     method: "POST",
     headers: { "content-type": "application/json", origin: ASSISTANT },
@@ -58,7 +59,7 @@ async function newClient(scope = "app:read offline_access") {
 
 /** Starts consent as `browser` and returns the handle the consent page would post back. */
 async function beginConsent(browser: Browser, authorizeUrl: string): Promise<string> {
-  const response = await browser.fetch(authorizeUrl);
+  const response = await browser.page(authorizeUrl);
   expect(response.status).toBe(303);
   const location = new URL(ORIGIN + (response.headers.get("location") ?? ""));
   expect(location.pathname).toBe("/connect/consent");
@@ -79,8 +80,8 @@ async function callbackOf(response: Response): Promise<URL> {
 }
 
 /** One JSON-RPC call over Streamable HTTP. */
-async function mcp(token: string, body: Record<string, unknown>) {
-  const response = await new Browser().fetch("/mcp", {
+async function mcp(token: string, body: Record<string, unknown>, product?: ProductName) {
+  const response = await new Browser({ product }).fetch("/mcp", {
     method: "POST",
     headers: {
       authorization: `Bearer ${token}`,
@@ -143,7 +144,7 @@ describe("discovery", () => {
 describe("consent", () => {
   it("sends a signed-out browser to sign in, and back to the same request afterwards", async () => {
     const client = await newClient();
-    const response = await new Browser().fetch(client.authorizeUrl);
+    const response = await new Browser().page(client.authorizeUrl);
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(`/sign-in?next=${encodeURIComponent(client.authorizeUrl)}`);
   });
@@ -245,5 +246,71 @@ describe("tools", () => {
     const { client, code } = await connect("replay@example.com", "app:read", ["app:read"]);
     const replay = await client.exchange(code);
     expect(replay.status).toBe(400);
+  });
+});
+
+describe("before launch", () => {
+  const whoami = { id: 1, method: "tools/call", params: { name: "whoami", arguments: {} } };
+
+  it("connects an assistant for the person Cloudflare Access verified, with no second sign-in", async () => {
+    const product = "private-mcp-public";
+    const person = new Browser({ product, accessEmail: "founder-mcp@example.com" });
+    const { id } = (await (await person.fetch("/api/account/whoami")).json()) as { id: string };
+    const client = await newClient("app:read", product);
+    const handle = await beginConsent(person, client.authorizeUrl);
+    const approved = await person.postForm("/authorize", decision(handle, "approve", ["app:read"]));
+    const code = (await callbackOf(approved)).searchParams.get("code") ?? "";
+    const tokens = (await (await client.exchange(code)).json()) as { access_token: string };
+    const who = await mcp(tokens.access_token, whoami, product);
+    expect(JSON.stringify(who.message.result)).toContain(id);
+  });
+
+  it("keeps the consent step behind Access even when the MCP endpoints are public", async () => {
+    const product = "private-mcp-public";
+    const client = await newClient("app:read", product);
+    const outsider = new Browser({ product });
+    expect((await outsider.page(client.authorizeUrl)).status).toBe(404);
+    expect((await outsider.postForm("/authorize", decision("any", "approve", ["app:read"]))).status).toBe(404);
+    expect((await outsider.fetch("/.well-known/oauth-authorization-server")).status).toBe(200);
+  });
+
+  it("hides the MCP endpoints too, unless the product config opens them", async () => {
+    const outsider = new Browser({ product: "private" });
+    for (const path of ["/mcp", "/oauth/register", "/oauth/token"]) {
+      expect((await outsider.post(path, {})).status, path).toBe(404);
+    }
+    expect((await outsider.fetch("/.well-known/oauth-protected-resource/mcp")).status).toBe(404);
+  });
+});
+
+describe("when the account goes", () => {
+  it("a deleted account's assistant stops working at once", async () => {
+    const { browser, tokens } = await connect("leaving-mcp@example.com", "app:read offline_access", [
+      "app:read",
+      "offline_access",
+    ]);
+    expect((await mcp(tokens.access_token, { id: 1, method: "tools/list", params: {} })).status).toBe(200);
+    expect((await browser.post("/api/account/delete", { confirm: "delete my account" })).status).toBe(200);
+    expect((await mcp(tokens.access_token, { id: 2, method: "tools/list", params: {} })).status).toBe(401);
+  });
+
+  it("a banned account's assistant stops working at once, and cannot refresh", async () => {
+    const { userId, client, tokens } = await connect("banned-mcp@example.com", "app:read offline_access", [
+      "app:read",
+      "offline_access",
+    ]);
+    const admin = new Browser({ accessEmail: "admin@example.com" });
+    expect((await admin.post("/api/admin/users/ban", { userId, banned: true })).status).toBe(200);
+    expect((await mcp(tokens.access_token, { id: 1, method: "tools/list", params: {} })).status).toBe(401);
+    const refresh = await new Browser().fetch("/oauth/token", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: tokens.refresh_token ?? "",
+        client_id: client.clientId,
+      }),
+    });
+    expect(refresh.status).toBe(400);
   });
 });

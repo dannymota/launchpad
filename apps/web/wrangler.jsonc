@@ -17,11 +17,17 @@
     "run_worker_first": ["/*", "!/_next/static/*", "!/*/_next/static/*"]
   },
   "vars": {
-    // "local" | "staging" | "production". Secrets (BETTER_AUTH_SECRET) live in .dev.vars
-    // locally and in Worker secrets when deployed; `npm run setup` writes both.
-    "APP_ENV": "local",
-    // The address mail is sent from. Empty = mail goes to the email_outbox table instead.
-    "EMAIL_FROM": ""
+    // What a deployed Worker is. Local runs get APP_ENV=local from .dev.vars, which is never
+    // deployed, so a deployed Worker can never run with local shortcuts (plain-http cookies,
+    // the mail outbox, a stand-in Access identity). Secrets live in .dev.vars locally and in
+    // Worker secrets when deployed.
+    "APP_ENV": "production",
+    // The address mail is sent from. Empty = no mail, so no email-code sign-in when deployed.
+    "EMAIL_FROM": "",
+    // Cloudflare Access: the team domain ("acme.cloudflareaccess.com") and this Worker's
+    // application audience tags, comma-separated. Empty = internal areas answer 404 to everyone.
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": ""
   },
   // No ids: wrangler finds the database by name and provisions the KV namespace on first deploy.
   "d1_databases": [

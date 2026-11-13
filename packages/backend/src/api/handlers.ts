@@ -4,7 +4,7 @@
 // Both run the same procedures with the same context.
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { RPCHandler } from "@orpc/server/fetch";
-import { type Principal, sessionPrincipal } from "../accounts/session";
+import { type Principal, requestPrincipal } from "../accounts/session";
 import type { Env } from "../env";
 import type { ApiContext } from "./base";
 import { router } from "./router";
@@ -53,7 +53,7 @@ export function isApiPath(pathname: string): boolean {
 /** Answers /rpc/* and /api/* requests. An API path with no procedure behind it is a JSON 404. */
 export async function handleApi(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
-  const context = apiContext(env, () => sessionPrincipal(env, url.origin, request.headers));
+  const context = apiContext(env, () => requestPrincipal(env, request.headers));
   const handler = under(url.pathname, RPC_PREFIX) ? rpcHandler : restHandler;
   const prefix = handler === rpcHandler ? RPC_PREFIX : REST_PREFIX;
   const result = await handler.handle(request, { prefix, context });

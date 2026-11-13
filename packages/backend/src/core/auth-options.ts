@@ -1,7 +1,7 @@
 // The parts of the Better Auth config that decide the database shape. Shared by the runtime
 // instance (auth.ts) and the schema generator (auth.cli.ts) so the two can never disagree.
 import type { BetterAuthOptions } from "better-auth";
-import { emailOTP } from "better-auth/plugins";
+import { admin, emailOTP } from "better-auth/plugins";
 
 export const CODE_LENGTH = 6;
 export const CODE_SECONDS = 600;
@@ -54,6 +54,14 @@ export function authPlugins(deps: { sendCode: SendCode }) {
       // Codes are stored hashed, so a database read never reveals a usable code.
       storeOTP: "hashed",
       sendVerificationOTP: ({ email, otp, type }) => deps.sendCode({ email, code: otp, purpose: type }),
+    }),
+    // Used for its columns and its rule that a banned account cannot start a session. Its
+    // HTTP endpoints are not in the sign-in route table (safety/auth-gate.ts), so they are unreachable.
+    admin({
+      schema: {
+        user: { fields: { banReason: "ban_reason", banExpires: "ban_expires" } },
+        session: { fields: { impersonatedBy: "impersonated_by" } },
+      },
     }),
   ];
 }

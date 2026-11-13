@@ -1,7 +1,7 @@
 // The one place mail leaves the app. Everything that sends goes through sendEmail().
 
 import { UserError } from "../../core/errors";
-import { isLocalRun } from "../../core/runtime";
+import { emailMode } from "../../core/runtime";
 import { getDb, schema } from "../../db/client";
 import type { Env } from "../../env";
 
@@ -10,17 +10,6 @@ export interface OutgoingEmail {
   subject: string;
   /** Plain text. The app sends no HTML mail. */
   text: string;
-}
-
-/** True when real mail can be sent: the Email Service binding and a sender address are both set. */
-export function emailConfigured(env: Pick<Env, "EMAIL" | "EMAIL_FROM">): boolean {
-  return Boolean(env.EMAIL && env.EMAIL_FROM);
-}
-
-/** "on": real mail. "outbox": the local table. "off": a deployed build with no sending domain. */
-export function emailMode(env: Pick<Env, "EMAIL" | "EMAIL_FROM" | "APP_ENV">): "on" | "outbox" | "off" {
-  if (emailConfigured(env)) return "on";
-  return isLocalRun(env) ? "outbox" : "off";
 }
 
 /**

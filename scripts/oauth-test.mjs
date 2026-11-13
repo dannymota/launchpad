@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // End-to-end check of the assistant connection, against a running local Worker:
-//   sign in with an emailed code → register an OAuth client → authorize → approve on the
-//   consent page → exchange the code → call the MCP server → replay the code (must fail).
+//   sign in (an emailed code, or the local Access identity before launch) → register an OAuth
+//   client → authorize → approve on the consent page → exchange the code → call the MCP
+//   server → replay the code (must fail).
 // Usage: npm run mcp:test [-- http://localhost:8787]
 // Local only: it reads the sign-in code from the local D1 outbox.
 import { execFileSync } from "node:child_process";
@@ -157,20 +158,36 @@ const authorizeUrl = `/authorize?${new URLSearchParams({
   resource: `${origin}/mcp`,
 })}`;
 
-const signedOut = await call(authorizeUrl);
-ok(
-  signedOut.status === 302 && (signedOut.headers.get("location") ?? "").startsWith("/sign-in?next="),
-  "authorize without a session sends the browser to sign in",
-  `${signedOut.status} ${signedOut.headers.get("location")}`,
-);
+const asBrowser = { headers: { accept: "text/html,application/xhtml+xml" } };
+const { signIn: methods } = await (await call("/health", { cookies: false })).json();
 
-const sent = await postJson("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" });
-ok(sent.status === 200, "a sign-in code is sent", await sent.text());
-const signIn = await postJson("/api/auth/sign-in/email-otp", { email, otp: latestCode() });
-const session = await signIn.json();
-ok(signIn.status === 200 && session.user?.id, "the code from the outbox signs in", JSON.stringify(session));
+let userId;
+if (methods.emailCode) {
+  const signedOut = await call(authorizeUrl, asBrowser);
+  ok(
+    signedOut.status === 302 && (signedOut.headers.get("location") ?? "").startsWith("/sign-in?next="),
+    "authorize without a session sends the browser to sign in",
+    `${signedOut.status} ${signedOut.headers.get("location")}`,
+  );
+  const sent = await postJson("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" });
+  ok(sent.status === 200, "a sign-in code is sent", await sent.text());
+  const signIn = await postJson("/api/auth/sign-in/email-otp", { email, otp: latestCode() });
+  const session = await signIn.json();
+  ok(signIn.status === 200 && session.user?.id, "the code from the outbox signs in", JSON.stringify(session));
+  userId = session.user.id;
+} else {
+  // Before launch the Cloudflare Access email is the sign-in; locally that is DEV_ACCESS_EMAIL.
+  const who = await call("/api/account/whoami");
+  const me = await who.json();
+  ok(
+    who.status === 200 && me.id,
+    `the local Access identity (${me.email}) is the signed-in person`,
+    `${who.status}: set DEV_ACCESS_EMAIL in apps/web/.dev.vars`,
+  );
+  userId = me.id;
+}
 
-const began = await call(authorizeUrl);
+const began = await call(authorizeUrl, asBrowser);
 const consentUrl = began.headers.get("location") ?? "";
 ok(
   began.status === 303 && consentUrl.startsWith("/connect/consent?h="),
@@ -179,7 +196,7 @@ ok(
 );
 const handle = new URL(origin + consentUrl).searchParams.get("h");
 
-const consentPage = await call(consentUrl);
+const consentPage = await call(consentUrl, asBrowser);
 const consentHtml = await consentPage.text();
 ok(
   consentPage.status === 200 &&
@@ -273,15 +290,15 @@ ok(
 );
 
 const whoamiTool = toolNames.find((name) => /whoami/i.test(name));
-const who = await mcp(
+const called = await mcp(
   tokens.access_token,
   { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: whoamiTool, arguments: {} } },
   init.sessionId,
 );
 ok(
-  JSON.stringify(who.message?.result ?? {}).includes(session.user.id),
+  JSON.stringify(called.message?.result ?? {}).includes(userId),
   "whoami over MCP returns the signed-in person's id",
-  JSON.stringify(who),
+  JSON.stringify(called),
 );
 
 const refreshed = await call("/oauth/token", {
