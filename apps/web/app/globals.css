@@ -1,0 +1,12 @@
+/* Astryx alongside Tailwind utilities; the layer order maps the cascade. The look (type,
+   colour, shape) is the Astryx theme loaded by astryx-themes.ts. Pages are built from
+   Astryx components and props; add a rule here only for what Astryx has no prop for, and
+   say why beside it. */
+@layer reset, theme, base, astryx-base, astryx-theme, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "@astryxdesign/core/reset.css";
+@import "@astryxdesign/core/astryx.css";
+@import "@astryxdesign/core/tailwind-theme.css";
+@import "tailwindcss/utilities.css" layer(utilities);

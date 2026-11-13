@@ -1,0 +1,33 @@
+{
+  "name": "launchpad",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "workspaces": [
+    "apps/web",
+    "apps/mcp",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @app/web",
+    "build": "npm run build -w @app/web",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc -p tsconfig.json --noEmit --incremental false",
+    "lint": "biome ci",
+    "format": "biome check --write",
+    "test": "vitest run",
+    "test:workers": "npm run test:workers -w @app/web",
+    "db:generate": "npm run db:generate -w @app/backend",
+    "db:migrate:local": "npm run db:migrate:local -w @app/web",
+    "check": "npm run lint && npm run typecheck && npm test && npm run test:workers",
+    "mcp:test": "node scripts/oauth-test.mjs"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.7",
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  }
+}

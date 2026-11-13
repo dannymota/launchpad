@@ -1,0 +1,3 @@
+# Local secrets for `npm run dev`. Copy to .dev.vars (git-ignored); `npm run setup` does this for you.
+# Any random string of 32 or more characters: openssl rand -base64 32
+BETTER_AUTH_SECRET=
