@@ -1,8 +1,9 @@
 // Connecting an assistant, proven on the Workers runtime: discovery, client registration,
 // consent bound to the signed-in person, token exchange, and API procedures called as MCP tools.
 import { beforeAll, describe, expect, it } from "vitest";
-import { Browser, migrate, ORIGIN, signIn } from "./harness";
+import { Browser, env, migrate, ORIGIN, signIn } from "./harness";
 import type { ProductName } from "./products";
+import { mcp as mcpSurface } from "./worker-entry";
 
 const REDIRECT_URI = "http://127.0.0.1:53682/callback";
 const ASSISTANT = "https://assistant.example";
@@ -16,13 +17,13 @@ const base64url = (bytes: ArrayBuffer | Uint8Array) =>
     .replace(/=+$/, "");
 
 /** An assistant: it registers itself and holds the PKCE secret for one authorization. */
-async function newClient(scope = "app:read offline_access", product?: ProductName) {
+async function newClient(scope = "app:read offline_access", product?: ProductName, name = "Test assistant") {
   const machine = new Browser({ product });
   const registered = await machine.fetch("/oauth/register", {
     method: "POST",
     headers: { "content-type": "application/json", origin: ASSISTANT },
     body: JSON.stringify({
-      client_name: "Test assistant",
+      client_name: name,
       redirect_uris: [REDIRECT_URI],
       token_endpoint_auth_method: "none",
     }),
@@ -80,8 +81,8 @@ async function callbackOf(response: Response): Promise<URL> {
 }
 
 /** One JSON-RPC call over Streamable HTTP. */
-async function mcp(token: string, body: Record<string, unknown>, product?: ProductName) {
-  const response = await new Browser({ product }).fetch("/mcp", {
+async function mcp(token: string, body: Record<string, unknown>, product?: ProductName, route = "/mcp") {
+  const response = await new Browser({ product }).fetch(route, {
     method: "POST",
     headers: {
       authorization: `Bearer ${token}`,
@@ -99,13 +100,14 @@ async function mcp(token: string, body: Record<string, unknown>, product?: Produ
         .pop()
     : text;
   // biome-ignore lint/suspicious/noExplicitAny: JSON-RPC results are read loosely in tests.
-  return { status: response.status, message: data ? (JSON.parse(data) as any) : null };
+  const message = data && response.status < 400 ? (JSON.parse(data) as any) : null;
+  return { status: response.status, message, challenge: response.headers.get("www-authenticate") ?? "" };
 }
 
 /** Signs in, connects a new assistant with `granted` scopes, and returns its tokens. */
-async function connect(email: string, requested: string, granted: string[]) {
-  const { browser, userId } = await signIn(email);
-  const client = await newClient(requested);
+async function connect(email: string, requested: string, granted: string[], appName?: string, as?: Browser) {
+  const { browser, userId } = as ? { browser: as, userId: "" } : await signIn(email);
+  const client = await newClient(requested, undefined, appName);
   const handle = await beginConsent(browser, client.authorizeUrl);
   const approved = await browser.postForm("/authorize", decision(handle, "approve", granted));
   expect(approved.status).toBe(200);
@@ -312,5 +314,136 @@ describe("when the account goes", () => {
       }),
     });
     expect(refresh.status).toBe(400);
+  });
+});
+
+const listTools = { id: 1, method: "tools/list", params: {} };
+const toolNames = (result: { message: { result: { tools: { name: string }[] } } }) =>
+  result.message.result.tools.map((tool) => tool.name).sort();
+const assistants = async (browser: Browser) =>
+  (
+    (await (await browser.fetch("/api/account/assistants")).json()) as {
+      assistants: { id: string; name: string; lastUsedAt: string | null }[];
+    }
+  ).assistants;
+
+describe("more than one server", () => {
+  it("serves each at its own route with the same connection, offering only the tools its scopes allow", async () => {
+    const reader = await connect("reader@example.com", "app:read", ["app:read"]);
+    expect(toolNames(await mcp(reader.tokens.access_token, listTools))).toEqual(["ping", "whoami"]);
+    // A server with nothing to offer this connection has no tools at all, so it says it has no such method.
+    const nothing = await mcp(reader.tokens.access_token, listTools, undefined, "/mcp/writer");
+    expect(nothing.message.result?.tools ?? []).toEqual([]);
+    expect(nothing.message.error?.message).toBe("Method not found");
+
+    const writer = await connect("writer@example.com", "app:read app:write", ["app:read", "app:write"]);
+    expect(toolNames(await mcp(writer.tokens.access_token, listTools, undefined, "/mcp/writer"))).toEqual(["ping"]);
+  });
+
+  it("answers a call to a tool the connection was not allowed with a challenge naming the missing permission", async () => {
+    const { tokens } = await connect("challenged@example.com", "app:read", ["app:read"]);
+    const call = { id: 2, method: "tools/call", params: { name: "ping", arguments: {} } };
+    const refused = await mcp(tokens.access_token, call, undefined, "/mcp/writer");
+    expect(refused.status).toBe(403);
+    expect(refused.challenge).toContain('error="insufficient_scope"');
+    expect(refused.challenge).toContain('scope="app:write"');
+    // The same tool name on the main server needs only app:read, which this connection has.
+    expect((await mcp(tokens.access_token, call)).status).toBe(200);
+  });
+
+  it("requires a token at every server route", async () => {
+    const response = await new Browser().post("/mcp/writer", {});
+    expect(response.status).toBe(401);
+  });
+});
+
+describe("connected assistants", () => {
+  it("lists a person's connections and notes when one was last used", async () => {
+    const { browser, tokens } = await connect("lister@example.com", "app:read", ["app:read"], "Notes app");
+    const before = await assistants(browser);
+    expect(before).toMatchObject([{ name: "Notes app", lastUsedAt: null }]);
+    await mcp(tokens.access_token, listTools);
+    const after = await assistants(browser);
+    expect(after[0]?.lastUsedAt).toBeTruthy();
+  });
+
+  it("disconnects one when the person says so, at once", async () => {
+    const { browser, tokens } = await connect("disconnector@example.com", "app:read", ["app:read"]);
+    const [assistant] = await assistants(browser);
+    expect((await browser.post("/api/account/assistants/revoke", { id: assistant?.id })).status).toBe(200);
+    expect((await mcp(tokens.access_token, listTools)).status).toBe(401);
+    expect(await assistants(browser)).toEqual([]);
+  });
+
+  it("cannot disconnect someone else's", async () => {
+    const owner = await connect("grant-owner@example.com", "app:read", ["app:read"]);
+    const [assistant] = await assistants(owner.browser);
+    const other = await signIn("grant-meddler@example.com");
+    await other.browser.post("/api/account/assistants/revoke", { id: assistant?.id });
+    expect((await mcp(owner.tokens.access_token, listTools)).status).toBe(200);
+  });
+
+  it("replaces the earlier connection when the same app connects again", async () => {
+    const first = await connect("reconnector@example.com", "app:read", ["app:read"], "Editor");
+    const second = await connect("reconnector@example.com", "app:read", ["app:read"], "Editor", first.browser);
+    expect(second.client.clientId).not.toBe(first.client.clientId);
+    expect((await mcp(first.tokens.access_token, listTools)).status).toBe(401);
+    expect((await mcp(second.tokens.access_token, listTools)).status).toBe(200);
+    expect(await assistants(first.browser)).toHaveLength(1);
+  });
+
+  it("keeps different apps side by side", async () => {
+    const first = await connect("two-apps@example.com", "app:read", ["app:read"], "Editor");
+    const second = await connect("two-apps@example.com", "app:read", ["app:read"], "Terminal", first.browser);
+    expect((await mcp(first.tokens.access_token, listTools)).status).toBe(200);
+    expect((await mcp(second.tokens.access_token, listTools)).status).toBe(200);
+    expect((await assistants(first.browser)).map((item) => item.name).sort()).toEqual(["Editor", "Terminal"]);
+  });
+
+  it("are not something an assistant can list or disconnect for itself", async () => {
+    const { tokens } = await connect("self-serve@example.com", "app:read app:write", ["app:read", "app:write"]);
+    const names = toolNames(await mcp(tokens.access_token, listTools));
+    expect(names).not.toContain("listAssistants");
+    expect(names).not.toContain("revokeAssistant");
+    expect(names).not.toContain("deleteAccount");
+  });
+});
+
+describe("a replayed authorization code", () => {
+  it("ends the connection the first use created", async () => {
+    const { browser, client, code, tokens } = await connect("replayed@example.com", "app:read offline_access", [
+      "app:read",
+      "offline_access",
+    ]);
+    expect((await mcp(tokens.access_token, listTools)).status).toBe(200);
+    expect((await client.exchange(code)).status).toBe(400);
+    expect((await mcp(tokens.access_token, listTools)).status).toBe(401);
+    expect(await assistants(browser)).toEqual([]);
+  });
+
+  it("does not let a made-up code end anyone's connection", async () => {
+    const { userId, client, tokens } = await connect("not-replayed@example.com", "app:read", ["app:read"]);
+    const row = await env.DB.prepare("select provider_grant_id from assistant_grants where user_id = ?")
+      .bind(userId)
+      .first<{ provider_grant_id: string }>();
+    // The right user and grant ids, but a secret the provider never issued.
+    expect((await client.exchange(`${userId}:${row?.provider_grant_id}:forged-secret`)).status).toBe(400);
+    expect((await mcp(tokens.access_token, listTools)).status).toBe(200);
+  });
+});
+
+describe("the daily sweep", () => {
+  it("deletes the stored tokens of connections that have ended, and leaves live ones", async () => {
+    const gone = await connect("swept@example.com", "app:read", ["app:read"], "Old app");
+    const kept = await connect("kept@example.com", "app:read", ["app:read"], "Live app");
+    const [assistant] = await assistants(gone.browser);
+    await gone.browser.post("/api/account/assistants/revoke", { id: assistant?.id });
+
+    const stored = async (userId: string) => (await env.OAUTH_KV.list({ prefix: `grant:${userId}:` })).keys.length;
+    expect(await stored(gone.userId)).toBe(1);
+    await mcpSurface.sweep(env, ORIGIN);
+    expect(await stored(gone.userId)).toBe(0);
+    expect(await stored(kept.userId)).toBe(1);
+    expect((await mcp(kept.tokens.access_token, listTools)).status).toBe(200);
   });
 });

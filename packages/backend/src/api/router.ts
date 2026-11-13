@@ -2,6 +2,7 @@
 // `os.router` fails to compile when one is missing or has the wrong shape.
 import { deleteAccount, listSessions, revokeSession } from "../accounts/account";
 import { listUsers, setBanned } from "../accounts/admin";
+import { listGrants, revokeGrant } from "../accounts/assistants";
 import { adminOnly, inPerson, os, signedIn, userErrors } from "./base";
 
 const ok = { ok: true as const };
@@ -22,6 +23,21 @@ export const router = os.router({
       })),
       revoke: os.account.sessions.revoke.use(inPerson).handler(async ({ context, input }) => {
         await revokeSession(context.env, context.principal, input.id);
+        return ok;
+      }),
+    },
+    assistants: {
+      list: os.account.assistants.list.use(inPerson).handler(async ({ context }) => ({
+        assistants: (await listGrants(context.env, context.principal.userId)).map((grant) => ({
+          id: grant.id,
+          name: grant.clientName,
+          scopes: grant.scopes,
+          createdAt: grant.createdAt,
+          lastUsedAt: grant.lastUsedAt,
+        })),
+      })),
+      revoke: os.account.assistants.revoke.use(inPerson).handler(async ({ context, input }) => {
+        await revokeGrant(context.env, context.principal.userId, input.id);
         return ok;
       }),
     },

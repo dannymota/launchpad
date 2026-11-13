@@ -31,6 +31,13 @@ export const assistant_grants = sqliteTable(
       .references(() => auth_user.id, { onDelete: "cascade" }),
     client_id: text("client_id").notNull(),
     client_name: text("client_name").notNull(),
+    /**
+     * Which app this is, however many times it registers (apps/mcp/oauth/clients.ts). Connecting
+     * the same app again replaces its earlier connection instead of piling up duplicates.
+     */
+    client_key: text("client_key").notNull().default(""),
+    /** The OAuth provider's own id for this grant, so its stored tokens can be found and deleted. */
+    provider_grant_id: text("provider_grant_id"),
     /** JSON array of granted scopes. */
     scope: text("scope").notNull(),
     created_at: integer("created_at", { mode: "timestamp_ms" })
@@ -38,6 +45,11 @@ export const assistant_grants = sqliteTable(
       .notNull(),
     last_used_at: integer("last_used_at", { mode: "timestamp_ms" }),
     revoked_at: integer("revoked_at", { mode: "timestamp_ms" }),
+    /** "person" | "replaced" | "banned" | "code_replay": why the connection ended. */
+    revoked_reason: text("revoked_reason"),
   },
-  (table) => [index("assistant_grants_user_id_idx").on(table.user_id)],
+  (table) => [
+    index("assistant_grants_user_id_idx").on(table.user_id),
+    index("assistant_grants_provider_grant_idx").on(table.provider_grant_id),
+  ],
 );

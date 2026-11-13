@@ -1,11 +1,16 @@
 // What the surfaces may use. Pages and the Worker import from here; nothing outside this
 // package reaches into its folders.
 export {
+  type ActiveGrant,
+  activeGrant,
+  attachProviderGrant,
   bindConsent,
   createGrant,
-  grantIsActive,
+  endedProviderGrants,
+  noteGrantUse,
   type PendingConsent,
   readConsent,
+  revokeProviderGrant,
   takeConsent,
 } from "./accounts/assistants";
 export { AUTH_BASE_PATH, type Auth, getAuth } from "./accounts/auth";

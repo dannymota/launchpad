@@ -1,5 +1,6 @@
 // The product configs the Workers-runtime tests run against. A test picks one per request
 // (see harness.ts); the default is a launched product with open signup.
+import type { McpServerDefinition } from "@app/mcp";
 import { defineProduct, type Product, type ProductConfig } from "@app/shared/product";
 
 const base: ProductConfig = {
@@ -28,4 +29,15 @@ export const PRODUCTS = {
 } satisfies Record<string, Product>;
 
 export type ProductName = keyof typeof PRODUCTS;
+
+/**
+ * A second MCP server, only in tests: it proves that the registry serves more than one, and
+ * that a tool is offered only to a connection holding the scope it needs.
+ */
+export const WRITER_SERVER: McpServerDefinition = {
+  route: "/mcp/writer",
+  name: "Writer",
+  version: "0.0.0",
+  tools: { "system.ping": "app:write" },
+};
 export const PRODUCT_HEADER = "x-test-product";

@@ -15,6 +15,13 @@
       "when": 1794611117232,
       "tag": "0001_brief_karen_page",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794612765893,
+      "tag": "0002_sticky_luke_cage",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,8 @@ export { isScope, REQUIRED_SCOPE, SCOPES, type Scope } from "./assistant-scopes"
 export {
   type AdminUser,
   AdminUserSchema,
+  type Assistant,
+  AssistantSchema,
   OkSchema,
   type Session,
   SessionSchema,

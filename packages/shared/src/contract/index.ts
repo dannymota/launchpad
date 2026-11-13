@@ -11,7 +11,7 @@
 import { oc } from "@orpc/contract";
 import { openapi } from "@orpc/openapi";
 import * as z from "zod";
-import { AdminUserSchema, OkSchema, SessionSchema, UserSchema } from "../schemas/account";
+import { AdminUserSchema, AssistantSchema, OkSchema, SessionSchema, UserSchema } from "../schemas/account";
 
 // Two namespaces are tied to an access area, so the edge can tell them apart by path:
 //   public.*  what the public site calls without a sign-in. REST paths start with /public/.
@@ -63,6 +63,32 @@ export const contract = {
             operationId: "revokeSession",
             summary: "Sign out one browser or app",
             description: "Ends one of this account's sessions by id. That browser or app must sign in again.",
+          }),
+        )
+        .input(z.object({ id: z.string().min(1).max(200) }))
+        .output(OkSchema),
+    },
+    assistants: {
+      list: oc
+        .meta(
+          openapi({
+            method: "GET",
+            path: "/account/assistants",
+            operationId: "listAssistants",
+            summary: "List connected assistants",
+            description: "Returns the assistants connected to this account, with what each is allowed to do.",
+          }),
+        )
+        .output(z.object({ assistants: z.array(AssistantSchema) })),
+      revoke: oc
+        .meta(
+          openapi({
+            method: "POST",
+            path: "/account/assistants/revoke",
+            operationId: "revokeAssistant",
+            summary: "Disconnect an assistant",
+            description:
+              "Ends one assistant connection by id. It stops working at once and must be connected again to return.",
           }),
         )
         .input(z.object({ id: z.string().min(1).max(200) }))

@@ -119,7 +119,8 @@ describe("surfaces", () => {
       const from = surfaceOf(file);
       const to = surfaceOf(target);
       if (!from.startsWith("apps/") || !to.startsWith("apps/") || from === to) return false;
-      return !(file.startsWith("apps/web/worker/") && to === "apps/mcp");
+      // The Worker mounts the MCP surface, and its tests mount it with extra servers.
+      return !(/^apps\/web\/(worker|tests)\//.test(file) && to === "apps/mcp");
     });
     expect(crossing).toEqual([]);
   });

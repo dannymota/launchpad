@@ -10,7 +10,7 @@
 import { bindConsent, createGrant, type Env, requestPrincipal, takeConsent } from "@app/backend";
 import { isScope, REQUIRED_SCOPE } from "@app/shared";
 import { AuthorizationError, CimdFetchError } from "@cloudflare/workers-oauth-provider";
-import { SERVER_NAME } from "../servers/main/scopes";
+import { clientKey } from "./clients";
 
 export const AUTHORIZE_PATH = "/authorize";
 export const CONSENT_PAGE = "/connect/consent";
@@ -109,16 +109,22 @@ export async function authorize(request: Request, env: Env): Promise<Response> {
     const chosen = new Set([REQUIRED_SCOPE, ...form.getAll("scope").map(String)]);
     const scope = pending.scopes.filter((item) => chosen.has(item));
     const approved = await provider.approveConsent(request, handle, { scope });
-    const grantId = await createGrant(env, {
+    const clientId = approved.request.clientId;
+    const client = await provider.lookupClient(clientId).catch(() => null);
+    const { id: grantId, replaced } = await createGrant(env, {
       userId: principal.userId,
-      clientId: approved.request.clientId,
+      clientId,
       clientName: pending.clientName,
+      clientKey: await clientKey(clientId, client),
       scopes: approved.request.scope,
     });
+    // The same app connected before: its earlier connection has just ended in the database.
+    // Deleting its tokens from the provider's store is tidying up, so a failure is not fatal.
+    await Promise.all(replaced.map((old) => provider.revokeGrant(old, principal.userId).catch(() => undefined)));
     const { redirectTo } = await provider.completeAuthorization({
       request: approved.request,
       userId: principal.userId,
-      metadata: { label: `${SERVER_NAME} assistant`, assistantGrantId: grantId },
+      metadata: { label: pending.clientName, assistantGrantId: grantId },
       scope: approved.request.scope,
       props: { userId: principal.userId, assistantGrantId: grantId },
       revokeExistingGrants: false,

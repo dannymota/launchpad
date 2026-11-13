@@ -8,6 +8,7 @@ import { Heading, Text } from "@astryxdesign/core/Text";
 import type { Metadata } from "next";
 import { api, requireUser } from "@/lib/server";
 import { SignOutButton } from "../../_components/SignOutButton";
+import { AssistantRows } from "./AssistantRows";
 import { DeleteAccount } from "./DeleteAccount";
 import { SessionRows } from "./SessionRows";
 
@@ -31,6 +32,7 @@ export default async function SettingsPage() {
   const principal = await requireUser("/settings");
   const viaAccess = principal.via === "access";
   const { sessions } = viaAccess ? { sessions: [] } : await api().account.sessions.list();
+  const { assistants } = await api().account.assistants.list();
 
   return (
     <Layout
@@ -70,6 +72,14 @@ export default async function SettingsPage() {
                 </Section>
               </>
             )}
+
+            <Divider />
+            <Section
+              title="Connected assistants"
+              about="AI assistants you allowed to use your account. Disconnect one and it stops working at once."
+            >
+              <AssistantRows initial={assistants} />
+            </Section>
 
             <Divider />
             <Section

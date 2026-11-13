@@ -34,7 +34,8 @@ scripts/ tests/ docs/
 
 - **One action, defined once.** Add a procedure to `packages/shared/src/contract`, implement it in
   `packages/backend/src/api/router.ts`. That gives the typed client, the REST endpoint and, once
-  listed in `apps/mcp/servers/main/scopes.ts`, an MCP tool. Do not add route handlers under `app/api`.
+  listed in `apps/mcp/servers/main/scopes.ts`, an MCP tool (`docs/MCP.md`). Do not add route
+  handlers under `app/api`.
 - **Every path belongs to an area** with two settings: public or internal (Cloudflare Access), and
   whether it needs a sign-in (`packages/shared/src/product/access.ts`). A page outside `/app`,
   `/settings`, `/admin` and `/labs` is part of the site, which is public after launch. Unfinished

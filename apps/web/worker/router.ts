@@ -29,7 +29,7 @@ import {
   verifyAccess,
   withProduct,
 } from "@app/backend";
-import { handleMcp, isMcpMachinePath, isMcpPath } from "@app/mcp";
+import { createMcp, type Mcp } from "@app/mcp";
 import { type Area, type AreaName, areaFor, normalizePath, type Product } from "@app/shared/product";
 
 export interface Pages {
@@ -40,6 +40,8 @@ export interface RouterOptions {
   pages: Pages;
   /** Defaults to product/product.config.ts. Tests pass their own to try every preset. */
   product?: Product;
+  /** Defaults to the servers in apps/mcp/servers. Tests pass their own. */
+  mcp?: Mcp;
 }
 
 const json = (body: unknown, status: number) =>
@@ -54,11 +56,6 @@ const tooManyRequests = () =>
 const isAuthPath = (path: string) => path === AUTH_BASE_PATH || path.startsWith(`${AUTH_BASE_PATH}/`);
 const isLoopback = (hostname: string) =>
   hostname === "localhost" || hostname === "[::1]" || hostname.endsWith(".localhost") || /^127\./.test(hostname);
-
-/** Other sites may write only where the protocol requires it: OAuth and MCP machine calls, and Apple's callback. */
-function crossSiteWriteAllowed(method: string, path: string): boolean {
-  return isMcpMachinePath(path) || isCrossSiteAuthCallback(method, path, AUTH_BASE_PATH);
-}
 
 /** What someone with no sign-in gets in an area that needs one: the sign-in page, or 401 for anything that is not a page view. */
 function signInNeeded(request: Request, url: URL): Response {
@@ -97,7 +94,11 @@ async function overRateLimit(env: Env, request: Request): Promise<boolean> {
   return !success;
 }
 
-export function createRouter({ pages, product }: RouterOptions) {
+export function createRouter({ pages, product, mcp = createMcp() }: RouterOptions) {
+  /** Other sites may write only where the protocol requires it: OAuth and MCP machine calls, and Apple's callback. */
+  const crossSiteWriteAllowed = (method: string, path: string) =>
+    mcp.isMachinePath(path) || isCrossSiteAuthCallback(method, path, AUTH_BASE_PATH);
+
   async function route(request: Request, env: Env, ctx: ExecutionContext, context: ResponseContext): Promise<Response> {
     const url = new URL(request.url);
     // "local" and "test" turn off Secure cookies and real mail. Never on a public host.
@@ -139,11 +140,11 @@ export function createRouter({ pages, product }: RouterOptions) {
     // Machine endpoints answer only to the path as written: a spelling the access check had
     // to decode or lowercase never reaches them.
     const exact = path === url.pathname;
-    const machine = isMcpPath(path) || isAuthPath(path) || isApiPath(path);
+    const machine = mcp.isMcpPath(path) || isAuthPath(path) || isApiPath(path);
     if (machine && !exact) return notFound();
-    if (isMcpPath(path)) {
-      if (isMcpMachinePath(path) && (await overRateLimit(env, request))) return tooManyRequests();
-      return handleMcp(trusted, env, ctx);
+    if (mcp.isMcpPath(path)) {
+      if (mcp.isMachinePath(path) && (await overRateLimit(env, request))) return tooManyRequests();
+      return mcp.handle(trusted, env, ctx);
     }
     if (isAuthPath(path)) {
       return (await authGate(trusted, env, AUTH_BASE_PATH)) ?? (await getAuth(env, url.origin)).handler(trusted);
