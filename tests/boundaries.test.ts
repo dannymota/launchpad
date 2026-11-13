@@ -23,7 +23,12 @@ const BACKEND_LAYERS = ["db", "core", "safety", "integrations", "accounts", "fea
 const BACKEND_ROOT_FILES: Record<string, number> = { "env.ts": -1, "index.ts": BACKEND_LAYERS.length };
 
 /** Generated files: not ours to split or restructure. */
-const GENERATED = new Set(["packages/backend/src/db/schema/auth.ts", "apps/web/astryx-themes.ts"]);
+const GENERATED = new Set([
+  "packages/backend/src/db/schema/auth.ts",
+  "apps/web/astryx-themes.ts",
+  "packages/theme/src/palette.ts",
+  "packages/theme/src/generated/native-tokens.ts",
+]);
 
 function walk(dir: string, out: string[] = []): string[] {
   const full = path.join(ROOT, dir);
@@ -71,7 +76,8 @@ const WORKSPACES: Record<string, string> = {
   "@app/shared/client": "packages/shared/src/client.ts",
   "@app/shared/product": "packages/shared/src/product/index.ts",
   "@app/product": "product/product.config.ts",
-  "@app/theme": "packages/theme/src/tokens.ts",
+  "@app/theme": "packages/theme/src/index.ts",
+  "@app/theme/native": "packages/theme/src/native.ts",
   "@app/mcp": "apps/mcp/index.ts",
 };
 

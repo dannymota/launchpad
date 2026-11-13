@@ -10,12 +10,14 @@
     "typecheck": "tsc --noEmit --incremental false",
     "test:workers": "vitest run --config vitest.workers.config.ts",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
-    "doctor": "astryx doctor --built app"
+    "doctor": "astryx doctor --built app",
+    "theme": "astryx theme build src/themes/brand/brandTheme.ts"
   },
   "dependencies": {
     "@app/backend": "*",
     "@app/mcp": "*",
     "@app/shared": "*",
+    "@app/theme": "*",
     "@astryxdesign/core": "0.7.15",
     "@astryxdesign/theme-neutral": "0.7.15",
     "@stylexjs/stylex": "0.19.2",

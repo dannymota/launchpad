@@ -1,0 +1,13 @@
+{
+  "recipe": "astryx-oklch-v1",
+  "vibrancy": 100,
+  "neutralProfile": "neutral-v1",
+  "modeStrategy": "light-and-dark",
+  "families": [
+    {
+      "id": "accent",
+      "name": "Accent",
+      "seed": "#3b63f3"
+    }
+  ]
+}
