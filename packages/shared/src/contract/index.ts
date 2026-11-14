@@ -1,13 +1,12 @@
 // The API contract: every action the product offers, defined once.
 //
 // The backend implements it (packages/backend/src/api). The same definitions become the
-// typed client for web and mobile (/rpc), a REST endpoint with an OpenAPI document (/api),
-// and, for the procedures apps/mcp lists in a server's scopes.ts, an MCP tool. `summary` and
-// `description` are read by people in the API docs and by models choosing a tool, so write
-// them for both.
+// typed client (/rpc) and a REST endpoint with an OpenAPI document (/api).
+// A procedure that apps/mcp lists in a server's scopes.ts is an MCP tool as well.
+// `summary` and `description` are read by people in the API docs and by a model choosing what
+// to call, so write them for both.
 //
-// Clients import this file's TYPE only (see ../client.ts), so none of it ships to a browser
-// or a phone.
+// Clients import this file's TYPE only (see ../client.ts), so none of it ships to them.
 import { oc } from "@orpc/contract";
 import { openapi } from "@orpc/openapi";
 import * as z from "zod";

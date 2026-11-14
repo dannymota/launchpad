@@ -1,12 +1,12 @@
 ---
 name: brand
-description: Give the product its look from the brief. Use after /start, or when the owner asks to change the colours, typeface or corner radius of the whole product. Edits the one brand file, regenerates the web theme and the values the mobile app reads, and stops when the contrast tests pass.
+description: Give the product its look from the brief. Use after /start, or when the owner asks to change the colours, typeface or corner radius of the whole product. Edits the one brand file, regenerates everything built from it, and stops when the contrast tests pass.
 ---
 
 # /brand: one look, everywhere
 
-Everything visual on the web and in the app comes from `packages/theme/src/brand.ts`. You change
-that file and one seed colour; everything else is generated.
+Everything visual in the product comes from `packages/theme/src/brand.ts`. You change that file
+and one seed colour; everything else is generated.
 
 ## Steps
 
@@ -30,7 +30,7 @@ npm run palette -w @app/theme
 npm run theme
 ```
 
-5. Replace the app icon, favicon and share image if the owner has supplied artwork. If not, leave
+5. Replace the icon, favicon and share image if the owner has supplied artwork. If not, leave
    the template's in place and list "icon artwork" under what the owner still owes. Do not draw a
    logo with shapes and call it done.
 

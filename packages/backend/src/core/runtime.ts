@@ -34,7 +34,7 @@ export interface SignInMethods {
   apple: boolean;
 }
 
-/** True when the sign-in code form is checked by Cloudflare Turnstile. Native apps then cannot ask for codes. */
+/** True when the sign-in code form is checked by Cloudflare Turnstile. Only a browser can then ask for a code. */
 export function captchaOn(env: Pick<Env, "TURNSTILE_SECRET_KEY" | "TURNSTILE_SITE_KEY">): boolean {
   return Boolean(env.TURNSTILE_SECRET_KEY && env.TURNSTILE_SITE_KEY);
 }

@@ -37,7 +37,7 @@ export async function listUsers(
   return { users, next: rows.length > options.limit && last ? last.createdAt : null };
 }
 
-/** Banning ends every session and assistant connection at once, in one batch. */
+/** Banning ends everything the person is signed in to at once, in one batch. */
 export async function setBanned(env: Env, admin: Principal, userId: string, banned: boolean): Promise<void> {
   if (banned && userId === admin.userId)
     throw new UserError(400, "cannot_ban_self", "You cannot ban your own account.");

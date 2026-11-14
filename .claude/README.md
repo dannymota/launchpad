@@ -5,12 +5,12 @@ every agent reads first; this folder holds what backs it.
 
 | Path | What it does |
 | --- | --- |
-| `settings.json` | Hooks, permissions, plugins and which MCP servers are off |
+| `settings.json` | Hooks, permissions, plugins and which servers in `.mcp.json` are off |
 | `hooks/session-start.mjs` | Installs dependencies, creates local settings, applies local migrations, links the design engine, says where the product stands |
 | `hooks/guard.mjs` | Refuses writing secret or generated files, deploys that skip the deploy script, changes to a remote database, pushes and pull requests to someone else's repository |
 | `hooks/format.mjs` | Formats each file after it is edited |
 | `hooks/stop-check.mjs` | Types and repo-wide tests before the agent stops; a failure sends it back once |
-| `rules/*.md` | Rules that load only when a matching file is touched: web pages, sign-in and access, the database, MCP, mobile, modules |
+| `rules/*.md` | Rules that load only when a matching file is touched, one file per area: web pages, design work, the database, sign-in and access, each optional part |
 | `skills/` | Skills written for this template, and ones copied in (`skills/VENDORED.md` says from where, at which commit, and what was changed) |
 | `agents/reviewer.md` | Reviews a finished change in a fresh context |
 | `agents/impeccable-*.md` | Helpers the `impeccable` skill starts by itself (copied in with it) |
@@ -33,8 +33,10 @@ every agent reads first; this folder holds what backs it.
 | `unslop-ui` | Audit and fix a web screen that looks generated (copied in; see `skills/VENDORED.md`) |
 | `appllama-*` | The build bar for mobile screens (copied in) |
 
-`.mcp.json` at the root lists documentation servers for the stack: Astryx, Better Auth,
-Cloudflare and Expo. Each asks for approval the first time it is used.
+`.mcp.json` at the root lists documentation servers for the stack: Astryx, Better Auth and
+Cloudflare.
+For the mobile app it lists Expo's, and Appllama's, which stays off until its account is set up.
+Each asks for approval the first time it is used.
 
 ## Impeccable
 
@@ -63,9 +65,9 @@ its engine pinned to match. `rules/design.md` is the short account of how it is 
 
 ## What to know before relying on it
 
-- **Plugins cannot be pinned to a commit.** `settings.json` turns on Cloudflare's and Better
-  Auth's skills and three from Anthropic's directory (Superpowers, Expo, Stripe). Claude Code
-  pins a marketplace to a branch or a tag only, and neither vendor publishes tags, so these
+- **Plugins cannot be pinned to a commit.** `settings.json` turns on skills from Cloudflare, from
+  Better Auth and from Claude Code's official directory (`enabledPlugins` names each one). Claude
+  Code pins a marketplace to a branch or a tag only, and neither vendor publishes tags, so these
   follow each vendor's `main`. Claude Code asks before installing them when the folder is first
   trusted. To run without one, set it to `false` under `enabledPlugins`.
 - **Plugins do not load in cloud sessions** (claude.ai/code). The hooks, rules, skills and the

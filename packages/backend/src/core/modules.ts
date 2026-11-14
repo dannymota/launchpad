@@ -12,7 +12,7 @@ export interface ModuleAuthRoute {
 
 /** A path prefix a module answers itself, such as a proxy to its service. */
 export interface ModuleRoute {
-  /** "/ingest" matches "/ingest" and everything under "/ingest/". */
+  /** "/proxy" matches "/proxy" and everything under "/proxy/". */
   prefix: string;
   handle(request: Request, env: Env): Promise<Response>;
 }

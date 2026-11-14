@@ -1,5 +1,5 @@
 // Facts the Worker's router has established about a request, carried to whoever handles it
-// (the API, the MCP consent step, a page) as request headers. The router is the only writer:
+// (the API, a page, another surface) as request headers. The router is the only writer:
 // it removes any copy a client sent before setting its own, so a handler can trust them.
 import type { Identity } from "@app/shared/product";
 

@@ -1,6 +1,6 @@
 # MCP: connecting assistants
 
-The product's MCP server lets an AI assistant act for a signed-in person. It is served by the same
+The product's MCP server lets an assistant act for a signed-in person. It is served by the same
 Worker as everything else, at `/mcp`, behind OAuth 2.1.
 
 ## Adding a tool

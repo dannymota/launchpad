@@ -25,9 +25,10 @@ Run every `astryx` command from `apps/web`, as `npx astryx <cmd>`.
   `browserApi()` from `@/lib/api-client`. Never import `@/lib/server` from a client component.
 - **A text field on a server-rendered page takes `useEarlyInput`** (`@/lib/early-input`): it can be
   typed into before the page's code runs, and without the hook that text never reaches the state.
-- **Where a page lives decides who can open it**: `(site)/` is the public website, `(app)/app/` the
-  signed-in product, `(account)/` sign-in and settings, `admin/` and `labs/` internal in every
-  preset. Unfinished work goes under `labs/`.
+- **Where a page lives decides who can open it**: `(app)/app/` is the signed-in product,
+  `(account)/` sign-in and settings, `admin/` and `labs/` internal in every preset.
+  `(site)/` is the public website.
+  Unfinished work goes under `labs/`.
 - **Before you finish**: `npm run doctor -w @app/web` on a built app, then `npm run check`. For a
   screen people will judge by eye: `/impeccable polish <page>`, then the `unslop-ui` skill as a
   second, independent look. `.claude/rules/design.md` says how Impeccable is fitted here.

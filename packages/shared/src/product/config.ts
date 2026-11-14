@@ -6,7 +6,7 @@ import { type AccessConfig, type AccessMap, PRESETS, resolveAccess, type SignupM
 export interface ProductConfig {
   /** The name people see. */
   name: string;
-  /** Lowercase letters, digits and dashes. Names the Worker, the database and the app scheme. */
+  /** Lowercase letters, digits and dashes. Names the Worker and the database. */
   slug: string;
   tagline: string;
   domains: {
@@ -28,11 +28,11 @@ export interface ProductConfig {
     apple: boolean;
   };
   /**
-   * What people can be on. The first plan that is not `paid` is the free tier. A paid plan's
-   * Stripe price is a Worker variable, STRIPE_PRICE_<ID in capitals>, not written here.
+   * What people can be on. The first plan that is not `paid` is the free tier.
+   * A paid plan's Stripe price is a Worker variable, STRIPE_PRICE_<ID in capitals>, not written here.
    */
   plans?: {
-    /** Short and stable: "free", "pro". Stored on subscriptions, so do not rename a plan people are on. */
+    /** Short and stable: "free", "pro". Do not rename a plan people are on. */
     id: string;
     name: string;
     /** As shown to people: "$12 a month", "Free". */

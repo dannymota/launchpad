@@ -5,7 +5,7 @@ import type { Principal } from "../accounts/session";
 import { UserError } from "../core/errors";
 import type { Env } from "../env";
 
-/** What every procedure call receives. Built once per request by handlers.ts or the MCP server. */
+/** What every procedure call receives. Built once per request by whoever serves it (handlers.ts, for HTTP). */
 export interface ApiContext {
   env: Env;
   /** Looked up at most once per request, and only when a procedure asks. */
@@ -14,7 +14,7 @@ export interface ApiContext {
 
 export const os = implement(contract).$context<ApiContext>();
 
-/** Requires a signed-in person or a connected assistant, and hands the handler its principal. */
+/** Requires a principal (a signed-in person, or something acting for one) and hands it to the handler. */
 export const signedIn = os.middleware(async ({ context, next }) => {
   const principal = await context.loadPrincipal();
   if (!principal) throw new ORPCError("UNAUTHORIZED", { message: "Sign in to continue." });

@@ -1,7 +1,7 @@
 // The shape of the repo, kept honest. These tests read source files and fail when a change
 // puts something where it does not belong:
 //
-//   - surfaces (apps/*) do not import each other; only the Worker mounts apps/mcp;
+//   - surfaces (apps/*) do not import each other, except where the Worker mounts one;
 //   - only packages/backend touches the database, and only through its index;
 //   - packages/shared and packages/theme run anywhere: no React, Next, Cloudflare or Node;
 //   - the backend is layered, with no import cycles;

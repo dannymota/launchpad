@@ -15,7 +15,7 @@ commit that was reviewed; nothing in this folder updates itself.
 - `unslop-ui`: `references/daisyui-theme.md` is replaced by `references/astryx.md`, and the stack rule, description and links in `SKILL.md` and the references point to it. Nothing else is edited, so the tables still name DaisyUI classes; `astryx.md` says what to use instead. Its `LICENSE`, `NOTICE.md` and `LICENSES/` travel with it: it adapts unslop by Damir Sokolovsky (@heydamir), CC BY 4.0, and credit is due on any shared before and after.
 - `unslop-ui` has two scripts, `measure.js` and `redline.js`. They run in the page being audited, read its styles and draw labels on it. They make no network requests and store nothing.
 - The Appllama skills are Markdown only. Not copied from Appllama: the plugin manifests and `agents/openai.yaml`.
-- `appllama-usage` (Appllama) only acts when the Appllama MCP server is connected, which needs a paid account. Without it, skip its research step and build to the design skill.
+- `appllama-usage` (Appllama) only acts when Appllama's own server (`appllama` in `.mcp.json`) is connected, which needs a paid account. Without it, skip its research step and build to the design skill.
 - Where the Appllama design skill and `.claude/rules/mobile.md` differ, the rule file wins.
 
 ## Impeccable

@@ -21,7 +21,7 @@ router refuses `local` and `test` on any host that is not loopback.
 
 | Method       | Turned on by                                                                            | Notes                                                                                                                                             |
 | ------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Emailed code | `signIn.emailCode` and a sending domain (`domains.email`)                               | Six digits, ten minutes, stored hashed. The same on web and in the app                                                                            |
+| Emailed code | `signIn.emailCode` and a sending domain (`domains.email`)                               | Six digits, ten minutes, stored hashed                                                                                                            |
 | Google       | `signIn.google`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                             | Redirect: `https://<domain>/api/auth/callback/google`                                                                                             |
 | Apple        | `signIn.apple`, `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` | The client secret is signed from the key at run time, so nothing expires every six months. Return URL: `https://<domain>/api/auth/callback/apple` |
 
@@ -62,10 +62,12 @@ Counted in D1, so they hold across every Worker instance:
 | Mail to one recipient | day              | 10               |
 | All mail              | day              | 500              |
 
-The API and the MCP endpoints also have an edge limit of 300 requests a minute per client.
+The API also has an edge limit of 300 requests a minute per client.
+The MCP endpoints share that limit.
+
 Optional: Cloudflare Turnstile on the code form (`TURNSTILE_SITE_KEY` in `wrangler.jsonc`,
-`TURNSTILE_SECRET_KEY` as a secret). A native app cannot solve Turnstile, so with it on the app
-offers Google and Apple only.
+`TURNSTILE_SECRET_KEY` as a secret).
+A native app cannot solve Turnstile, so with it on the mobile app offers Google and Apple only.
 
 ## Sessions
 
@@ -75,11 +77,9 @@ needs a sign-in from the last ten minutes.
 
 ## Assistants (MCP)
 
-An assistant connects with OAuth 2.1 and acts with the scopes the person approved on the consent
-page. A connection is checked against the database on every call, so disconnecting one, banning
-the account or replaying an authorization code ends it immediately. `docs/MCP.md` has the flow.
-A procedure marked `inPerson` refuses an assistant: account deletion, sessions and connected
-assistants can only be managed by the person.
+An assistant connects with OAuth 2.1 and acts with the scopes the person approved on the consent page (`docs/MCP.md` has the flow).
+Every call checks the assistant's connection against the database, so disconnecting it, banning the account or replaying an authorization code ends it at once.
+A procedure marked `inPerson` refuses an assistant: deleting the account and managing sessions and connections stay with the person.
 
 ## Where to look when changing any of this
 

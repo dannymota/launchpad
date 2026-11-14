@@ -6,11 +6,11 @@
 //   npm run new:feature -- category --plural categories
 //
 // It writes a table (and its migration), list / create / remove procedures in the API
-// contract with their implementation, a Workers-runtime test, a page at /app/<plural>, and a
-// screen in the mobile app when there is one. Each person sees only their own rows, and
-// deleting the account deletes them. Reshape it from there: rename the title, add fields,
-// change the page. To offer it to assistants, list its procedures in
-// apps/mcp/servers/main/scopes.ts.
+// contract with their implementation, a Workers-runtime test and a page at /app/<plural>.
+// With the mobile app, it writes a screen there too.
+// Each person sees only their own rows, and deleting the account deletes them. Reshape it
+// from there: rename the title, add fields, change the page.
+// To offer it to assistants, list its procedures in apps/mcp/servers/main/scopes.ts.
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";

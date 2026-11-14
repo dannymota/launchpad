@@ -1,4 +1,4 @@
-// The typed API client: the same contract the web app and assistants use. Each call carries
+// The typed API client: the same contract every other caller uses. Each call carries
 // the stored session.
 import { createApiClient } from "@app/shared/client";
 import { authClient } from "./auth";

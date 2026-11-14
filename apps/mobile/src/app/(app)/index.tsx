@@ -1,4 +1,4 @@
-// Home. It makes one API call, the same `whoami` the web app and assistants use, and shows
+// Home. It makes one API call, the same `whoami` every other caller uses, and shows
 // every state that call can be in. /feature puts the product's first real screen here.
 import type { User } from "@app/shared";
 import { useCallback, useEffect, useState } from "react";

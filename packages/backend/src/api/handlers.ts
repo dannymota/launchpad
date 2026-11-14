@@ -1,5 +1,5 @@
 // Serves the router over HTTP, two ways:
-//   /rpc/*  the typed client used by the web and mobile apps (createApiClient)
+//   /rpc/*  the typed client (createApiClient)
 //   /api/*  plain REST, described by an OpenAPI document
 // Both run the same procedures with the same context.
 import { OpenAPIHandler } from "@orpc/openapi/fetch";

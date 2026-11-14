@@ -1,6 +1,7 @@
 // Payments: subscriptions through Stripe, by way of Better Auth's Stripe plugin. Checkout
 // and the customer portal are Stripe's own pages; the plugin keeps a `subscription` row in
-// step with Stripe through signed webhooks. Web only: the app stores have their own rules.
+// step with Stripe through signed webhooks.
+// Web only: the app stores have their own rules for what a mobile app may sell.
 //
 // On when STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are both set. Until then its routes
 // do not exist and everyone is on the free plan.

@@ -76,7 +76,7 @@ describe("cross-site writes", () => {
     expect(isCrossSiteWrite(request("POST", { "sec-fetch-site": "cross-site" }), url)).toBe(true);
     expect(isCrossSiteWrite(request("POST", { "sec-fetch-site": "same-site" }), url)).toBe(true);
     expect(isCrossSiteWrite(request("POST", { "sec-fetch-site": "same-origin" }), url)).toBe(false);
-    // A native app or a server: neither header.
+    // A caller that is not a browser: neither header.
     expect(isCrossSiteWrite(request("POST", {}), url)).toBe(false);
   });
 

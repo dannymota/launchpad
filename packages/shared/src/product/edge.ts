@@ -6,7 +6,7 @@
 //   site public           one rule per internal prefix
 //
 // A "bypass" rule is a public prefix inside a protected one (the public API under an
-// internal API, or public MCP endpoints while the product is internal).
+// internal API, for one).
 import { type AccessMap, AREA_NAMES, type AreaName, type Visibility } from "./access";
 
 export interface EdgeRule {

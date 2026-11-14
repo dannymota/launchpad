@@ -1,7 +1,7 @@
 # Mobile: the iOS and Android app
 
-`apps/mobile` is one Expo app that builds for both platforms. Remove it with the `mobile` block in
-`product/product.config.ts` if the product has no app.
+`apps/mobile` is one Expo app that builds for both platforms. If the product has no app,
+`npm run remove -- mobile` takes it out, with the `mobile` block in `product/product.config.ts`.
 
 ## Where things are
 

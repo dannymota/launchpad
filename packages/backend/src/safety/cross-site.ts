@@ -1,7 +1,7 @@
 // Requests that change something must come from this site. SameSite cookies do not stop a
 // sibling host on the same registrable domain (another Worker on workers.dev, a preview
 // host), so every write from another origin is refused before it reaches any handler.
-// Native apps and server-to-server calls send no Origin and are not affected.
+// Callers that are not browsers send no Origin and are not affected.
 const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 export function isCrossSiteWrite(request: Request, url: URL): boolean {

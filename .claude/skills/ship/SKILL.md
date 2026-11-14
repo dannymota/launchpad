@@ -53,7 +53,7 @@ The deploy stops by itself if the product config is out of step, if nobody has b
 Access does not match the access map, or if a check fails. Do not work around a stop: fix its
 cause and run it again. To take a rehearsal staging down again: `npm run teardown -- staging`.
 
-Keys the owner has for optional features (Google, Apple, Stripe, Anthropic, PostHog) are stored with
+Keys the owner has for optional features (a sign-in provider, a module) are stored with
 `npm run setup -- staging`, from the environment. It lists what is set and what each missing one
 would turn on.
 

@@ -92,7 +92,7 @@ export interface Env {
   /** Cloudflare Turnstile on the sign-in code form. Both set = on. The site key is public. */
   TURNSTILE_SITE_KEY?: string;
   TURNSTILE_SECRET_KEY?: string;
-  /** A per-client request limit for the API and MCP endpoints, counted at the edge. */
+  /** A per-client limit on requests from programs (the API and the like), counted at the edge. */
   API_LIMITER?: { limit(options: { key: string }): Promise<{ success: boolean }> };
 
   /** Local runs only: treat every request as this Cloudflare Access email. Ignored when deployed. */

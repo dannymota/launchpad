@@ -6,20 +6,23 @@
 //   npm run remove                      list what can be removed
 //
 // What belongs to each part is listed in scripts/removable.mjs: folders and files to
-// delete, and packages to drop. Lines a part adds to shared files sit between markers,
+// delete, packages to drop, and the lines and wording about it in the documents. Lines a part
+// adds to shared code sit between markers,
 //
 //   // >>> payments
 //   ...
 //   // <<< payments
 //
 // and are cut out with their markers. Imports are never marked: an import or re-export of a
-// deleted file is dropped, and so is any import the cuts leave unused. When tables go, a
-// migration that drops them is generated. Afterwards run `npm run check`: it must pass.
+// deleted file is dropped, and so is any import the cuts leave unused (the comment a file
+// opens with stays, whichever import it sat on). When tables go, a migration that drops them
+// is generated and applied to the local database. Last, the design files (DESIGN.md,
+// PRODUCT.md) are written again. Afterwards run `npm run check`: it must pass.
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, posix, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PARTS } from "./removable.mjs";
+import { DOCUMENTS, PARTS } from "./removable.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -106,15 +109,168 @@ export function dropDangling(text, file, deleted) {
   return { text: out, dropped };
 }
 
+/**
+ * `text` without the lines that contain one of `needles`, and how many lines that was. Where
+ * the lines that went stood between two blank lines, one blank line is left, so a document no
+ * formatter looks at stays tidy.
+ */
+export function dropLines(text, needles) {
+  const kept = [];
+  let dropped = 0;
+  let justDropped = false;
+  for (const line of text.split("\n")) {
+    if (needles.some((needle) => line.includes(needle))) {
+      dropped += 1;
+      justDropped = true;
+      continue;
+    }
+    const doubled = justDropped && line.trim() === "" && (kept.length === 0 || kept.at(-1).trim() === "");
+    if (!doubled) kept.push(line);
+    justDropped = false;
+  }
+  return { text: dropped ? kept.join("\n") : text, dropped };
+}
+
+/** `text` with every `find` of the `[find, replacement]` pairs replaced, and how many places that was. */
+export function reword(text, pairs) {
+  let out = text;
+  let replaced = 0;
+  for (const [find, replacement] of pairs) {
+    const pieces = out.split(find);
+    replaced += pieces.length - 1;
+    out = pieces.join(replacement);
+  }
+  return { text: out, replaced };
+}
+
+const SCRIPT_FILE = /\.(ts|tsx|mts|js|jsx|mjs|cjs)$/;
+const DIRECTIVE = /^(["'])use \w+\1;?$/;
+/** A comment written for a tool about the line under it. It belongs to that line, not to the file. */
+const FOR_A_TOOL = /^\/\/\s*(biome-ignore|eslint-disable|@ts-|prettier-ignore|knip-ignore)/;
+
+/**
+ * The comment a script opens with: `lines` of it, starting at line `start`, after a "#!" line,
+ * directives such as "use client" and blank lines. No lines when the file opens with code.
+ */
+function opening(text) {
+  const all = text.split("\n");
+  let start = all[0]?.startsWith("#!") ? 1 : 0;
+  while (start < all.length && (all[start].trim() === "" || DIRECTIVE.test(all[start].trim()))) start += 1;
+  let end = start;
+  let inBlock = false;
+  for (; end < all.length; end += 1) {
+    const line = all[end].trim();
+    const opens = !inBlock && line.startsWith("/*");
+    if (!inBlock && !opens && !line.startsWith("//")) break;
+    if (inBlock || opens) {
+      const close = line.indexOf("*/", opens ? 2 : 0);
+      // Code after the comment on the same line: this is no comment of its own.
+      if (close >= 0 && close + 2 < line.length) return { start, lines: [] };
+      inBlock = close < 0;
+    }
+  }
+  if (inBlock) return { start, lines: [] };
+  while (end > start && FOR_A_TOOL.test(all[end - 1].trim())) end -= 1;
+  return { start, lines: all.slice(start, end) };
+}
+
+/** The comment a script opens with, as text. Empty when it opens with code. */
+export function leadingComment(text) {
+  return opening(text).lines.join("\n");
+}
+
+/**
+ * `after` with the comment `before` opened with. Biome's fix for an unused import takes the
+ * comment above the import with it, and at the top of a file that comment is the file's own.
+ */
+export function keepLeadingComment(before, after) {
+  const was = opening(before);
+  if (!was.lines.length) return after;
+  const all = after.split("\n");
+  const now = opening(after);
+  if (was.lines.every((line, index) => all[now.start + index] === line)) return after;
+  const rest = all.slice(now.start);
+  // On another import the comment sits as it did. On anything else a blank line keeps it the
+  // file's comment, not that statement's.
+  const gap = /^\s*import\b/.test(rest[0] ?? "") ? [] : [""];
+  return [...before.split("\n").slice(0, was.start), ...was.lines, ...gap, ...rest].join("\n");
+}
+
+/** True for the documents that describe the product (the list is DOCUMENTS in removable.mjs). */
+export function isDocument(file) {
+  return DOCUMENTS.include.some((pattern) => pattern.test(file)) && !DOCUMENTS.exclude.some((p) => p.test(file));
+}
+
+/**
+ * Where `words` still stand in `text`, as `{ line, word }` with lines counted from 1. A word is
+ * matched whole and in its own case, a plural included: "Expo" is found in "Expo's" and not
+ * in "Export" or "expose".
+ */
+export function tracesIn(text, words) {
+  const patterns = words.map((word) => {
+    const before = /^\w/.test(word) ? "(?<!\\w)" : "";
+    const after = /\w$/.test(word) ? "s?(?!\\w)" : "";
+    return [word, new RegExp(`${before}${escaped(word)}${after}`)];
+  });
+  return text
+    .split("\n")
+    .flatMap((line, index) =>
+      patterns.filter(([, pattern]) => pattern.test(line)).map(([word]) => ({ line: index + 1, word })),
+    );
+}
+
 function inside(root, target) {
   const full = resolve(root, target);
   if (full !== root && !full.startsWith(root + sep)) throw new Error(`${target} is outside the repository`);
   return full;
 }
 
+/**
+ * Drops the imports that nothing uses any more from `files`, with Biome's fix for them. That
+ * fix removes the comment above an import along with it, so the comment each script opens
+ * with is put back when it went with the file's first import.
+ */
+function dropUnusedImports(files) {
+  const scripts = files.filter((file) => SCRIPT_FILE.test(file));
+  const before = new Map(scripts.map((file) => [file, readFileSync(join(ROOT, file), "utf8")]));
+  run("npx", [
+    "biome",
+    "lint",
+    "--write",
+    "--unsafe",
+    "--only=correctness/noUnusedImports",
+    "--no-errors-on-unmatched",
+    ...files,
+  ]);
+  for (const [file, text] of before) {
+    const after = readFileSync(join(ROOT, file), "utf8");
+    const kept = keepLeadingComment(text, after);
+    if (kept === after) continue;
+    console.log(`  kept    ${file} (the comment it opens with)`);
+    writeFileSync(join(ROOT, file), kept);
+  }
+}
+
+/** Applies the migrations to the local database. False when that could not be done: a removal does not fail on it. */
+function migrateLocally() {
+  console.log("  $ npm run db:migrate:local");
+  try {
+    // CI=1: wrangler applies without asking, as it does at the start of a session.
+    execFileSync("npm", ["run", "db:migrate:local"], { cwd: ROOT, stdio: "inherit", env: { ...process.env, CI: "1" } });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** The parts this repository still has: something of each one's own is on disk. */
 function list() {
+  const here = Object.entries(PARTS).filter(([, part]) =>
+    (part.paths ?? []).some((path) => existsSync(join(ROOT, path))),
+  );
+  if (!here.length) return console.log("Every optional part has been removed from this repository.");
   console.log("Removable parts:\n");
-  for (const [part, { what }] of Object.entries(PARTS)) console.log(`  ${part.padEnd(10)} ${what}`);
+  for (const [part, { what }] of here) console.log(`  ${part.padEnd(10)} ${what}`);
   console.log("\nRemove one with: npm run remove -- <name>   (add --dry-run to preview)");
 }
 
@@ -172,17 +328,22 @@ function main() {
     if (!dryRun) writeFileSync(full, content);
   }
 
-  // 4. Lines in prose, where a marker would show: each is dropped by the text it contains.
-  for (const [path, needles] of Object.entries(part.dropLines ?? {})) {
+  // 4. What the documents and comments say about it, where a marker would show: whole lines
+  //    are dropped by the text they contain, and wording inside a sentence is replaced.
+  for (const path of new Set([...Object.keys(part.dropLines ?? {}), ...Object.keys(part.replace ?? {})])) {
     const full = inside(ROOT, path);
-    if (!existsSync(full)) continue;
-    const lines = readFileSync(full, "utf8").split("\n");
-    const kept = lines.filter((line) => !needles.some((needle) => line.includes(needle)));
-    if (kept.length === lines.length) continue;
+    if (!existsSync(full) || deleted.some((gone) => path === gone || path.startsWith(`${gone}/`))) continue;
+    const lines = dropLines(readFileSync(full, "utf8"), part.dropLines?.[path] ?? []);
+    const words = reword(lines.text, part.replace?.[path] ?? []);
+    if (!lines.dropped && !words.replaced) continue;
     changed = true;
     edited.push(path);
-    console.log(`  cut     ${path} (${lines.length - kept.length} line${lines.length - kept.length === 1 ? "" : "s"})`);
-    if (!dryRun) writeFileSync(full, kept.join("\n"));
+    const what = [
+      lines.dropped && `${lines.dropped} line${lines.dropped === 1 ? "" : "s"}`,
+      words.replaced && `${words.replaced} place${words.replaced === 1 ? "" : "s"} reworded`,
+    ];
+    console.log(`  cut     ${path} (${what.filter(Boolean).join(", ")})`);
+    if (!dryRun) writeFileSync(full, words.text);
   }
 
   // 5. Packages and scripts only it used.
@@ -263,19 +424,42 @@ function main() {
   }
   // The sign-in tables are generated from the plugins in use; then the migration that drops what went.
   if (part.regenerate?.includes("auth")) run("npm", ["run", "auth:generate", "-w", "@app/backend"]);
-  if (part.regenerate?.includes("db")) run("npm", ["run", "db:generate"]);
+  const notes = [...(part.notes ?? [])];
+  if (part.regenerate?.includes("db")) {
+    run("npm", ["run", "db:generate"]);
+    // The local database follows, so the next `npm run dev` does not meet tables the code no longer has.
+    if (!migrateLocally()) {
+      notes.push(
+        "The local database could not be reached (what `npm run db:migrate:local` said is above), so the new migration is not applied to it yet. Run that command before `npm run dev`.",
+      );
+    }
+  }
   if (part.regenerate?.includes("theme")) run("npm", ["run", "theme"]);
-  const toFormat = edited.filter(
+  const toFormat = [...new Set(edited)].filter(
     (file) => existsSync(join(ROOT, file)) && /\.(ts|tsx|mjs|js|json|jsonc|css|md|yml|yaml)$/.test(file),
   );
   if (toFormat.length) {
-    // A cut can leave an import with nothing using it; those go too.
-    run("npx", ["biome", "lint", "--write", "--unsafe", "--only=correctness/noUnusedImports", ...toFormat]);
+    dropUnusedImports(toFormat);
     run("npx", ["biome", "check", "--write", "--no-errors-on-unmatched", ...toFormat]);
   }
+  // DESIGN.md and PRODUCT.md are written from the product config, the brief and the brand,
+  // and the check holds them to it. A copy that has no design skill has no such script.
+  if (existsSync(join(ROOT, "scripts/design-context.mjs"))) run("node", ["scripts/design-context.mjs"]);
+
+  // What the list did not know about: a sentence someone added since, in a document.
+  const traces = sourceFiles()
+    .filter(isDocument)
+    .flatMap((file) =>
+      tracesIn(readFileSync(join(ROOT, file), "utf8"), part.traces ?? []).map(
+        ({ line, word }) => `${file}:${line} still says "${word}"`,
+      ),
+    );
 
   console.log(`\nRemoved ${name}. Now run: npm run check`);
-  for (const note of part.notes ?? []) console.log(`Note: ${note}`);
+  for (const note of notes) console.log(`Note: ${note}`);
+  if (traces.length) {
+    console.log(`Note: the documents still name what was removed. Reword these by hand:\n  ${traces.join("\n  ")}`);
+  }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();

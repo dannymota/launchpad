@@ -110,7 +110,7 @@ export async function getAuth(env: Env, origin: string) {
       },
     },
     plugins: authPlugins({
-      // What the optional modules add (payments, for one), while each is on.
+      // What the optional modules add, while each is on.
       extra: modules().flatMap((module) => module.authPlugins?.(env) ?? []),
       sendCode: async ({ email, code }) => {
         // An address that has no account and may not create one gets no mail. The caller sees

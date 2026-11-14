@@ -90,9 +90,9 @@ npm run setup -- staging
 ```
 
 stores every setting it knows that is present in the shell's environment, and prints which are
-set and what each missing one would turn on (Google and Apple sign-in, Turnstile, Stripe, the AI
-key and budgets, PostHog). Values go to Cloudflare through wrangler's standard input.
-`/health` on the deployed product shows what is on.
+set and what each missing one would turn on: a sign-in method, Turnstile, an optional module.
+Values go to Cloudflare through wrangler's standard input. `/health` on the deployed product shows
+what is on.
 
 ## Taking staging down
 
@@ -118,7 +118,7 @@ down by a script.
 
 The domain must be a zone on the same Cloudflare account. Then follow `/go-live`
 (`.claude/skills/go-live/SKILL.md`): it sets `domains.app` and the preset, applies the config,
-updates Access, deploys production and lists the redirect URLs to change at Google, Apple and Stripe.
+updates Access, deploys production and lists the addresses to change in other companies' consoles.
 
 ## Looking at a running product
 

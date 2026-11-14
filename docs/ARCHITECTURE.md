@@ -26,14 +26,15 @@ decode or lowercase reaches a page's 404, never an API.
 An action is defined once in `packages/shared/src/contract` (oRPC): its name, description, input
 and output. `packages/backend/src/api/router.ts` implements it. From that one definition come:
 
-| Caller                      | Reaches it through                                                          |
-| --------------------------- | --------------------------------------------------------------------------- |
-| A server-rendered page      | `api()` in `apps/web/lib/server.ts`, in-process, no HTTP                    |
-| The browser, the mobile app | the typed client (`createApiClient`), over `/rpc`                           |
-| Anything else               | REST with an OpenAPI document, over `/api`                                  |
-| An AI assistant             | an MCP tool, when the procedure is listed in `apps/mcp/servers/*/scopes.ts` |
+| Caller                 | Reaches it through                                                          |
+| ---------------------- | --------------------------------------------------------------------------- |
+| A server-rendered page | `api()` in `apps/web/lib/server.ts`, in-process, no HTTP                    |
+| The browser            | the typed client (`createApiClient`), over `/rpc`                           |
+| The mobile app         | the same typed client, over `/rpc`                                          |
+| Anything else          | REST with an OpenAPI document, over `/api`                                  |
+| An assistant           | an MCP tool, when the procedure is listed in `apps/mcp/servers/*/scopes.ts` |
 
-Clients import only the contract's type, so no server code reaches a browser or a phone.
+Clients import only the contract's type, so no server code leaves the Worker.
 
 ## Who can reach what
 
@@ -62,7 +63,7 @@ area of every preset as five kinds of visitor (`apps/web/tests/access.workers.te
 ```
 packages/shared    the contract, zod schemas, the typed client, the access map. No server code.
 packages/backend   everything that touches the database or a secret
-packages/theme     the brand: one file, from which the web theme and the app's values are built
+packages/theme     the brand: one file, from which everything visual is built
 ```
 
 The backend is layered; a file imports from its own layer or the ones before it:
@@ -75,37 +76,42 @@ backend touches the database, shared code runs anywhere, browser code imports no
 D1 (SQLite) through Drizzle. Tables live in `packages/backend/src/db/schema/`, one file per
 feature; `npm run db:generate` writes the SQL; Wrangler applies it. There are no interactive
 transactions: writes that must succeed together go in one `db.batch`, and a check that must not
-race with its write is one statement (the AI budget and the attempt limits both work this way).
+race with its write is one statement (the limits on sign-in attempts work this way).
 
 A table holding a person's data references `auth_user` with `onDelete: "cascade"`, so deleting the
 account deletes the data.
 
 ## Optional parts
 
-Three **surfaces** (`mobile`, `mcp`, `site`) and three **modules** (`payments`, `ai`, `analytics`)
-can each be taken out with `npm run remove -- <name>`.
+A **surface** is another way into the product beside the web app. A **module** is a capability
+that stays off until its keys are set. `npm run remove` lists the ones this copy has.
+
+- `mobile`, a surface: the iOS and Android app, one Expo codebase with the same sign-in and the same typed API (`docs/MOBILE.md`).
+- `mcp`, a surface: MCP servers behind OAuth, where an API procedure becomes a tool an assistant can call (`docs/MCP.md`).
+- `site`, a surface: the public website, under `apps/web/app/(site)`. Without it the root goes straight to the product.
+- `payments`, a module: Better Auth's Stripe plugin, with checkout, the billing portal and signed webhooks. Plans come from the product config, prices from `STRIPE_PRICE_<PLAN>`.
+- `ai`, a module: model calls through Anthropic's SDK, by way of Cloudflare AI Gateway when `AI_GATEWAY_URL` is set. A ledger in D1 holds the most a call could cost before it starts and corrects it afterwards, so the monthly budget and each person's share cannot be overshot.
+- `analytics`, a module: PostHog. Events go to `/ingest` on the Worker, which passes them on with nothing that identifies the account. No cookie until the visitor allows one.
+
+Each comes out for good with `npm run remove -- <name>`. What makes that possible:
 
 - A module registers itself in `packages/backend/src/modules/index.ts`. The core asks the registry
   what modules add (sign-in plugins and routes, their own paths) and never names one.
 - A module is **off until configured**: without its keys its routes do not exist and `/health`
   reports it `off`.
 - What a part adds to shared files sits between `>>> name` and `<<< name` markers.
-  `scripts/removable.mjs` lists its own files and packages.
+  `scripts/removable.mjs` lists its own files and packages, and what the documents say about it.
 - `scripts/check-removal.mjs` proves a removal by doing it on a copy and running the full check
-  and build. All six pass alone and together.
-
-| Module    | What it is                                                                                                                                                                                                                                                       |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Payments  | Better Auth's Stripe plugin: checkout, the billing portal, signed webhooks. Plans come from the product config, prices from `STRIPE_PRICE_<PLAN>`                                                                                                                |
-| AI        | Model calls through Anthropic's SDK, by way of Cloudflare AI Gateway when `AI_GATEWAY_URL` is set. A ledger in D1 holds the most a call could cost before it starts and corrects it afterwards, so the monthly budget and each person's share cannot be overshot |
-| Analytics | PostHog on web and mobile. Events go to `/ingest` on the Worker, which passes them on with nothing that identifies the account. No cookie until the visitor allows one                                                                                           |
+  and build, and by reading the documents afterwards for anything that still names the part.
+  Every part passes alone, and together with the others.
 
 ## The brand
 
 `packages/theme/src/brand.ts` holds the decisions: colour pairs for light and dark, radii, a
 typeface. `npm run theme` builds the Astryx theme for the web from it, then writes the same values
-as plain numbers (`src/generated/tokens.ts`) for the mobile app and the contrast tests. A page or a
-screen never sets a colour.
+as plain numbers (`src/generated/tokens.ts`) for the contrast tests.
+The mobile app reads those numbers too (`packages/theme/src/native.ts`), so it cannot show a different brand.
+Nothing else sets a colour.
 
 ## Design review
 
@@ -126,6 +132,6 @@ browser draws it, at desktop and phone width, signed out and signed in.
 
 ## What is deliberately not here
 
-Teams and organisations, queues, file uploads, realtime, push notifications, in-app purchases,
-API keys. Each is a decision a product makes for itself; the layout has a place for each
-(`packages/backend/src/features/`, a new folder under `apps/`).
+Teams and organisations, queues, file uploads, realtime, API keys. Each is a decision a product
+makes for itself; the layout has a place for each (`packages/backend/src/features/`, a new folder
+under `apps/`).

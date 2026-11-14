@@ -49,6 +49,6 @@ Give these as a list with the exact values, since each lives in someone else's c
 - **Stripe**: webhook endpoint `https://<domain>/api/auth/stripe/webhook`.
 - **Email**: the sending domain onboarded in Cloudflare Email Service.
 - **The mobile app**: a new build, so its links and API address use the domain; then store review.
-- **AI assistants**: the MCP address is `https://<domain>/mcp`.
+- **Assistants**: the MCP address is `https://<domain>/mcp`.
 
 Finish by saying what is live, at which address, for whom, and which items on that list are still open.

@@ -1,7 +1,7 @@
 // Cloudflare Turnstile on the form that asks for a sign-in code. On when TURNSTILE_SECRET_KEY
-// is set: the form's token must then check out before any mail is sent. A native app has no
-// widget to get a token from, so with Turnstile on it offers Apple and Google instead of
-// email codes (/health says so under signIn.captcha).
+// is set: the form's token must then check out before any mail is sent. /health says so
+// under signIn.captcha.
+// The mobile app has no widget to get a token from: with Turnstile on it offers Apple and Google only.
 import { captchaOn } from "../core/runtime";
 import type { Env } from "../env";
 import { clientAddress } from "./limits";

@@ -1,5 +1,5 @@
-// The product, in one file. Change a value here and every surface that depends on it
-// follows: the Worker, sign-in, the access rules at the edge, emails, the mobile app.
+// The product, in one file. Change a value here and everything that depends on it follows:
+// the Worker, sign-in, the access rules at the edge, emails.
 // Email addresses and keys do not belong here; they are Worker variables and secrets.
 import { defineProduct } from "@app/shared/product";
 
@@ -17,7 +17,7 @@ export default defineProduct({
 
   // Who can reach what. Presets: "private" (everything behind Cloudflare Access, the default
   // before launch), "internal-tool", "private-beta", "public-product". Override one area with
-  // areas: { mcp: { visibility: "public" } }. See packages/shared/src/product/access.ts.
+  // areas: { api: { visibility: "public" } }. See packages/shared/src/product/access.ts.
   access: { preset: "private" },
 
   signIn: { emailCode: true, google: false, apple: false },

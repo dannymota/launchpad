@@ -2,19 +2,25 @@
 // Proves that a part can be removed: on a copy of this repository it removes the part, then
 // runs the full check and the build. Nothing here is touched.
 //
+// A removal can also go wrong without breaking anything, and the check and the build cannot
+// see that. So before them the copy is read for what they would miss: a marker left behind,
+// a document that still names the part (its `traces` in scripts/removable.mjs), and a file
+// that lost the comment it opens with.
+//
 //   node scripts/check-removal.mjs <name> [<name> ...]   one copy per name
 //   node scripts/check-removal.mjs --all                 every part in scripts/removable.mjs
 //   node scripts/check-removal.mjs a+b                   remove several from the same copy
 //   node scripts/check-removal.mjs --feature note [a]    scaffold a feature first (`npm run new:feature`)
 //   node scripts/check-removal.mjs --e2e ...             then drive the result in a browser as well
 //
-// CI runs one name per job (.github/workflows/check.yml).
+// CI runs one name per job (.github/workflows/removal.yml).
 import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PARTS } from "./removable.mjs";
+import { isDocument, leadingComment, tracesIn } from "./remove.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -55,15 +61,20 @@ function copyOfRepo() {
   return copy;
 }
 
-/** Files in the copy that still carry a marker for one of `parts`. */
-function leftoverMarkers(copy, parts) {
-  const files = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z"], {
+/** The files of the copy, as git sees them. */
+function filesOf(copy) {
+  return execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z"], {
     cwd: copy,
     maxBuffer: 64 * 1024 * 1024,
   })
     .toString("utf8")
     .split("\0")
-    .filter(Boolean);
+    .filter((file) => file && existsSync(join(copy, file)));
+}
+
+/** Files in the copy that still carry a marker for one of `parts`. */
+function leftoverMarkers(copy, parts) {
+  const files = filesOf(copy);
   // These describe the markers, so they contain them.
   const about = ["scripts/remove.mjs", "scripts/removable.mjs", "tests/removable.test.ts", ".claude/rules/modules.md"];
   return files.filter((file) => {
@@ -72,6 +83,26 @@ function leftoverMarkers(copy, parts) {
     // A marker is a comment on a line of its own.
     return parts.some((part) =>
       new RegExp(`^\\s*(?://|#|\\{/\\*|/\\*|<!--)\\s*(?:>>>|<<<)\\s*${part}(?![\\w-])`, "m").test(text),
+    );
+  });
+}
+
+/** Where a document in the copy still names one of `parts`: "file:line: the word". */
+function leftoverTraces(copy, parts) {
+  const words = parts.flatMap((part) => PARTS[part]?.traces ?? []);
+  return filesOf(copy)
+    .filter(isDocument)
+    .flatMap((file) =>
+      tracesIn(readFileSync(join(copy, file), "utf8"), words).map(({ line, word }) => `${file}:${line}: "${word}"`),
+    );
+}
+
+/** Scripts that open with a comment here and no longer do in the copy. */
+function lostComments(copy) {
+  return filesOf(copy).filter((file) => {
+    if (!/\.(ts|tsx|mts|js|jsx|mjs|cjs)$/.test(file) || !existsSync(join(ROOT, file))) return false;
+    return (
+      leadingComment(readFileSync(join(ROOT, file), "utf8")) && !leadingComment(readFileSync(join(copy, file), "utf8"))
     );
   });
 }
@@ -87,6 +118,13 @@ for (const name of names) {
     for (const part of parts) sh(copy, "node", ["scripts/remove.mjs", part]);
     const left = leftoverMarkers(copy, parts);
     if (left.length) throw new Error(`markers remain in: ${left.join(", ")}`);
+    const traces = leftoverTraces(copy, parts);
+    if (traces.length) {
+      console.error(`These documents still name what was removed:\n  ${traces.join("\n  ")}`);
+      throw new Error(`the documents still name ${parts.join(" or ")} in ${traces.length} place(s): see above`);
+    }
+    const bare = lostComments(copy);
+    if (bare.length) throw new Error(`the comment at the top of the file was lost in: ${bare.join(", ")}`);
     sh(copy, "npm", ["run", "check"]);
     sh(copy, "npm", ["run", "build"]);
     if (e2e) sh(copy, "npx", ["playwright", "test", "--trace", "off"]);

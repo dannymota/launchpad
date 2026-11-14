@@ -1,6 +1,6 @@
 // Who a request is acting for. One shape for every way in: a browser or app session
-// (Better Auth), a Cloudflare Access identity (internal areas that opt in) and an
-// assistant connection (OAuth grant).
+// (Better Auth) and a Cloudflare Access identity (internal areas that opt in).
+// An assistant connection (an OAuth grant) is a third way in.
 import { eq } from "drizzle-orm";
 import { listOf } from "../core/product";
 import { requestFacts } from "../core/request";

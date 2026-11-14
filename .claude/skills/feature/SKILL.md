@@ -1,12 +1,13 @@
 ---
 name: feature
-description: Build one feature of the product end to end. Use when the owner asks for a feature ("/feature notes", "add projects"), or right after /brand to build the main thing from the brief. Scaffolds a working slice with a table, API, tests, web page and mobile screen, then shapes it to the brief.
+description: Build one feature of the product end to end. Use when the owner asks for a feature ("/feature notes", "add projects"), or right after /brand to build the main thing from the brief. Scaffolds a working slice (a table, API, tests and the UI for it), then shapes it to the brief.
 ---
 
 # /feature: one slice, all the way through
 
-A feature here is a vertical slice: a table, the procedures that work on it, tests, a web page and,
-when there is an app, a screen. The scaffold gives you all of it running; your work is the substance.
+A feature here is a vertical slice: a table, the procedures that work on it, tests and a web page.
+With the mobile app, a screen there as well.
+The scaffold gives you all of it running; your work is the substance.
 
 ## Steps
 
@@ -31,11 +32,9 @@ npm run new:feature -- note
      first with `/impeccable shape <feature>` (a plan, no code). Then start from
      `npx astryx build "<what the page is for>"` and keep the template's frame. Rows for dense
      data, not cards. Finish with `/impeccable harden <page>`: empty, loading, error, long text.
-   - **Screen** (`apps/mobile/src/app/(app)/<plural>.tsx`), if there is an app: follow
-     `.claude/rules/mobile.md`; give the tab a title and icon in `_layout.tsx`.
-4. If assistants should use it, list its procedures in `apps/mcp/servers/main/scopes.ts` with a
-   scope: reads `app:read`, anything that changes data a write scope.
-5. Link the page from where a person would look for it (the app home, usually).
+   - **Screen** (`apps/mobile/src/app/(app)/<plural>.tsx`): follow `.claude/rules/mobile.md`, and give the tab a title and icon in `_layout.tsx`.
+4. Link the page from where a person would look for it (the app home, usually).
+5. If assistants should use it, list its procedures in `apps/mcp/servers/main/scopes.ts` with a scope: reads `app:read`, anything that changes data a write scope.
 
 ## Gate
 

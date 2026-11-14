@@ -15,18 +15,24 @@ From the idea, decide each line below yourself. Mark the ones you are unsure of.
 - **Name**, a slug (lowercase, dashes) and a one-line tagline.
 - **Who it is for** and **the main thing they do** with it. That one job becomes the first feature.
 - **What it is not**: two or three things it will not do, so later work stays small.
-- **Surfaces**: public website, mobile app (iOS and Android), MCP server for AI assistants.
-- **Modules**: payments (a paid plan), AI (model calls with a budget), analytics.
+- **Which optional parts it has**, of those still in this copy. `npm run remove` lists them.
+  - `site`: a public website.
+  - `mobile`: a mobile app, for iOS and Android.
+  - `mcp`: an MCP server, so assistants can use the product for a person.
+  - `payments`: a paid plan.
+  - `ai`: model calls, under a budget.
+  - `analytics`: page views and events.
 - **Access before launch**: `private` (everything behind Cloudflare Access) unless told otherwise.
   After launch: `public-product`, `private-beta` or `internal-tool`.
-- **Sign-in after launch**: emailed code always; Google and Apple if the product has a mobile app.
+- **Sign-in after launch**: emailed code always; Google and Apple when the people it is for expect them.
+  A product with a mobile app offers both.
 
 ## 2. Ask once
 
 Ask the owner, in one message, only for what you could not infer, and always for these, since
 nothing in the idea can tell you:
 
-- the legal entity, a contact email and the jurisdiction (for the legal pages and store listings);
+- the legal entity, a contact email and the jurisdiction (for the brief's `## Legal`);
 - whether there is a domain yet (it is fine if not: the product ships on workers.dev first);
 - anything you marked unsure.
 
@@ -39,13 +45,17 @@ Then show the whole brief as a short summary and ask "go?". One confirmation, no
   `## Access`, `## Plans`, `## Voice` (three plain words and two example sentences in that voice),
   `## Legal`, `## Open questions`. If the owner gave real proof (customers, numbers, a quote), add
   `## Proof` with exactly that. Never invent any.
-- `product/product.config.ts`: name, slug, tagline, access preset, sign-in methods, plans, and the
-  mobile bundle id (`com.<entity>.<slug>`). Leave `domains` empty unless the owner has them.
-- Remove what the product does not have, one at a time: `npm run remove -- <mobile|mcp|site|payments|ai|analytics>`.
+- `product/product.config.ts`: name, slug, tagline, access preset and sign-in methods. Leave
+  `domains` empty unless the owner has them.
+  - `plans`: what people can be on, the free tier first.
+  - `mobile`: the bundle id, `com.<entity>.<slug>`.
+- Remove each optional part the product does not have, one at a time: `npm run remove -- <name>`.
   Each removal is permanent; do it only for a clear "no" in the brief.
-- `npm run config:apply`, so the Worker, the database and the listings carry the new name.
-- `npm run design:context`, which writes `PRODUCT.md` (and the app's) from the brief. The design
-  skill reads those before it touches a screen. Do not write them by hand or run `/impeccable init`.
+- `npm run config:apply`, so the Worker, the database and everything else that repeats the name
+  carry the new one.
+- `npm run design:context`, which writes what the design skill reads about the product
+  (`PRODUCT.md`) from the brief. The skill reads it before it touches a screen. Do not write it
+  by hand or run `/impeccable init`.
 
 ## 4. Gate
 

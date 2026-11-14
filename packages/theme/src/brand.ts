@@ -1,6 +1,7 @@
-// The brand, as a handful of decisions. Everything visual that web and mobile share starts
-// here: the web Astryx theme (apps/web/themes/brand) is built from it, and the native theme
-// (native.ts) is generated from that build, so the two cannot drift apart.
+// The brand, as a handful of decisions. Everything visual starts here: the web Astryx theme
+// (apps/web/src/themes/brand) is built from it, and the same values are written from that
+// build as plain numbers (src/generated/tokens.ts) for whatever is not a web page.
+// The mobile app's theme (native.ts) reads those numbers, so it cannot drift from the website.
 //
 // /brand rewrites this file: it sets the seed colour in palette.config.json, regenerates
 // palette.ts with Astryx's palette tool, and picks the stops below. After any edit run
@@ -32,7 +33,7 @@ export const brand = {
   /** Corner radii in px: small parts, controls, cards, and page-level panels. */
   radius: { inner: 6, element: 10, container: 12, page: 28 },
   font: {
-    /** Loaded on the web by the theme's font stylesheet; mobile uses each platform's system font. */
+    /** Loaded on the web by the theme's font stylesheet. Where there is none, the system font stands in. */
     body: "Figtree",
     heading: "Figtree",
   },

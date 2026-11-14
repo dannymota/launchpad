@@ -1,8 +1,8 @@
 # Launchpad
 
-A template for new products: one Cloudflare Worker serving the website, sign-in and the API,
-with optional surfaces (a mobile app, MCP servers) and modules beside it. Copy it per project.
-`docs/PLAN.md` is the design.
+A template for new products: one Cloudflare Worker serving the pages, sign-in and the API, with
+optional surfaces and modules beside it (`npm run remove` lists the ones this copy has). Copy it
+per project. `docs/PLAN.md` is the original design.
 
 ## Commands
 
@@ -20,8 +20,8 @@ with optional surfaces (a mobile app, MCP servers) and modules beside it. Copy i
 | `npm run mcp:test`                           | End-to-end OAuth and MCP check against the running local Worker              |
 | `npm run remove -- <part>`                   | Take out a surface or module for good. `npm run remove` lists them           |
 | `node scripts/check-removal.mjs <part>`      | Prove a part still removes cleanly: on a copy, then full check and build     |
-| `npm run new:feature -- <name>`              | Scaffold a working slice: table, API, tests, page, screen                    |
-| `npm run config:apply`                       | Carry the product config into wrangler.jsonc and the package and store names |
+| `npm run new:feature -- <name>`              | Scaffold a working slice: table, API, tests and the UI for it                |
+| `npm run config:apply`                       | Carry the product config into the files that repeat its names and domains    |
 | `npm run access:plan -- <env>`               | Show the Cloudflare Access setup the access map needs (`apply` makes it so)  |
 | `npm run deploy -- <env>`                    | Check, build, migrate, deploy, set secrets, then check from outside          |
 | `npm run smoke -- <env or address>`          | Check each area of a deployed product as a stranger sees it                  |
@@ -71,8 +71,8 @@ scripts/ tests/ docs/
 - **Migrations are generated.** Edit `packages/backend/src/db/schema/*`, run `npm run db:generate`.
   Never edit or delete an applied file in `packages/backend/migrations`. `schema/auth.ts` is generated
   by Better Auth: `npx auth@1.7.23 generate --config ./auth.cli.ts --output ./src/db/schema/auth.ts`.
-- **The look is decided in one place**: `packages/theme/src/brand.ts`. Never set a colour or radius in
-  a page or a screen. `packages/theme/src/generated` and the files under `apps/web/src/themes/brand`
+- **The look is decided in one place**: `packages/theme/src/brand.ts`. Never set a colour or radius
+  anywhere else. `packages/theme/src/generated` and the files under `apps/web/src/themes/brand`
   other than `brandTheme.ts` are built by `npm run theme`; do not edit them. `DESIGN.md` and
   `PRODUCT.md` are generated too (`npm run design:context`): they tell the `impeccable` design skill
   what the product and its look are.
@@ -82,14 +82,24 @@ scripts/ tests/ docs/
   there; add an exemption only for a protocol that requires one, with a test.
 - **Versions are pinned exactly.** Add a dependency with `npm install --save-exact`.
 - **Everything optional stays removable.** What a module or surface adds to shared files sits
-  between `>>> name` and `<<< name` markers and is listed in `scripts/removable.mjs`
-  (`.claude/rules/modules.md`).
+  between `>>> name` and `<<< name` markers. Its own files, and what the documents say about it,
+  are listed in `scripts/removable.mjs` (`.claude/rules/modules.md`).
 
 ## The pipeline
 
-A product is built in steps, each a skill in `.claude/skills/`: `/start` (the brief and config),
-`/brand`, `/feature`, `/site`, `/listing`, `/ship`, `/launch-check`, `/go-live`. `product/brief.md`
-says what the product is; read it before building anything, and do not build what it rules out.
+A product is built in steps, each a skill in `.claude/skills/`, in this order:
+
+- `/start`: the brief and the product config.
+- `/brand`: the look.
+- `/feature`: one slice of the product, end to end.
+- `/site`: the public website.
+- `/listing`: the store listings for the mobile app.
+- `/ship`: staging, behind Cloudflare Access.
+- `/launch-check`: what is ready and what is left.
+- `/go-live`: the domain, and who gets in.
+
+`product/brief.md` says what the product is; read it before building anything, and do not build
+what it rules out.
 
 ## Before you say it is done
 

@@ -5,7 +5,8 @@ the API, the deploy path and the rules for who can reach what already work. Unti
 product sits behind Cloudflare Access; going public is a change of one setting.
 
 Stack: Cloudflare Workers and D1, vinext (the Next.js App Router on Vite), Better Auth, oRPC,
-Drizzle, Astryx for the web UI, Expo for the app.
+Drizzle and Astryx for the web UI.
+The mobile app is built with Expo.
 
 ## From an idea to a product
 
@@ -15,8 +16,8 @@ repository. Each writes real files and ends at a check that must pass.
 | Step                | What it does                                                                      | Ends at                       |
 | ------------------- | --------------------------------------------------------------------------------- | ----------------------------- |
 | `/start <idea>`     | Writes the brief and the product config; removes the parts the idea does not need | `npm run check:brief`         |
-| `/brand`            | Colours, corners and typeface, from one file, for web and app                     | `npm run theme:check`         |
-| `/feature <name>`   | One slice end to end: table, API, tests, page, screen                             | `npm run check`               |
+| `/brand`            | Colours, corners and typeface for the whole product, from one file                | `npm run theme:check`         |
+| `/feature <name>`   | One slice end to end: table, API, tests and the UI for it                         | `npm run check`               |
 | `/site`             | Landing, pricing, FAQ and legal pages from the brief                              | `npm run doctor -w @app/web`  |
 | `/listing`          | App Store and Google Play listings, inside each field's limit                     | `npm run check:listing`       |
 | `/ship`             | Deploys to staging behind Cloudflare Access and checks it from outside            | `npm run smoke -- staging`    |
@@ -24,32 +25,34 @@ repository. Each writes real files and ends at a check that must pass.
 | `/go-live <domain>` | The domain, the access preset, production                                         | `npm run smoke -- production` |
 
 Almost everything about a product is set in one file, `product/product.config.ts`: its name, its
-domains, who can reach which part, how people sign in, its plans. The Worker, the pages, the
-emails, the app and the deploy scripts all read it.
+domains, who can reach which part and how people sign in. The Worker, the pages, the emails and
+the deploy scripts all read it.
 
 ## What is in it
 
 - **One Worker** serving pages, sign-in, the API and everything else, with one definition of each
-  action giving a typed client, a REST endpoint and an MCP tool.
+  action giving a typed client and a REST endpoint.
 - **Access in one map.** Each area of the product is public or internal (Cloudflare Access), and
   separately needs a sign-in or not. Four presets: `private` (the default), `internal-tool`,
   `private-beta`, `public-product`. The Worker, the edge and a generated test all read the same map.
 - **Sign-in**: before launch the Cloudflare Access email is the sign-in. After launch: an emailed
   code, and Google and Apple once their keys are set. Sign-up open, closed, by allowlist or by domain.
 - **Account pages**: where you are signed in, sign out a device, delete the account. An admin page.
-- **An MCP server** (`docs/MCP.md`): assistants connect with OAuth, a consent page and a permission per tool.
+- **An MCP server** (`docs/MCP.md`): any action can be a tool; assistants connect with OAuth, a consent page and a permission per tool.
 - **An iOS and Android app** (`docs/MOBILE.md`): one Expo codebase, the same sign-in and the same typed API.
-- **Three optional modules**, each off until its keys are set: payments (Stripe), AI (Claude, with
-  a monthly spending cap that cannot be overshot), analytics (PostHog, no cookie until allowed).
-- **One brand** for web and app, with contrast tested in light and dark.
+- **Payments**, off until its keys are set: subscriptions through Stripe, with a billing page.
+- **AI**, off until its key is set: calls to Claude under a monthly spending cap that cannot be overshot.
+- **Analytics**, off until its key is set: PostHog, with no cookie until the visitor allows one.
+- **One brand** for the whole product, with contrast tested in light and dark.
 - **Protections on every request**: a content security policy with a per-page nonce, refusal of
   writes from other sites, a size limit, rate limits, caps on mail.
-- **Everything optional comes out cleanly**: `npm run remove -- <mobile|mcp|site|payments|ai|analytics>`.
-  Each removal is proven by doing it on a copy and running the full check and build.
+- **Everything optional comes out cleanly**: `npm run remove` lists the optional parts, and
+  `npm run remove -- <part>` takes one out for good, with what the documents say about it. Each
+  removal is proven by doing it on a copy and running the full check and build.
 - **A design check on the main pages.** [Impeccable](https://impeccable.style), a design skill
-  with a detector, is built in: it plans and reviews screens, and its detector reads the home page,
-  sign-in, the app and settings as a browser draws them (contrast, text size, heading order, the
-  usual marks of a generated page). Each feature you generate is added to that check.
+  with a detector, is built in: it plans and reviews screens, and its detector reads the main
+  pages, signed out and signed in, as a browser draws them (contrast, text size, heading order,
+  the usual marks of a generated page). Each feature you generate is added to that check.
 - **An agent set up to work here**: short rules, a guard hook, a reviewer, and the skills above.
 
 ## Run it
@@ -95,10 +98,15 @@ npm run e2e
 
 ## What you still supply
 
-The template cannot know or do these: the idea; a Cloudflare API token and a Zero Trust
-organization; the people allowed in before launch; and, before going public, a domain, Google and
-Apple sign-in keys, Stripe keys, store accounts and builds, icon artwork, and a legal read of the
-generated privacy and terms pages.
+The template cannot know or do these:
+
+- The idea.
+- A Cloudflare API token and a Zero Trust organization.
+- The people allowed in before launch.
+- Before going public: a domain, Google and Apple sign-in keys, and icon artwork.
+- Stripe keys and prices, to sell a plan.
+- Store accounts and builds, for the mobile app.
+- A legal read of the generated privacy and terms pages.
 
 ## Where things are
 
@@ -108,7 +116,7 @@ generated privacy and terms pages.
 | `docs/ARCHITECTURE.md` | How it fits together, and why                                                |
 | `docs/AUTH.md`         | Sign-in, sign-up, sessions, limits                                           |
 | `docs/OPERATIONS.md`   | Shipping, environments, secrets, backups, what to do when something is wrong |
-| `docs/MCP.md`          | Connecting AI assistants                                                     |
+| `docs/MCP.md`          | Connecting assistants over MCP                                               |
 | `docs/MOBILE.md`       | The iOS and Android app                                                      |
 | `docs/UPGRADING.md`    | Bringing a product up to a newer template                                    |
 | `.claude/README.md`    | How the agent is set up: hooks, rules, skills, plugins                       |

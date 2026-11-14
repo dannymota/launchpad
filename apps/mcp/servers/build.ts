@@ -1,6 +1,6 @@
 // Builds one MCP server for one request. Its tools are the contract procedures the server's
-// definition lists, registered by oRPC, so a tool call runs the same code as the web and
-// mobile apps, with the same validation. A connection sees only the tools its scopes allow.
+// definition lists, registered by oRPC, so a tool call runs the same code as every other
+// caller, with the same validation. A connection sees only the tools its scopes allow.
 import { apiContext, assistantPrincipal, type Env, productOf, router } from "@app/backend";
 import { McpServer } from "@modelcontextprotocol/server";
 import { McpRegistrar } from "@orpc/mcp";

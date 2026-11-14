@@ -23,12 +23,14 @@ behind Cloudflare Access with the rest until then.
 - **Start each page from a template**: `npx astryx build "<what the page is for>"`, run from
   `apps/web`. Keep the frame; replace every word and number with the product's.
 - **Take facts from the config, not from memory**: name and tagline from `productOf(getEnv())`,
-  plans from `product.plans`, the support address as `support@` the sending domain.
+  the support address as `support@` the sending domain.
+  Plans come from `product.plans`.
 - **Write in the brief's voice.** No greeting headline, no exclamation marks, no invented
   customers, numbers, logos or testimonials. A claim is a fact about the product or it goes.
-- **Privacy and terms describe this product as built**: emailed sign-in codes, a session cookie,
-  the analytics cookie only if the analytics module is present, payments by Stripe only if payments
-  are. They are drafts: say so at the top of your report, since a person must read them before launch.
+- **Privacy and terms describe this product as built**: emailed sign-in codes and a session cookie.
+  With the analytics module, also its cookie and what PostHog is sent.
+  With payments, also that Stripe takes them.
+  They are drafts: say so at the top of your report, since a person must read them before launch.
 - **Metadata**: each page exports `metadata` with a title and description. Add `sitemap.ts` and
   `robots.ts` at the app root, listing only `(site)` pages. The Worker already keeps everything
   else out of search engines.

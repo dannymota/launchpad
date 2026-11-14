@@ -15,7 +15,7 @@ export interface Health {
   email: ReturnType<typeof emailMode>;
   /** The access preset in force, and whether Cloudflare Access is set up to enforce it. */
   access: { preset: string; configured: boolean };
-  /** `captcha`: the email-code form needs a Turnstile token, which a native app cannot get. */
+  /** `captcha`: the email-code form needs a Turnstile token, which only a browser can get. */
   signIn: SignInMethods & { captcha: boolean };
   // >>> mobile
   /** For the native app: builds older than `minVersion` should ask the person to update. Null with no app. */

@@ -38,9 +38,9 @@ export async function revokeSession(env: Env, principal: Principal, sessionId: s
 }
 
 /**
- * Deletes the account. Sessions, linked sign-ins, assistant connections and every feature
- * table that references the account go with it, by cascade: a new table that holds a
- * person's data must reference auth_user with onDelete "cascade".
+ * Deletes the account. Sessions, linked sign-ins and every other table that references the
+ * account go with it, by cascade: a new table that holds a person's data must reference
+ * auth_user with onDelete "cascade".
  */
 export async function deleteAccount(env: Env, principal: Principal): Promise<void> {
   if (principal.via === "session") {

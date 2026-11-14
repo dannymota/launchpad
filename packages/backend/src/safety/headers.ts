@@ -43,8 +43,8 @@ function nonce(): string {
 
 /**
  * Adds the security headers to a response. A handler that set its own content security
- * policy keeps it (the assistant handoff pages do). HTML gets a fresh nonce on each of its
- * script tags, so a script that did not come from the server's own render cannot run.
+ * policy keeps it. HTML gets a fresh nonce on each of its script tags, so a script that did
+ * not come from the server's own render cannot run.
  */
 export function secured(request: Request, response: Response, env: Env, context: ResponseContext): Response {
   // A WebSocket upgrade must be returned untouched.

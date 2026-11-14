@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Writes the brand's colours and radii as plain values, per colour scheme, from the built web
-// theme. The contrast tests read them, and so does the native app, so iOS and Android can
-// never show a different brand from the website.
+// theme. The contrast tests read them.
+// So does the mobile app, so iOS and Android can never show a different brand from the website.
 //   apps/web/src/themes/brand/brand.js   (built by `astryx theme build`)
 //     → packages/theme/src/generated/tokens.ts
 // Run through `npm run theme`, which builds the web theme first. `--check` writes nothing and
