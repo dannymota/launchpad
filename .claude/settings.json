@@ -14,6 +14,18 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
@@ -40,6 +52,52 @@
     ]
   },
   "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npm test)",
+      "Bash(npm test *)",
+      "Bash(npx biome *)",
+      "Bash(npx vitest *)",
+      "Bash(npx tsc *)",
+      "Bash(npx astryx *)",
+      "Bash(npx wrangler dev *)",
+      "Bash(npx wrangler types*)",
+      "Bash(npx wrangler d1 migrations apply DB --local*)",
+      "Bash(npx wrangler d1 execute DB --local *)",
+      "Bash(npx expo-doctor*)",
+      "Bash(npx expo export *)",
+      "Bash(node scripts/check-removal.mjs *)",
+      "Bash(node scripts/oauth-test.mjs*)",
+      "Bash(node scripts/build-tokens.mjs*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
+    ],
+    "ask": ["Bash(npm run deploy*)", "Bash(npm run setup*)", "Bash(npm run access:apply*)", "Bash(npm run remove*)"],
     "deny": ["Read(./apps/web/.dev.vars)", "Read(./**/.env)", "Read(./**/.env.*)"]
-  }
+  },
+  "extraKnownMarketplaces": {
+    "cloudflare": {
+      "source": {
+        "source": "github",
+        "repo": "cloudflare/skills",
+        "ref": "main"
+      }
+    },
+    "better-auth-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "better-auth/skills",
+        "ref": "main"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "cloudflare@cloudflare": true,
+    "auth-skills@better-auth-agent-skills": true,
+    "superpowers@claude-plugins-official": true,
+    "expo@claude-plugins-official": true,
+    "stripe@claude-plugins-official": true
+  },
+  "disabledMcpjsonServers": ["appllama"]
 }

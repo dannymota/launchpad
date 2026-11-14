@@ -1,9 +1,6 @@
 ---
-
 paths:
-
-- "apps/mobile/**"
-
+  - "apps/mobile/**"
 ---
 
 # Mobile app rules

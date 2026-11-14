@@ -21,7 +21,9 @@
       "!packages/theme/src/palette.receipt.json",
       "!packages/theme/src/generated",
       "!.claude/skills/appllama-app-design-skill",
-      "!.claude/skills/appllama-usage"
+      "!.claude/skills/appllama-usage",
+      "!.claude/skills/unslop-ui",
+      "!.claude/**/*.md"
     ]
   },
   "formatter": {

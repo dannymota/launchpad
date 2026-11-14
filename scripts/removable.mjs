@@ -4,6 +4,7 @@
 //   packageJson     entries to drop, per workspace folder and section
 //   packageJsonSet  entries that change, per workspace folder and section
 //   dropLines       lines of prose to drop, by the text they contain (a marker would show in a document)
+//   json            entries to drop from other JSON files, per file and top-level key
 //   write           files that take another form once it is gone
 //   regenerate      "auth" (sign-in tables), "db" (a migration for dropped tables), "theme"
 //
@@ -31,8 +32,16 @@ export const PARTS = {
       ".claude/rules/mobile.md",
       ".claude/skills/appllama-app-design-skill",
       ".claude/skills/appllama-usage",
-      ".claude/skills/VENDORED.md",
     ],
+    dropLines: { ".claude/skills/VENDORED.md": ["ppllama"], "AGENTS.md": ["apps/mobile "] },
+    json: {
+      ".claude/settings.json": {
+        enabledPlugins: ["expo@claude-plugins-official"],
+        disabledMcpjsonServers: ["appllama"],
+      },
+      ".mcp.json": { mcpServers: ["expo", "appllama"] },
+      ".claude/launch.json": { configurations: ["mobile preview"] },
+    },
     packageJson: {
       "packages/backend": { dependencies: ["@better-auth/expo"] },
       "packages/shared": { exports: ["./version"] },
@@ -69,6 +78,7 @@ export default function RootPage() {
       ".": { workspaces: ["apps/mcp"], scripts: ["mcp:test"] },
       "apps/web": { dependencies: ["@app/mcp"] },
     },
+    dropLines: { "AGENTS.md": ["apps/mcp", "mcp:test"] },
     regenerate: ["db"],
   },
   payments: {
@@ -82,6 +92,7 @@ export default function RootPage() {
       "packages/backend": { dependencies: ["@better-auth/stripe", "stripe"] },
       "apps/web": { dependencies: ["@better-auth/stripe"] },
     },
+    json: { ".claude/settings.json": { enabledPlugins: ["stripe@claude-plugins-official"] } },
     regenerate: ["auth", "db"],
   },
   ai: {

@@ -1,7 +1,8 @@
 # Launchpad
 
-A template for new products: one Cloudflare Worker serving the website, sign-in, the API and
-MCP servers, with a place for a mobile app. Copy it per project. `docs/PLAN.md` is the design.
+A template for new products: one Cloudflare Worker serving the website, sign-in and the API,
+with optional surfaces (a mobile app, MCP servers) and modules beside it. Copy it per project.
+`docs/PLAN.md` is the design.
 
 ## Commands
 
@@ -10,11 +11,13 @@ MCP servers, with a place for a mobile app. Copy it per project. `docs/PLAN.md` 
 | `npm run dev`                                | Web app on the Workers runtime, with local D1 and KV                         |
 | `npm run check`                              | Lint, typecheck, boundary test, Workers-runtime tests. Run before finishing. |
 | `npm run format`                             | Biome: format and fix                                                        |
-| `npm run theme`                              | Rebuild the web theme and native tokens after editing the brand              |
+| `npm run theme`                              | Rebuild the web theme and the generated values after editing the brand       |
 | `npm run db:generate`                        | Turn schema changes into a migration (drizzle-kit)                           |
 | `npm run db:migrate:local`                   | Apply migrations to the local database                                       |
 | `npm run build` then `npm start -w @app/web` | Build, then run the built Worker on port 8787                                |
 | `npm run mcp:test`                           | End-to-end OAuth and MCP check against the running local Worker              |
+| `npm run remove -- <part>`                   | Take out a surface or module for good. `npm run remove` lists them           |
+| `node scripts/check-removal.mjs <part>`      | Prove a part still removes cleanly: on a copy, then full check and build     |
 
 Local runs read `apps/web/.dev.vars` (created at session start). `DEV_ACCESS_EMAIL` stands in for
 Cloudflare Access; `DEV_PRESET=public-product` tries the launched setup, where sign-in is an emailed
@@ -26,19 +29,20 @@ code that lands in the `email_outbox` table instead of being sent.
 product/          product.config.ts: name, domains, access preset, signup mode, sign-in methods
 apps/web          pages (vinext, Astryx) and worker/: the one Worker that serves every request
 apps/mcp          MCP servers and the OAuth provider in front of them
-apps/mobile       the iOS and Android app (Expo). Own lockfile; rules in .claude/rules/mobile.md
+apps/mobile       the iOS and Android app (Expo). Own lockfile and its own `npm install`
 packages/backend  all server logic: db/ core/ safety/ integrations/ accounts/ features/ modules/ api/
 packages/shared   zod schemas, the API contract, the typed client, the access map. Runs anywhere.
-packages/theme    the brand: colours, corners, typeface. Feeds the web theme and the native theme.
+packages/theme    the brand: colours, corners, typeface. Everything visual is generated from it.
 scripts/ tests/ docs/
+.claude/          rules/ (load by path), skills/, agents/reviewer.md, hooks/ (format, guard, checks)
 ```
 
 ## Rules that differ from defaults
 
 - **One action, defined once.** Add a procedure to `packages/shared/src/contract`, implement it in
-  `packages/backend/src/api/router.ts`. That gives the typed client, the REST endpoint and, once
-  listed in `apps/mcp/servers/main/scopes.ts`, an MCP tool (`docs/MCP.md`). Do not add route
-  handlers under `app/api`.
+  `packages/backend/src/api/router.ts`. That gives the typed client and the REST endpoint. Do not
+  add route handlers under `app/api`.
+- **An MCP tool is that same procedure**, listed with its scope in `apps/mcp/servers/main/scopes.ts` (`docs/MCP.md`).
 - **Every path belongs to an area** with two settings: public or internal (Cloudflare Access), and
   whether it needs a sign-in (`packages/shared/src/product/access.ts`). A page outside `/app`,
   `/settings`, `/admin` and `/labs` is part of the site, which is public after launch. Unfinished
@@ -64,6 +68,14 @@ scripts/ tests/ docs/
 - **New request paths go through `apps/web/worker/router.ts`.** Writes from other sites are refused
   there; add an exemption only for a protocol that requires one, with a test.
 - **Versions are pinned exactly.** Add a dependency with `npm install --save-exact`.
+- **Everything optional stays removable.** What a module or surface adds to shared files sits
+  between `>>> name` and `<<< name` markers and is listed in `scripts/removable.mjs`
+  (`.claude/rules/modules.md`).
+
+## Before you say it is done
+
+`npm run check` passes. For a page people will judge by eye, run the `unslop-ui` skill on it. For a
+feature, ask the `reviewer` agent to read the change in a fresh context, and fix what it finds.
 
 ## Hard rules
 

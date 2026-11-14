@@ -177,6 +177,33 @@ function main() {
     if (!dryRun) writeFileSync(file, `${JSON.stringify(manifest, null, 2)}\n`);
   }
 
+  // 6. Entries in other JSON files, which cannot carry a marker. A key is dropped from an
+  //    object, a value from a list, and an item from a list of objects by its "name".
+  for (const [path, sections] of Object.entries(part.json ?? {})) {
+    const full = inside(ROOT, path);
+    if (!existsSync(full)) continue;
+    const data = JSON.parse(readFileSync(full, "utf8"));
+    let touched = false;
+    for (const [section, keys] of Object.entries(sections)) {
+      const value = data[section];
+      if (Array.isArray(value)) {
+        data[section] = value.filter((item) => !keys.includes(typeof item === "object" && item ? item.name : item));
+        touched ||= data[section].length !== value.length;
+      } else if (value && typeof value === "object") {
+        for (const key of keys) {
+          if (key in value) {
+            delete value[key];
+            touched = true;
+          }
+        }
+      }
+    }
+    if (!touched) continue;
+    changed = true;
+    console.log(`  cut     ${path}`);
+    if (!dryRun) writeFileSync(full, `${JSON.stringify(data, null, 2)}\n`);
+  }
+
   if (!changed) return console.log(`Nothing of ${name} is left in this repository.`);
   if (dryRun) return console.log("\nDry run: nothing was changed.");
 

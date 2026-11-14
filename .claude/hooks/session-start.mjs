@@ -3,7 +3,7 @@
 // What it prints is added to the agent's context, so it stays short.
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
@@ -38,6 +38,17 @@ if (existsSync(at("node_modules")) && !existsSync(at("apps/web/.wrangler/state/v
       : "Local migrations failed: run `npm run db:migrate:local`.",
   );
 }
+
+// Where the product stands: its name and access preset, and whether it has a brief yet.
+try {
+  const config = readFileSync(at("product/product.config.ts"), "utf8");
+  const name = /\bname:\s*"([^"]+)"/.exec(config)?.[1] ?? "unnamed";
+  const preset = /\bpreset:\s*"([^"]+)"/.exec(config)?.[1] ?? "unknown";
+  const brief = existsSync(at("product/brief.md"))
+    ? "The brief is product/brief.md."
+    : "There is no product/brief.md yet: `/start <idea>` writes one.";
+  notes.push(`Product: ${name}, access preset "${preset}". ${brief}`);
+} catch {}
 
 notes.push(
   "Checks: `npm run check` (lint, types, boundaries, Workers-runtime tests). Read AGENTS.md before changing code.",
