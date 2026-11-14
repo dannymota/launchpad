@@ -11,6 +11,10 @@
 // protects every internal prefix (sign-in by emailed one-time code), and one that lets the
 // public prefixes inside a protected one through. Who may sign in is asked once, with --email
 // and --domain; later runs keep the people already allowed unless you name them again.
+//
+// On a workers.dev address Cloudflare accepts an application only once the Worker exists, so
+// the very first deploy sets Access up itself: npm run deploy -- <env> --email you@example.com.
+// Until Access is in place the Worker answers 404 for every internal area, so nothing is exposed.
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { accountOf, CloudflareError, cloudflareApi, hostOf, tokenFrom } from "./lib/cloudflare.mjs";
@@ -134,6 +138,30 @@ export function changes(existing, wanted) {
   return steps;
 }
 
+/** Who may sign in, as typed: trimmed, lowercased, once each. Throws on anything that is not an address or a domain. */
+export function people(emails, domains) {
+  const out = {
+    emails: [...new Set(emails.map((value) => value.trim().toLowerCase()).filter(Boolean))],
+    domains: [...new Set(domains.map((value) => value.trim().toLowerCase().replace(/^@/, "")).filter(Boolean))],
+  };
+  const bad = [
+    ...out.emails.filter((email) => !EMAIL.test(email)),
+    ...out.domains.filter((domain) => !DOMAIN.test(domain)),
+  ];
+  if (bad.length) throw new Error(`Not an email address or a domain: ${bad.join(", ")}`);
+  return out;
+}
+
+/** Makes the changes `changes()` worked out. */
+export async function applySteps(cf, account, steps) {
+  const base = `/accounts/${account}/access/apps`;
+  for (const step of steps) {
+    if (step.action === "create") await cf(base, { method: "POST", body: step.body });
+    else if (step.action === "update") await cf(`${base}/${step.id}`, { method: "PUT", body: step.body });
+    else await cf(`${base}/${step.id}`, { method: "DELETE" });
+  }
+}
+
 export function parseArgs(argv) {
   const out = { command: argv[0], target: undefined, host: undefined, emails: [], domains: [] };
   for (let index = 1; index < argv.length; index++) {
@@ -144,15 +172,19 @@ export function parseArgs(argv) {
     else if (!arg.startsWith("--") && !out.target) out.target = arg;
     else throw new Error(`Unknown option ${arg}. Use --email, --domain or --host.`);
   }
-  out.emails = [...new Set(out.emails.map((value) => value.trim().toLowerCase()).filter(Boolean))];
-  out.domains = [...new Set(out.domains.map((value) => value.trim().toLowerCase().replace(/^@/, "")).filter(Boolean))];
-  const bad = [
-    ...out.emails.filter((email) => !EMAIL.test(email)),
-    ...out.domains.filter((domain) => !DOMAIN.test(domain)),
-  ];
-  if (bad.length) throw new Error(`Not an email address or a domain: ${bad.join(", ")}`);
   if (!["plan", "apply", "check"].includes(out.command)) throw new Error("Say what to do: plan, apply or check.");
-  return out;
+  return { ...out, ...people(out.emails, out.domains) };
+}
+
+/** The --email and --domain values on a command line, wherever they are. */
+export function peopleFrom(argv) {
+  const emails = [];
+  const domains = [];
+  argv.forEach((arg, index) => {
+    if (arg === "--email") emails.push(...String(argv[index + 1] ?? "").split(","));
+    if (arg === "--domain") domains.push(...String(argv[index + 1] ?? "").split(","));
+  });
+  return people(emails, domains);
 }
 
 const NO_ORGANIZATION = [
@@ -242,11 +274,17 @@ async function main(argv) {
   }
   if (options.command === "plan") return console.log("\nPlan only: nothing was changed.");
 
-  const base = `/accounts/${account}/access/apps`;
-  for (const step of state.steps) {
-    if (step.action === "create") await cf(base, { method: "POST", body: step.body });
-    else if (step.action === "update") await cf(`${base}/${step.id}`, { method: "PUT", body: step.body });
-    else await cf(`${base}/${step.id}`, { method: "DELETE" });
+  try {
+    await applySteps(cf, account, state.steps);
+  } catch (error) {
+    // Cloudflare takes an application for a workers.dev address only once that Worker exists.
+    if (error instanceof CloudflareError && error.status === 400 && host.endsWith(".workers.dev")) {
+      console.error(
+        `\nCloudflare refused the application for ${host}. On a workers.dev address the Worker has to exist first.\nDo the first deploy with the people named, and it sets Access up as soon as the Worker is there:\n  npm run deploy -- ${target.name} --email you@example.com`,
+      );
+      process.exit(1);
+    }
+    throw error;
   }
   console.log(
     `\nCloudflare Access now matches the access map. Deploy to hand the Worker its half: npm run deploy -- ${target.name}`,

@@ -1,6 +1,7 @@
 # Deploys staging when main changes. It does nothing until the repository has the secret
-# CLOUDFLARE_API_TOKEN (and CLOUDFLARE_ACCOUNT_ID when the token can see several accounts),
-# and Cloudflare Access has been set up once with `npm run access:apply -- staging`.
+# CLOUDFLARE_API_TOKEN (and CLOUDFLARE_ACCOUNT_ID when the token can see several accounts).
+# The very first deploy must name who may sign in: start this workflow by hand (Run workflow)
+# and fill in "emails". Every push after that deploys by itself.
 # Production is never deployed from here: that is `npm run deploy -- production`, by a person.
 name: deploy-staging
 
@@ -8,6 +9,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      emails:
+        description: "First deploy only: who may sign in through Cloudflare Access (comma-separated)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -45,5 +51,9 @@ jobs:
         if: steps.ready.outputs.go == 'true'
       # Checks the config and Cloudflare Access, runs the full check, builds, applies
       # migrations, deploys, sets secrets, then looks at the result from outside.
-      - run: npm run deploy -- staging
+      - name: Deploy
         if: steps.ready.outputs.go == 'true'
+        env:
+          # Passed through the environment, never pasted into the command.
+          EMAILS: ${{ inputs.emails }}
+        run: npm run deploy -- staging ${EMAILS:+--email "$EMAILS"}

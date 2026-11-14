@@ -321,7 +321,23 @@ describe("deploying", () => {
     expect(deploy.parseArgs(["production", "--confirm", "acme-notes"], "acme-notes")).toMatchObject({
       name: "production",
     });
-    expect(deploy.parseArgs(["staging", "--skip-checks"], "acme-notes")).toEqual({ name: "staging", skipChecks: true });
+    expect(deploy.parseArgs(["staging", "--skip-checks"], "acme-notes")).toEqual({
+      name: "staging",
+      skipChecks: true,
+      emails: [],
+      domains: [],
+    });
+  });
+
+  it("takes the people to let in on a first deploy, and does not mistake them for the target", () => {
+    expect(deploy.parseArgs(["--email", "A@x.com", "staging", "--domain", "corp.example"], "acme-notes")).toMatchObject(
+      {
+        name: "staging",
+        emails: ["a@x.com"],
+        domains: ["corp.example"],
+      },
+    );
+    expect(() => deploy.parseArgs(["staging", "--email", "nonsense"], "acme-notes")).toThrow("Not an email");
   });
 });
 
