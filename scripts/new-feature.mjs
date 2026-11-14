@@ -200,10 +200,12 @@ import { List, ListItem } from "@astryxdesign/core/List";
 import { TextInput } from "@astryxdesign/core/TextInput";
 import { useState } from "react";
 import { browserApi, errorMessage } from "@/lib/api-client";
+import { useEarlyInput } from "@/lib/early-input";
 
 export function ${Single}Rows({ initial }: { initial: ${Single}[] }) {
   const [items, setItems] = useState(initial);
   const [title, setTitle] = useState("");
+  const titleField = useEarlyInput(setTitle);
   const [error, setError] = useState<string | null>(null);
 
   const add = async () => {
@@ -233,7 +235,13 @@ export function ${Single}Rows({ initial }: { initial: ${Single}[] }) {
       {error && <Banner status="error" title={error} />}
       <HStack gap={2} vAlign="end">
         <StackItem size="fill">
-          <TextInput label="New ${single}" value={title} onChange={setTitle} onEnter={() => void add()} />
+          <TextInput
+            ref={titleField}
+            label="New ${single}"
+            value={title}
+            onChange={setTitle}
+            onEnter={() => void add()}
+          />
         </StackItem>
         <Button label="Add" variant="primary" clickAction={add} />
       </HStack>

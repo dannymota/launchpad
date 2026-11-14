@@ -23,6 +23,8 @@ Run every `astryx` command from `apps/web`, as `npx astryx <cmd>`.
 - **Pages are server components.** They get the person with `requireUser()` or `pagePrincipal()` and
   data with `api()`, all from `@/lib/server`. A client component (`"use client"`) calls
   `browserApi()` from `@/lib/api-client`. Never import `@/lib/server` from a client component.
+- **A text field on a server-rendered page takes `useEarlyInput`** (`@/lib/early-input`): it can be
+  typed into before the page's code runs, and without the hook that text never reaches the state.
 - **Where a page lives decides who can open it**: `(site)/` is the public website, `(app)/app/` the
   signed-in product, `(account)/` sign-in and settings, `admin/` and `labs/` internal in every
   preset. Unfinished work goes under `labs/`.

@@ -3,7 +3,7 @@
 // These run against the built Worker (scripts/e2e-server.mjs), not a dev server.
 import { execFileSync } from "node:child_process";
 import path from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 const WEB = path.resolve(import.meta.dirname, "../../apps/web");
 
@@ -52,7 +52,7 @@ test("a person signs in with an emailed code, uses the app, and signs out", asyn
   const email = `e2e-${Date.now()}@example.com`;
   await page.goto("/app");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Email").press("Enter");
+  await page.getByRole("button", { name: "Send code" }).click();
   await expect(page.getByRole("heading", { name: "Enter your code" })).toBeVisible();
 
   await page.getByLabel("Code").fill(mailedCode(email));
@@ -80,7 +80,7 @@ test("a wrong code is refused, and pages carry the security headers", async ({ p
   expect(response?.headers()["x-frame-options"]).toBe("DENY");
 
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Email").press("Enter");
+  await page.getByRole("button", { name: "Send code" }).click();
   await expect(page.getByRole("heading", { name: "Enter your code" })).toBeVisible();
   const real = mailedCode(email);
   await page.getByLabel("Code").fill(real === "000000" ? "111111" : "000000");
@@ -88,4 +88,33 @@ test("a wrong code is refused, and pages carry the security headers", async ({ p
   // The message appears on the field (and is announced to screen readers).
   await expect(page.getByText("That code didn't work").first()).toBeVisible();
   await expect(page).toHaveURL(/\/sign-in/);
+});
+
+// A slow connection: the sign-in form is on screen, and can be typed into, seconds before its
+// scripts arrive. Both tests below hold the scripts back to make that happen every time.
+async function slowScripts(page: Page, ms: number) {
+  await page.route("**/*.js", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, ms));
+    await route.continue();
+  });
+}
+
+test("an address typed before the page has finished loading is still used", async ({ page }) => {
+  await slowScripts(page, 1500);
+  const email = `e2e-early-${Date.now()}@example.com`;
+  await page.goto("/sign-in", { waitUntil: "commit" });
+  await page.getByLabel("Email").fill(email);
+  await page.getByRole("button", { name: "Send code" }).click();
+  await expect(page.getByRole("heading", { name: "Enter your code" })).toBeVisible();
+  await expect(page.getByText(email)).toBeVisible();
+});
+
+test("Enter pressed before the page has finished loading keeps where the person was going", async ({ page }) => {
+  await slowScripts(page, 1500);
+  await page.goto("/sign-in?next=%2Fsettings", { waitUntil: "commit" });
+  await page.getByLabel("Email").fill("too-early@example.com");
+  // The browser submits the form by itself: the page reloads, and must not forget the destination.
+  await page.getByLabel("Email").press("Enter");
+  await expect(page).toHaveURL(/\/sign-in\?next=%2Fsettings$/);
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
 });

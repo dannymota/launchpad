@@ -11,6 +11,7 @@ import { Heading, Text } from "@astryxdesign/core/Text";
 import { TextInput } from "@astryxdesign/core/TextInput";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useEarlyInput } from "@/lib/early-input";
 import { TurnstileWidget } from "./TurnstileWidget";
 
 const CODE_LENGTH = 6;
@@ -31,6 +32,7 @@ export function SignInForm(props: {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
+  const emailField = useEarlyInput(setEmail);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -81,6 +83,8 @@ export function SignInForm(props: {
               void (step === "email" ? sendCode() : signIn());
             }}
           >
+            {/* Enter pressed before this code runs reloads the page (a plain form submit). This keeps the destination. */}
+            <input type="hidden" name="next" value={next} />
             <VStack gap={4} hAlign="stretch">
               <VStack gap={1} hAlign="center">
                 <Heading level={2} accessibilityLevel={1}>
@@ -109,6 +113,7 @@ export function SignInForm(props: {
               ) : (
                 methods.emailCode && (
                   <TextInput
+                    ref={emailField}
                     label="Email"
                     type="email"
                     placeholder="name@example.com"

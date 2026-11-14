@@ -45,6 +45,13 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e
+      # What the browser showed when a test failed.
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: e2e-failures
+          path: test-results/
+          retention-days: 7
 
   # >>> mobile
   mobile:
@@ -59,7 +66,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: apps/mobile/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            apps/mobile/package-lock.json
+      # The shared packages the app imports resolve their own imports from the root install.
+      - run: npm ci
+        working-directory: .
       # The app has its own lockfile, so Expo's version pins never constrain the web app.
       - run: npm ci
       - run: npm run typecheck
