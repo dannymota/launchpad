@@ -32,8 +32,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     APP_ENV: "local",
     BETTER_AUTH_SECRET: randomBytes(36).toString("base64"),
     DEV_PRESET: "public-product",
-    // Set, and empty: nobody is let through in place of Cloudflare Access.
-    DEV_ACCESS_EMAIL: "",
+    // Set, and empty: nobody is let through in place of Cloudflare Access. `npm run shots`
+    // names someone, to take pictures of the internal pages as well.
+    DEV_ACCESS_EMAIL: process.env.PRODUCT_ACCESS_EMAIL ?? "",
   };
   const server = spawn(
     "npx",

@@ -1,8 +1,8 @@
 // Labs: pages still being worked on (Astryx template: blank). Internal in every preset, so
 // work in progress under /labs is never public. Add a page as app/labs/<name>/page.tsx.
 import { Button } from "@astryxdesign/core/Button";
-import { EmptyState } from "@astryxdesign/core/EmptyState";
 import { HStack, Layout, LayoutContent, LayoutHeader, StackItem } from "@astryxdesign/core/Layout";
+import { List, ListItem } from "@astryxdesign/core/List";
 import { Heading } from "@astryxdesign/core/Text";
 import type { Metadata } from "next";
 
@@ -25,11 +25,13 @@ export default function LabsPage() {
       }
       content={
         <LayoutContent padding={6}>
-          <EmptyState
-            headingLevel={2}
-            title="Nothing in the lab yet"
-            description="Pages under /labs stay behind Cloudflare Access, whatever the rest of the product is set to."
-          />
+          <List hasDividers>
+            <ListItem
+              label="The brand"
+              description="The colours, corners and text sizes the theme sets, on real components."
+              href="/labs/brand"
+            />
+          </List>
         </LayoutContent>
       }
     />

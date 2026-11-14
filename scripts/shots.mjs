@@ -93,7 +93,8 @@ async function main(argv) {
     cwd: ROOT,
     stdio: "ignore",
     detached: true,
-    env: { ...process.env, PRODUCT_PORT: String(PORT), PRODUCT_STATE: STATE },
+    // Someone Cloudflare Access would let through, so the internal pages can be pictured too.
+    env: { ...process.env, PRODUCT_PORT: String(PORT), PRODUCT_STATE: STATE, PRODUCT_ACCESS_EMAIL: "dev@example.com" },
   });
   const stop = () => {
     try {
@@ -148,7 +149,7 @@ async function main(argv) {
     await page.getByLabel("Code").press("Enter");
     await page.waitForURL(/\/app$/);
 
-    const signedIn = options.only ? options.paths : ["/app", "/settings", ...options.paths];
+    const signedIn = options.only ? options.paths : ["/app", "/settings", "/labs/brand", ...options.paths];
     for (const path of signedIn) await visit(path);
   } finally {
     await browser.close();
