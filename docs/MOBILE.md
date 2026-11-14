@@ -88,3 +88,106 @@ These cannot be checked without devices and store accounts:
 - Expo UI's SwiftUI and Jetpack Compose controls are installed (`@expo/ui`) but the starter screens
   do not need a switch, picker or sheet yet. Use them when a feature does, in preference to
   rebuilding a native control.
+
+## Screen layouts
+
+The layouts for the app's screens, in the shape `docs/LAYOUTS.md` uses for pages: what each is for,
+its regions in order, and the rules that make it work. Where the two platforms differ, the rule
+says so. Review a screen against them with `/impeccable audit` and `/impeccable critique`.
+
+### Tab shell
+
+The frame of the signed-in app: a few sections of equal rank, each keeping its own place.
+
+**Regions**
+
+1. The root stack: the signed-out screens or the signed-in ones, never both.
+2. Tabs: two to five top-level sections, each with an icon and a one-word label.
+3. A stack inside each tab.
+4. Modals and sheets, above the tabs.
+
+**Rules**
+
+- Tabs navigate and never act. A button that does something belongs on a screen (Apple).
+- Never hide or disable a tab. A section with nothing in it yet says why, and how to fill it
+  (Apple).
+- Each tab keeps its own stack. Choosing the tab you are on returns to its first screen, at the
+  top.
+- The bar differs. iOS: a tab bar at the foot of the screen, which on iPad sits at the top or
+  turns into a sidebar. Android: a navigation bar with three to five destinations, which becomes
+  a rail on a wide screen (Material). `expo-router/native-tabs` draws each platform's own bar and
+  allows at most five tabs on Android.
+- Back differs. iOS: the swipe from the left edge. Android: the system Back gesture or button.
+  Both do what the back arrow does, and neither is ever blocked.
+
+**Sources**:
+[Apple, tab bars](https://developer.apple.com/design/human-interface-guidelines/components/navigation-and-search/tab-bars),
+[Material 3, navigation bar](https://m3.material.io/components/navigation-bar/guidelines),
+[Expo, native tabs](https://docs.expo.dev/router/advanced/native-tabs).
+
+### List, detail, form and settings screens
+
+The four screens most features are made of.
+
+**Regions**
+
+1. List: title, search when the list is long, rows, pull to refresh.
+2. Detail: a pushed screen, with the record's name as its title and its actions in the bar.
+3. Form: a modal or a sheet, with Cancel, the fields and Save.
+4. Settings: groups of rows, each row showing its current value, and a screen of its own for a
+   long group.
+
+**Rules**
+
+- A touch target is at least 44pt on iOS and 48dp on Android.
+- One sheet at a time, and a Done button always has Cancel or Back beside it (Apple).
+- A form's buttons differ. iOS: Cancel at the leading edge of the bar, Done at the trailing edge.
+  Android: a form with several fields is a full-screen dialog, and a single field a plain dialog.
+- A form sheet (`presentation: "formSheet"`) rests at up to three heights on Android and at any
+  number on iOS. On Android it draws no header, so its title and buttons go in its content (Expo).
+- Settings: with fifteen or more, group related ones on a screen of their own. Android's guidance
+  keeps account management and the app's version off the settings screen. `FieldGroup` from
+  `@expo/ui` draws a SwiftUI form on iOS and a Material grouped list on Android from one component.
+- States: every list has three besides ready: loading, empty, and failed with a retry. Pull to
+  refresh keeps the rows on screen while it works.
+
+**Sources**:
+[Apple, sheets](https://developer.apple.com/design/human-interface-guidelines/sheets),
+[Android, settings](https://developer.android.com/design/ui/mobile/guides/patterns/settings),
+[Android, settings guidelines](https://source.android.com/docs/core/settings/settings-guidelines),
+[Expo, modals and form sheets](https://docs.expo.dev/router/advanced/modals/),
+[Expo, FieldGroup](https://docs.expo.dev/versions/latest/sdk/ui/universal/fieldgroup/).
+
+### Onboarding and paywall
+
+The first screens a new person meets, and the screen that sells a subscription.
+
+**Regions**
+
+1. Onboarding: nothing, or up to three screens that can be skipped.
+2. Paywall, in this order: a headline that names the benefit; the plans, with the amount charged
+   as the largest price on the screen; for a trial, its length and the price after it; the
+   purchase button; Restore purchases, with links to the terms and to the privacy policy; a way to
+   close.
+
+**Rules**
+
+- No slideshow of features at first launch: people skip it, and it reads as marketing (NN/g).
+  Teach by letting them do the first task, with tips where they are needed (Apple).
+- The requirements differ. Apple: the screen shows the subscription's name and length, what it
+  gives, the amount charged as the most prominent price, and a way to restore. Google: the cost,
+  the cycle and the renewal terms are visible without a further tap, and the app has a way to
+  manage or cancel the subscription. A shared screen carries both.
+- Where the paywall goes is a product decision. In RevenueCat's 2026 data a hard paywall turns
+  10.7% of downloads into payers by day 35 at the median, against 2.1% for freemium, with about
+  the same retention after a year. 55% of cancellations of a three-day trial come on its first
+  day.
+- States: prices loading, a purchase in progress, a purchase that failed or was cancelled (say
+  which, and that nothing was charged), and a restore that found nothing.
+
+**Sources**:
+[Apple, subscriptions](https://developer.apple.com/app-store/subscriptions/),
+[Apple, onboarding](https://developer.apple.com/design/human-interface-guidelines/patterns/onboarding),
+[Google Play, subscriptions policy](https://support.google.com/googleplay/android-developer/answer/9900533),
+[NN/g, onboarding](https://www.nngroup.com/articles/mobile-app-onboarding/),
+[RevenueCat, State of Subscription Apps](https://www.revenuecat.com/state-of-subscription-apps).
