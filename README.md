@@ -81,7 +81,12 @@ the local `email_outbox` table instead of being sent.
 npm run check
 ```
 
-Lint, types, the repository's own rules, and the tests that run on the Workers runtime.
+Lint, types, unused code, the repository's own rules, and the tests that run on the Workers
+runtime. To drive the built product in a real browser as well (a stranger, a sign-in, a sign-out):
+
+```bash
+npm run e2e
+```
 
 ## What you still supply
 
