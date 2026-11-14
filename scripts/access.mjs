@@ -15,6 +15,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { accountOf, CloudflareError, cloudflareApi, hostOf, tokenFrom } from "./lib/cloudflare.mjs";
 import { loadProduct, targetOf } from "./lib/product.mjs";
+import { throughProxy } from "./lib/proxy.mjs";
 
 const EMAIL = /^[^\s@,]+@[^\s@,]+\.[^\s@,]+$/;
 const DOMAIN = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
@@ -117,12 +118,15 @@ export function ours(apps, product, host) {
   };
 }
 
+/** Which of the two applications one is. Only the protect application names a sign-in method. */
+const kindOf = (app) => ("allowed_idps" in app ? "protect" : "bypass");
+
 /** What to create, update and delete so the account holds exactly the wanted applications. */
 export function changes(existing, wanted) {
   const steps = [];
   for (const kind of ["protect", "bypass"]) {
     const have = existing[kind];
-    const want = wanted.find((app) => app.policies[0].decision === (kind === "protect" ? "allow" : "bypass")) ?? null;
+    const want = wanted.find((app) => kindOf(app) === kind) ?? null;
     if (want && !have) steps.push({ action: "create", kind, body: want });
     else if (want && have && differs(have, want)) steps.push({ action: "update", kind, id: have.id, body: want });
     else if (!want && have) steps.push({ action: "delete", kind, id: have.id });
@@ -250,6 +254,7 @@ async function main(argv) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  throughProxy();
   main(process.argv.slice(2)).catch((error) => {
     console.error(error.message);
     process.exit(1);

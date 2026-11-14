@@ -23,6 +23,7 @@ import { inspect } from "./access.mjs";
 import { plan } from "./config.mjs";
 import { accountOf, cloudflareApi, hostOf, tokenFrom, wrangler } from "./lib/cloudflare.mjs";
 import { loadProduct, ROOT, targetOf } from "./lib/product.mjs";
+import { throughProxy } from "./lib/proxy.mjs";
 import { applySecrets } from "./setup.mjs";
 import { smoke } from "./smoke.mjs";
 
@@ -120,6 +121,7 @@ async function main(argv) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  throughProxy();
   main(process.argv.slice(2)).catch((error) => {
     console.error(`\n${error.message}`);
     process.exit(1);

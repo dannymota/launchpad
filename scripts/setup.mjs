@@ -13,6 +13,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { accountOf, cloudflareApi, tokenFrom, wrangler } from "./lib/cloudflare.mjs";
 import { loadProduct, targetOf } from "./lib/product.mjs";
+import { throughProxy } from "./lib/proxy.mjs";
 
 /** Each setting a deployed Worker can be given, and what it turns on. */
 export const SETTINGS = [
@@ -102,6 +103,7 @@ async function main(argv) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  throughProxy();
   main(process.argv.slice(2)).catch((error) => {
     console.error(error.message);
     process.exit(1);

@@ -8,6 +8,7 @@
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadProduct, targetOf } from "./lib/product.mjs";
+import { throughProxy } from "./lib/proxy.mjs";
 
 /** One path to try in each area, and what a public area answers to a stranger. */
 export const PROBES = {
@@ -92,6 +93,7 @@ async function main(argv) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  throughProxy();
   main(process.argv.slice(2)).catch((error) => {
     console.error(error.message);
     process.exit(1);

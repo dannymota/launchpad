@@ -14,6 +14,7 @@ const files = {
   setup: "../scripts/setup.mjs",
   smoke: "../scripts/smoke.mjs",
   deploy: "../scripts/deploy.mjs",
+  proxy: "../scripts/lib/proxy.mjs",
 };
 // biome-ignore lint/suspicious/noExplicitAny: the scripts are plain JavaScript.
 type Any = any;
@@ -22,6 +23,7 @@ const access = (await import(files.access)) as Any;
 const setup = (await import(files.setup)) as Any;
 const smoke = (await import(files.smoke)) as Any;
 const deploy = (await import(files.deploy)) as Any;
+const proxy = (await import(files.proxy)) as Any;
 
 const product = (overrides: Partial<Parameters<typeof defineProduct>[0]> = {}): Product =>
   defineProduct({
@@ -161,6 +163,38 @@ describe("Access applications from the access map", () => {
     ).toEqual([{ name: "n", decision: "allow", include: [{ everyone: {} }] }]);
   });
 
+  it("reads an account with nothing set up yet, and says nobody is allowed in", async () => {
+    const item = product();
+    const cf = async (path: string) => {
+      if (path.endsWith("/organizations")) return { auth_domain: "team.cloudflareaccess.com" };
+      if (path.endsWith("/identity_providers")) return [{ id: "idp-1", type: "onetimepin" }];
+      if (path.endsWith("/apps")) return [];
+      throw new Error(`unexpected call: ${path}`);
+    };
+    const state = await access.inspect({ cf, account: "acc", product: item, rules: edgePlan(item.areas), host: HOST });
+    expect(state.organization).toBe("team.cloudflareaccess.com");
+    expect(state.needsPeople).toBe(true);
+    expect(state.steps.map((step: Any) => `${step.action} ${step.kind}`)).toEqual(["create protect"]);
+    // Once someone is named, the application to create carries them.
+    const named = await access.inspect({
+      cf,
+      account: "acc",
+      product: item,
+      rules: edgePlan(item.areas),
+      host: HOST,
+      emails: ["owner@example.com"],
+    });
+    expect(named.needsPeople).toBe(false);
+    expect(named.steps[0].body.policies[0].include).toEqual([{ email: { email: "owner@example.com" } }]);
+  });
+
+  it("says so when the account has no Zero Trust organization", async () => {
+    const item = product();
+    const cf = async () => ({ auth_domain: undefined });
+    const state = await access.inspect({ cf, account: "acc", product: item, rules: edgePlan(item.areas), host: HOST });
+    expect(state.organization).toBeNull();
+  });
+
   it("finds this product's applications by name and host, and no one else's", () => {
     const label = access.names(product());
     const all = [
@@ -269,5 +303,18 @@ describe("deploying", () => {
       name: "production",
     });
     expect(deploy.parseArgs(["staging", "--skip-checks"], "acme-notes")).toEqual({ name: "staging", skipChecks: true });
+  });
+});
+
+describe("running behind a proxy", () => {
+  it("starts again with the proxy honoured, once", () => {
+    expect(proxy.needsProxyRerun({ HTTPS_PROXY: "http://127.0.0.1:3128" })).toBe(true);
+    expect(proxy.needsProxyRerun({ https_proxy: "http://127.0.0.1:3128" })).toBe(true);
+    // Already told: no second start, so it cannot loop.
+    expect(proxy.needsProxyRerun({ HTTPS_PROXY: "http://127.0.0.1:3128", NODE_USE_ENV_PROXY: "1" })).toBe(false);
+  });
+
+  it("leaves a direct connection alone", () => {
+    expect(proxy.needsProxyRerun({})).toBe(false);
   });
 });
