@@ -20,9 +20,14 @@
       "!packages/theme/src/palette.ts",
       "!packages/theme/src/palette.receipt.json",
       "!packages/theme/src/generated",
+      "!DESIGN.md",
+      "!PRODUCT.md",
+      "!apps/mobile/PRODUCT.md",
       "!.claude/skills/appllama-app-design-skill",
       "!.claude/skills/appllama-usage",
       "!.claude/skills/unslop-ui",
+      "!.claude/skills/impeccable",
+      "!.impeccable",
       "!.claude/**/*.md"
     ]
   },

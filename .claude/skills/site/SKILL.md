@@ -43,5 +43,13 @@ npm run build
 npm run doctor -w @app/web
 ```
 
-Run the `unslop-ui` skill on the landing page at 1440 and 390 wide, fix what it grades above "no
-slop", and open every link on every page once. Then `npm run check`.
+Add each new page to the first test in `tests/e2e/design.spec.ts`, then:
+
+```bash
+npm run e2e
+```
+
+Then two reviews of the landing page, in this order: `/impeccable critique` on it (fix what it
+ranks first, and `/impeccable clarify` any copy it calls vague), and the `unslop-ui` skill at 1440
+and 390 wide as an independent second look. Fix what that grades above "no slop", and open every
+link on every page once. Then `npm run check`.

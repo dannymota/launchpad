@@ -16,7 +16,8 @@ quietly in this step.
 | Config | `npm run config:check` | Worker and listing names match the config |
 | Code | `npm run check` | Lint, types, repo rules, runtime tests |
 | Build | `npm run build`, then `npm run doctor -w @app/web` | The bundle and the pages |
-| Brand | `npm run theme:check` | Generated theme files are current; contrast tests ran in `check` |
+| Brand | `npm run theme:check`, `npm run design:context -- --check` | Generated theme and design files are current; contrast tests ran in `check` |
+| Browser | `npm run e2e` | A stranger, a sign-in, a sign-out, and the design detector on every main page |
 | Listings | `npm run check:listing` | Store fields, when there is an app |
 | Edge | `npm run access:check -- staging` | Cloudflare Access matches the access map |
 | Live | `npm run smoke -- staging` | Each area answers a stranger the way the map says |

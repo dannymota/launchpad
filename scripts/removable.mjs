@@ -37,6 +37,7 @@ export const PARTS = {
     dropLines: {
       ".claude/skills/VENDORED.md": ["ppllama"],
       "AGENTS.md": ["apps/mobile "],
+      ".claude/rules/design.md": ["apps/mobile"],
       "README.md": ["docs/MOBILE.md", "`/listing`"],
       ".github/workflows/removal.yml": ["          - mobile"],
     },

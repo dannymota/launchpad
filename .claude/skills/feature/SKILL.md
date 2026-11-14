@@ -27,8 +27,10 @@ npm run new:feature -- note
      Rules that can fail throw `UserError` with a message the person can act on.
    - **Tests** (`apps/web/tests/<plural>.workers.test.ts`): one for each rule, including what must be
      refused: signed out, someone else's record, bad input.
-   - **Page** (`apps/web/app/(app)/app/<plural>/`): start from `npx astryx build "<what the page is for>"`
-     and keep the template's frame. Rows for dense data, not cards.
+   - **Page** (`apps/web/app/(app)/app/<plural>/`): when the screen is more than a list, agree it
+     first with `/impeccable shape <feature>` (a plan, no code). Then start from
+     `npx astryx build "<what the page is for>"` and keep the template's frame. Rows for dense
+     data, not cards. Finish with `/impeccable harden <page>`: empty, loading, error, long text.
    - **Screen** (`apps/mobile/src/app/(app)/<plural>.tsx`), if there is an app: follow
      `.claude/rules/mobile.md`; give the tab a title and icon in `_layout.tsx`.
 4. If assistants should use it, list its procedures in `apps/mcp/servers/main/scopes.ts` with a
@@ -45,6 +47,12 @@ npm run db:migrate:local
 npm run check
 ```
 
-Then build and run the Worker (`npm run build`, `npm start -w @app/web`) and use the feature in a
-browser as a signed-in person: add, see, remove, and try an empty input. Ask the `reviewer` agent to
+```bash
+npm run e2e
+```
+
+The last one drives the product in a browser and runs the design detector on every page, the new
+one included (the scaffold added it to `tests/e2e/design.spec.ts`). Then run the Worker
+(`npm start -w @app/web`) and use the feature as a signed-in person: add, see, remove, and try an
+empty input. Ask the `reviewer` agent to
 read the change, fix what it finds, and only then report: what works, what you checked, what is left.

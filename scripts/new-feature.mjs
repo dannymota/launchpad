@@ -246,7 +246,7 @@ export function ${Single}Rows({ initial }: { initial: ${Single}[] }) {
         <Button label="Add" variant="primary" clickAction={add} />
       </HStack>
       {items.length === 0 ? (
-        <EmptyState title="No ${plural} yet" description="Add the first one above." />
+        <EmptyState headingLevel={2} title="No ${plural} yet" description="Add the first one above." />
       ) : (
         <List hasDividers>
           {items.map((item) => (
@@ -380,7 +380,14 @@ export function insertions({ single, plural, Single, Plural }) {
     }),
   },
 `;
+  const designCheck = `  await page.goto("/app/${plural}");
+  await expect(page.getByRole("heading", { name: "${Plural}", exact: true })).toBeVisible();
+  await expectClean(page, "${Plural}");
+
+`;
   return [
+    // The design detector looks at the new page too (skipped when the product dropped that test).
+    ["tests/e2e/design.spec.ts", `  ${ANCHOR}`, designCheck],
     ["packages/shared/src/contract/index.ts", `  ${ANCHOR}`, contract],
     [
       "packages/shared/src/contract/index.ts",
@@ -411,7 +418,7 @@ function main(argv) {
   const created = files(feature);
   const taken = Object.keys(created).filter((file) => existsSync(join(ROOT, file)));
   if (taken.length) throw new Error(`These exist already, so nothing was written: ${taken.join(", ")}`);
-  const edits = insertions(feature);
+  const edits = insertions(feature).filter(([file]) => existsSync(join(ROOT, file)));
   for (const [file, find] of edits) {
     if (!readFileSync(join(ROOT, file), "utf8").includes(find))
       throw new Error(`${file} has lost the line new features are added at:\n  ${find.trim()}`);

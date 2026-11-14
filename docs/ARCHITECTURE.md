@@ -107,6 +107,22 @@ typeface. `npm run theme` builds the Astryx theme for the web from it, then writ
 as plain numbers (`src/generated/tokens.ts`) for the mobile app and the contrast tests. A page or a
 screen never sets a colour.
 
+## Design review
+
+The `impeccable` skill (copied in, `.claude/skills/VENDORED.md`) plans and reviews screens. It is
+told what the product and its look are by two generated files, so there is no second copy to keep:
+
+| File                                   | Written from                                    | By                       |
+| -------------------------------------- | ----------------------------------------------- | ------------------------ |
+| `DESIGN.md`                            | `packages/theme/src/brand.ts`, the built theme  | `npm run theme`          |
+| `PRODUCT.md`, `apps/mobile/PRODUCT.md` | `product/brief.md`, `product/product.config.ts` | `npm run design:context` |
+
+`DESIGN.md` carries the brand's values and the template's rules for using them (components only,
+no literal colour, one accent), which is what keeps a design pass inside the component library.
+The skill's detector then holds pages to it in two places: after each edit to a page (a hook in
+`.claude/settings.json`), and in `tests/e2e/design.spec.ts`, which reads every main page as a
+browser draws it, at desktop and phone width, signed out and signed in.
+
 ## What is deliberately not here
 
 Teams and organisations, queues, file uploads, realtime, push notifications, in-app purchases,

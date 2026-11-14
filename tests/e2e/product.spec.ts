@@ -1,34 +1,8 @@
 // The product in a real browser, as it is after launch: a stranger sees the public pages and
 // nothing internal; a person signs in with an emailed code, reaches the app, and signs out.
 // These run against the built Worker (scripts/e2e-server.mjs), not a dev server.
-import { execFileSync } from "node:child_process";
-import path from "node:path";
 import { expect, type Page, test } from "@playwright/test";
-
-const WEB = path.resolve(import.meta.dirname, "../../apps/web");
-
-/** The newest sign-in code mailed to `email`, read from the local outbox. */
-function mailedCode(email: string): string {
-  const out = execFileSync(
-    "npx",
-    [
-      "wrangler",
-      "d1",
-      "execute",
-      "DB",
-      "--local",
-      "--persist-to",
-      ".wrangler/e2e",
-      "--json",
-      "--command",
-      `select subject from email_outbox where recipient = '${email}' order by id desc limit 1`,
-    ],
-    { cwd: WEB, encoding: "utf8", env: { ...process.env, CI: "1" } },
-  );
-  const code = /\d{6}/.exec(out.slice(out.indexOf("[")))?.[0];
-  if (!code) throw new Error(`No sign-in code was mailed to ${email}.`);
-  return code;
-}
+import { mailedCode } from "./outbox";
 
 test("a stranger sees the site, and nothing internal", async ({ page, request }) => {
   // >>> site

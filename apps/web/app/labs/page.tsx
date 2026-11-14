@@ -26,6 +26,7 @@ export default function LabsPage() {
       content={
         <LayoutContent padding={6}>
           <EmptyState
+            headingLevel={2}
             title="Nothing in the lab yet"
             description="Pages under /labs stay behind Cloudflare Access, whatever the rest of the product is set to."
           />

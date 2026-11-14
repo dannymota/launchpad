@@ -37,12 +37,15 @@ Then show the whole brief as a short summary and ask "go?". One confirmation, no
 - `product/brief.md` with these sections, each filled in: `# <Name>`, then `## What it is`,
   `## Who it is for`, `## The main thing people do`, `## What it is not`, `## Surfaces`,
   `## Access`, `## Plans`, `## Voice` (three plain words and two example sentences in that voice),
-  `## Legal`, `## Open questions`.
+  `## Legal`, `## Open questions`. If the owner gave real proof (customers, numbers, a quote), add
+  `## Proof` with exactly that. Never invent any.
 - `product/product.config.ts`: name, slug, tagline, access preset, sign-in methods, plans, and the
   mobile bundle id (`com.<entity>.<slug>`). Leave `domains` empty unless the owner has them.
 - Remove what the product does not have, one at a time: `npm run remove -- <mobile|mcp|site|payments|ai|analytics>`.
   Each removal is permanent; do it only for a clear "no" in the brief.
 - `npm run config:apply`, so the Worker, the database and the listings carry the new name.
+- `npm run design:context`, which writes `PRODUCT.md` (and the app's) from the brief. The design
+  skill reads those before it touches a screen. Do not write them by hand or run `/impeccable init`.
 
 ## 4. Gate
 

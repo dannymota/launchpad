@@ -13,6 +13,12 @@ const { accent } = palette;
 export type Pair = readonly [light: string, dark: string];
 
 export const brand = {
+  /**
+   * The look in a sentence or two, for people and for the design skill: it opens DESIGN.md.
+   * Say what it is, not what it avoids.
+   */
+  character:
+    "Plain and exact: neutral surfaces, one blue accent, soft corners. It reads as a working tool, and the content is the loudest thing on the page.",
   color: {
     /** Buttons, links, the focus ring: the one colour that says "this product". */
     accent: [accent.light[45], accent.dark[70]] as Pair,

@@ -42,7 +42,13 @@ export function UsersTable({ initial, initialNext }: { initial: AdminUser[]; ini
     });
 
   if (users.length === 0) {
-    return <EmptyState title="No accounts yet" description="People appear here the first time they sign in." />;
+    return (
+      <EmptyState
+        headingLevel={2}
+        title="No accounts yet"
+        description="People appear here the first time they sign in."
+      />
+    );
   }
 
   return (

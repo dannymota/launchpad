@@ -3,8 +3,8 @@
 // What it prints is added to the agent's context, so it stays short.
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 
 const root = process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
 const at = (path) => resolve(root, path);
@@ -16,6 +16,28 @@ if (!existsSync(at("node_modules"))) {
   const install = run("npm", ["ci", "--no-audit", "--no-fund"]);
   notes.push(install.status === 0 ? "Installed dependencies." : `npm ci failed: ${install.stderr.trim().slice(-400)}`);
 }
+
+// Impeccable (the design skill) looks for its engine next to its launcher before it downloads
+// one. Point that place at the copy npm installed, which the lockfile pins: nothing is
+// downloaded, and the design check after each edit works with no network access.
+function linkDesignEngine() {
+  const os = { darwin: "darwin", linux: "linux", win32: "windows" }[process.platform];
+  const arch = { arm64: "arm64", x64: "x64" }[process.arch];
+  const exe = os === "windows" ? "impeccable.exe" : "impeccable";
+  const engine = at(`node_modules/@impeccable/cli-${os}-${arch}/bin/${exe}`);
+  const scripts = at(".claude/skills/impeccable/scripts");
+  if (!existsSync(engine) || !existsSync(scripts)) return;
+  const link = join(scripts, "bin", `${os}-${arch}`, exe);
+  try {
+    if (existsSync(link) && realpathSync(link) === realpathSync(engine)) return;
+    mkdirSync(dirname(link), { recursive: true });
+    rmSync(link, { force: true });
+    symlinkSync(relative(dirname(link), engine), link);
+  } catch {
+    // No symlinks here (some Windows setups): the launcher then fetches its own checked copy.
+  }
+}
+linkDesignEngine();
 
 // Local-only settings, never committed: a random signing secret, and who to be in place of
 // Cloudflare Access, which does not exist on a developer machine.

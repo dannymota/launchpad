@@ -39,20 +39,20 @@ export const RADIUS_ROLES = {
 };
 
 /** A token's value with every var() followed to its end. */
-function resolved(tokens, name, depth = 0) {
+export function tokenValue(tokens, name, depth = 0) {
   const value = tokens[name];
   if (typeof value !== "string") throw new Error(`The built theme has no ${name} token.`);
   const reference = /^var\((--[\w-]+)\)$/.exec(value.trim());
   if (!reference) return value.trim();
   if (depth > 8) throw new Error(`${name} refers to itself.`);
-  return resolved(tokens, reference[1], depth + 1);
+  return tokenValue(tokens, reference[1], depth + 1);
 }
 
 const HEX = /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 
 /** "light-dark(#fff, #000)" → ["#fff", "#000"]; a single colour is used for both. */
 function colorPair(tokens, name) {
-  const value = resolved(tokens, name);
+  const value = tokenValue(tokens, name);
   const match = /^light-dark\(\s*([^,]+?)\s*,\s*([^,]+?)\s*\)$/.exec(value);
   const pair = match ? [match[1], match[2]] : [value, value];
   for (const color of pair) {
@@ -62,7 +62,7 @@ function colorPair(tokens, name) {
 }
 
 function pixels(tokens, name) {
-  const value = resolved(tokens, name);
+  const value = tokenValue(tokens, name);
   const match = /^(-?\d*\.?\d+)(rem|px)$/.exec(value);
   if (!match) throw new Error(`${name} is "${value}": the native theme needs a rem or px length.`);
   return Math.round(Number(match[1]) * (match[2] === "rem" ? 16 : 1) * 100) / 100;

@@ -19,7 +19,10 @@ function Section({ title, about, children }: { title: string; about: string; chi
   return (
     <Grid columns={{ minWidth: 320 }} gap={10}>
       <VStack gap={1}>
-        <Heading level={3}>{title}</Heading>
+        {/* Sized as a third-level heading; in the page's outline it comes right under "Settings". */}
+        <Heading level={3} accessibilityLevel={2}>
+          {title}
+        </Heading>
         <Text type="supporting" color="secondary">
           {about}
         </Text>

@@ -29,4 +29,5 @@ Run every `astryx` command from `apps/web`, as `npx astryx <cmd>`.
   signed-in product, `(account)/` sign-in and settings, `admin/` and `labs/` internal in every
   preset. Unfinished work goes under `labs/`.
 - **Before you finish**: `npm run doctor -w @app/web` on a built app, then `npm run check`. For a
-  screen people will judge by eye, run the `unslop-ui` skill on it.
+  screen people will judge by eye: `/impeccable polish <page>`, then the `unslop-ui` skill as a
+  second, independent look. `.claude/rules/design.md` says how Impeccable is fitted here.

@@ -1,5 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "IMPECCABLE_LIVE_COPY_AGENT": "chat"
+  },
   "hooks": {
     "SessionStart": [
       {
@@ -36,6 +39,17 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -f \"${CLAUDE_PROJECT_DIR}/.claude/skills/impeccable/scripts/impeccable\" ] || \"${CLAUDE_PROJECT_DIR}/.claude/skills/impeccable/scripts/impeccable\" hook",
+            "timeout": 5,
+            "statusMessage": "Checking UI changes"
+          }
+        ]
       }
     ],
     "Stop": [
@@ -46,6 +60,16 @@
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-check.mjs\"",
             "timeout": 120,
             "statusMessage": "Checking types and boundaries"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -f \"${CLAUDE_PROJECT_DIR}/.claude/skills/impeccable/scripts/impeccable\" ] || \"${CLAUDE_PROJECT_DIR}/.claude/skills/impeccable/scripts/impeccable\" hook",
+            "timeout": 30,
+            "statusMessage": "Design deep pass"
           }
         ]
       }
@@ -60,6 +84,11 @@
       "Bash(npx vitest *)",
       "Bash(npx tsc *)",
       "Bash(npx astryx *)",
+      "Bash(npx impeccable detect *)",
+      "Bash(.claude/skills/impeccable/scripts/impeccable context*)",
+      "Bash(.claude/skills/impeccable/scripts/impeccable detect *)",
+      "Bash(.claude/skills/impeccable/scripts/impeccable signals*)",
+      "Bash(.claude/skills/impeccable/scripts/impeccable hooks status*)",
       "Bash(npx wrangler dev *)",
       "Bash(npx wrangler types*)",
       "Bash(npx wrangler d1 migrations apply DB --local*)",
@@ -69,6 +98,7 @@
       "Bash(node scripts/check-removal.mjs *)",
       "Bash(node scripts/oauth-test.mjs*)",
       "Bash(node scripts/build-tokens.mjs*)",
+      "Bash(node scripts/design-context.mjs*)",
       "Bash(git status*)",
       "Bash(git diff*)",
       "Bash(git log*)"
@@ -78,7 +108,15 @@
       "Bash(npm run setup*)",
       "Bash(npm run access:apply*)",
       "Bash(npm run remove*)",
-      "Bash(npm run teardown*)"
+      "Bash(npm run teardown*)",
+      "Bash(npx impeccable install*)",
+      "Bash(.claude/skills/impeccable/scripts/impeccable install*)",
+      "Bash(npx impeccable update*)",
+      "Bash(.claude/skills/impeccable/scripts/impeccable update*)",
+      "Bash(npx impeccable login*)",
+      "Bash(.claude/skills/impeccable/scripts/impeccable login*)",
+      "Bash(npx impeccable live*)",
+      "Bash(.claude/skills/impeccable/scripts/impeccable live*)"
     ],
     "deny": ["Read(./apps/web/.dev.vars)", "Read(./**/.env)", "Read(./**/.env.*)"]
   },

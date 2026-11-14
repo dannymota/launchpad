@@ -12,10 +12,11 @@ with optional surfaces (a mobile app, MCP servers) and modules beside it. Copy i
 | `npm run check`                              | Lint, typecheck, boundary test, Workers-runtime tests. Run before finishing. |
 | `npm run format`                             | Biome: format and fix                                                        |
 | `npm run theme`                              | Rebuild the web theme and the generated values after editing the brand       |
+| `npm run design:context`                     | Write PRODUCT.md and DESIGN.md, which the design skill reads, from the brief |
 | `npm run db:generate`                        | Turn schema changes into a migration (drizzle-kit)                           |
 | `npm run db:migrate:local`                   | Apply migrations to the local database                                       |
 | `npm run build` then `npm start -w @app/web` | Build, then run the built Worker on port 8787                                |
-| `npm run e2e`                                | Build, then drive the product in a browser: stranger, sign-in, sign-out      |
+| `npm run e2e`                                | Build, then drive it in a browser: stranger, sign-in, the design detector    |
 | `npm run mcp:test`                           | End-to-end OAuth and MCP check against the running local Worker              |
 | `npm run remove -- <part>`                   | Take out a surface or module for good. `npm run remove` lists them           |
 | `node scripts/check-removal.mjs <part>`      | Prove a part still removes cleanly: on a copy, then full check and build     |
@@ -72,7 +73,9 @@ scripts/ tests/ docs/
   by Better Auth: `npx auth@1.7.23 generate --config ./auth.cli.ts --output ./src/db/schema/auth.ts`.
 - **The look is decided in one place**: `packages/theme/src/brand.ts`. Never set a colour or radius in
   a page or a screen. `packages/theme/src/generated` and the files under `apps/web/src/themes/brand`
-  other than `brandTheme.ts` are built by `npm run theme`; do not edit them.
+  other than `brandTheme.ts` are built by `npm run theme`; do not edit them. `DESIGN.md` and
+  `PRODUCT.md` are generated too (`npm run design:context`): they tell the `impeccable` design skill
+  what the product and its look are.
 - **Web UI is Astryx.** Start pages from `npx astryx template`, read props with `npx astryx component
   <Name>`. No `<div>`, no `style={{}}`, no raw hex or px. Run these from `apps/web`.
 - **New request paths go through `apps/web/worker/router.ts`.** Writes from other sites are refused
@@ -90,8 +93,10 @@ says what the product is; read it before building anything, and do not build wha
 
 ## Before you say it is done
 
-`npm run check` passes. For a page people will judge by eye, run the `unslop-ui` skill on it. For a
-feature, ask the `reviewer` agent to read the change in a fresh context, and fix what it finds.
+`npm run check` passes. For a page or screen people will judge by eye: `/impeccable polish` it,
+`npm run e2e` (which runs the design detector on the pages), then the `unslop-ui` skill as a second
+look. For a feature, ask the `reviewer` agent to read the change in a fresh context, and fix what
+it finds.
 
 ## Hard rules
 

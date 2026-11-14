@@ -22,8 +22,9 @@ that file and one seed colour; everything else is generated.
 npm run palette -w @app/theme
 ```
 
-3. Edit `packages/theme/src/brand.ts`: the colour pairs (each is `[light, dark]`), radii and font.
-4. Rebuild:
+3. Edit `packages/theme/src/brand.ts`: the colour pairs (each is `[light, dark]`), radii and font,
+   and `character`: the look in a sentence or two, said as what it is. It opens `DESIGN.md`.
+4. Rebuild. This also rewrites `DESIGN.md`, which the design skill and its detector hold pages to:
 
 ```bash
 npm run theme
@@ -34,6 +35,9 @@ npm run theme
    logo with shapes and call it done.
 
 ## Gate
+
+Stage the brand and what it generated first (`git add packages/theme apps/web/src/themes DESIGN.md`):
+the check rebuilds, and fails if rebuilding changes anything.
 
 ```bash
 npm run theme:check
