@@ -16,6 +16,3 @@ registerModule(analytics);
 // >>> payments
 registerModule(payments);
 // <<< payments
-
-/** Imported for its effect: registering the modules above. */
-export const MODULES_REGISTERED = true;

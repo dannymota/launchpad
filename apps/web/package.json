@@ -22,7 +22,6 @@
     "@astryxdesign/theme-neutral": "0.7.15",
     "@better-auth/stripe": "1.7.23",
     "@stylexjs/stylex": "0.19.2",
-    "@vinext/cloudflare": "1.3.4",
     "better-auth": "1.7.23",
     "posthog-js": "1.449.1",
     "react": "19.3.1",

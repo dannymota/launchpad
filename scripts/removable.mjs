@@ -84,6 +84,7 @@ export default function RootPage() {
     packageJson: {
       ".": { workspaces: ["apps/mcp"], scripts: ["mcp:test"] },
       "apps/web": { dependencies: ["@app/mcp"] },
+      "packages/backend": { dependencies: ["@cloudflare/workers-oauth-provider"] },
     },
     dropLines: {
       "AGENTS.md": ["apps/mcp", "mcp:test"],

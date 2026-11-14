@@ -24,7 +24,10 @@ export function rememberCookieChoice(allowed: boolean): void {
   }
 }
 
-/** Records a product event, e.g. track("report_exported", { format: "csv" }). */
+/**
+ * Records a product event, e.g. track("report_exported", { format: "csv" }).
+ * @public The template does not call it; a product does.
+ */
 export function track(event: string, properties?: Record<string, unknown>): void {
   void import("posthog-js").then(({ default: posthog }) => {
     if (posthog.__loaded) posthog.capture(event, properties);

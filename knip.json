@@ -1,0 +1,42 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.mjs", "tests/*.test.ts", ".claude/hooks/*.mjs"],
+      "project": ["scripts/**/*.mjs", "tests/**/*.ts", ".claude/hooks/*.mjs"]
+    },
+    "apps/web": {
+      "entry": [
+        "app/**/{page,layout,route,sitemap,robots}.{ts,tsx}",
+        "tests/*.ts",
+        "next.config.ts",
+        "src/themes/brand/brandTheme.ts",
+        "astryx-themes.ts"
+      ],
+      "project": ["**/*.{ts,tsx}"],
+      "vitest": false,
+      "ignoreDependencies": ["next", "tailwindcss"]
+    },
+    "apps/mcp": {
+      "project": ["**/*.ts"]
+    },
+    "packages/backend": {
+      "entry": ["auth.cli.ts", "tests/*.test.ts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "packages/shared": {
+      "entry": ["tests/*.test.ts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "packages/theme": {
+      "entry": ["tests/*.test.ts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts"],
+      "ignore": ["src/palette.ts"],
+      "ignoreBinaries": ["astryx"]
+    },
+    "product": {
+      "project": ["*.ts"]
+    }
+  },
+  "ignoreExportsUsedInFile": true
+}
