@@ -134,13 +134,22 @@ describe("request size", () => {
 
 describe("the edge rate limit", () => {
   it("stops one client hammering the API, and only that client", async () => {
-    const heavy = new Browser();
-    const statuses: number[] = [];
-    for (let i = 0; i < 320; i++) {
-      const response = await heavy.fetch("/api/ping");
-      statuses.push(response.status);
-      await response.body?.cancel();
-    }
+    const burst = async () => {
+      const heavy = new Browser();
+      const statuses: number[] = [];
+      for (let i = 0; i < 320; i++) {
+        const response = await heavy.fetch("/api/ping");
+        statuses.push(response.status);
+        await response.body?.cancel();
+      }
+      return statuses;
+    };
+    // The limit counts within a minute of the clock. A burst that starts just before the
+    // minute turns is split across two counts and is never refused, so that one is run again.
+    const minute = () => Math.floor(Date.now() / 60_000);
+    const before = minute();
+    let statuses = await burst();
+    if (minute() !== before) statuses = await burst();
     expect(statuses.slice(0, 250).every((status) => status === 200)).toBe(true);
     expect(statuses.at(-1)).toBe(429);
     expect((await new Browser().fetch("/api/ping")).status).toBe(200);

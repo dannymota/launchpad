@@ -29,6 +29,10 @@ Run every `astryx` command from `apps/web`, as `npx astryx <cmd>`.
   `(account)/` sign-in and settings, `admin/` and `labs/` internal in every preset.
   `(site)/` is the public website.
   Unfinished work goes under `labs/`.
-- **Before you finish**: `npm run doctor -w @app/web` on a built app, then `npm run check`. For a
-  screen people will judge by eye: `/impeccable polish <page>`, then the `unslop-ui` skill as a
-  second, independent look. `.claude/rules/design.md` says how Impeccable is fitted here.
+- **Headings**: the page title is `Heading level={1}`. A section under it is
+  `Heading level={3} accessibilityLevel={2}`: it reads as a second-level heading and is sized as a
+  section title. A bare `level={2}` is a size the type scale does not use beside body text, and the
+  design detector reports the page as flat. An `EmptyState` right under the title takes
+  `headingLevel={2}`.
+- **Before you finish**: `npm run doctor -w @app/web` on a built app, then the list in `AGENTS.md`
+  ("Before you say it is done"). `.claude/rules/design.md` says how Impeccable is fitted here.

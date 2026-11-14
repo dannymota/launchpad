@@ -6,25 +6,26 @@ per project. `docs/PLAN.md` is the original design.
 
 ## Commands
 
-| Command                                      | What it does                                                                 |
-| -------------------------------------------- | ---------------------------------------------------------------------------- |
-| `npm run dev`                                | Web app on the Workers runtime, with local D1 and KV                         |
-| `npm run check`                              | Lint, typecheck, boundary test, Workers-runtime tests. Run before finishing. |
-| `npm run format`                             | Biome: format and fix                                                        |
-| `npm run theme`                              | Rebuild the web theme and the generated values after editing the brand       |
-| `npm run design:context`                     | Write PRODUCT.md and DESIGN.md, which the design skill reads, from the brief |
-| `npm run db:generate`                        | Turn schema changes into a migration (drizzle-kit)                           |
-| `npm run db:migrate:local`                   | Apply migrations to the local database                                       |
-| `npm run build` then `npm start -w @app/web` | Build, then run the built Worker on port 8787                                |
-| `npm run e2e`                                | Build, then drive it in a browser: stranger, sign-in, the design detector    |
-| `npm run mcp:test`                           | End-to-end OAuth and MCP check against the running local Worker              |
-| `npm run remove -- <part>`                   | Take out a surface or module for good. `npm run remove` lists them           |
-| `node scripts/check-removal.mjs <part>`      | Prove a part still removes cleanly: on a copy, then full check and build     |
-| `npm run new:feature -- <name>`              | Scaffold a working slice: table, API, tests and the UI for it                |
-| `npm run config:apply`                       | Carry the product config into the files that repeat its names and domains    |
-| `npm run access:plan -- <env>`               | Show the Cloudflare Access setup the access map needs (`apply` makes it so)  |
-| `npm run deploy -- <env>`                    | Check, build, migrate, deploy, set secrets, then check from outside          |
-| `npm run smoke -- <env or address>`          | Check each area of a deployed product as a stranger sees it                  |
+| Command                                      | What it does                                                                  |
+| -------------------------------------------- | ----------------------------------------------------------------------------- |
+| `npm run dev`                                | Web app on the Workers runtime, with local D1 and KV                          |
+| `npm run check`                              | Lint, typecheck, boundary test, Workers-runtime tests. Run before finishing.  |
+| `npm run format`                             | Biome: format and fix                                                         |
+| `npm run theme`                              | Rebuild the web theme and the generated values after editing the brand        |
+| `npm run design:context`                     | Write PRODUCT.md and DESIGN.md, which the design skill reads, from the brief  |
+| `npm run db:generate`                        | Turn schema changes into a migration (drizzle-kit)                            |
+| `npm run db:migrate:local`                   | Apply migrations to the local database                                        |
+| `npm run build` then `npm start -w @app/web` | Build, then run the built Worker on port 8787                                 |
+| `npm run shots`                              | Pictures of the main pages (after a build): signed out and in, light and dark |
+| `npm run e2e`                                | Build, then drive it in a browser: stranger, sign-in, the design detector     |
+| `npm run mcp:test`                           | End-to-end OAuth and MCP check against the running local Worker               |
+| `npm run remove -- <part>`                   | Take out a surface or module for good. `npm run remove` lists them            |
+| `node scripts/check-removal.mjs <part>`      | Prove a part still removes cleanly: on a copy, then full check and build      |
+| `npm run new:feature -- <name>`              | Scaffold a working slice: table, API, tests and the UI for it                 |
+| `npm run config:apply`                       | Carry the product config into the files that repeat its names and domains     |
+| `npm run access:plan -- <env>`               | Show the Cloudflare Access setup the access map needs (`apply` makes it so)   |
+| `npm run deploy -- <env>`                    | Check, build, migrate, deploy, set secrets, then check from outside           |
+| `npm run smoke -- <env or address>`          | Check each area of a deployed product as a stranger sees it                   |
 
 `<env>` is `staging` or `production`. Deploy, setup, Access changes, removal and `npm run teardown`
 (which deletes a staging) always ask first;
@@ -73,7 +74,7 @@ scripts/ tests/ docs/
   by Better Auth: `npx auth@1.7.23 generate --config ./auth.cli.ts --output ./src/db/schema/auth.ts`.
 - **The look is decided in one place**: `packages/theme/src/brand.ts`. Never set a colour or radius
   anywhere else. `packages/theme/src/generated` and the files under `apps/web/src/themes/brand`
-  other than `brandTheme.ts` are built by `npm run theme`; do not edit them. `DESIGN.md` and
+  other than `brandTheme.ts` and `brand.fonts.css` are built by `npm run theme`; do not edit them. `DESIGN.md` and
   `PRODUCT.md` are generated too (`npm run design:context`): they tell the `impeccable` design skill
   what the product and its look are.
 - **Web UI is Astryx.** Start pages from `npx astryx template`, read props with `npx astryx component
@@ -103,10 +104,17 @@ what it rules out.
 
 ## Before you say it is done
 
-`npm run check` passes. For a page or screen people will judge by eye: `/impeccable polish` it,
-`npm run e2e` (which runs the design detector on the pages listed in `tests/e2e/design.spec.ts`),
-then the `unslop-ui` skill as a second look. For a feature, ask the `reviewer` agent to read the change in a fresh context, and fix what
-it finds.
+This is the one list; a skill or a rule file may add to it but does not replace it.
+
+1. `npm run check` passes.
+2. For anything a person sees: look at it (`npm run build && npm run shots`, then open the
+   pictures), run `npm run e2e` (it holds the pages listed in `tests/e2e/design.spec.ts` to the
+   design detector), and finish the page with `/impeccable polish <page>`.
+3. For a page a stranger sees first (the landing page, sign-in): the `unslop-ui` skill as a second,
+   independent look.
+4. For a feature: ask the `reviewer` agent to read the change in a fresh context, and fix what it
+   finds.
+5. Say what you decided without the owner, and add it to `## Open questions` in the brief.
 
 ## Hard rules
 

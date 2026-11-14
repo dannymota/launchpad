@@ -12,27 +12,40 @@ and one seed colour; everything else is generated.
 
 1. Read `product/brief.md`, mainly `## Voice` and `## Who it is for`. Choose:
    - **one accent colour**, from the product's world, not from habit. No purple-to-blue gradient,
-     and not the template's blue unless the brief earns it;
-   - **a neutral ramp** (graphite, warm or ink) that suits it;
-   - **corner radii**: tight (6 / 8 / 10) for a tool people work in all day, softer for a consumer product;
+     and not the template's blue unless the brief earns it. The palette keeps the hue of the
+     colour you give it and takes its strength from `vibrancy` (100 is vivid; 30 to 60 suits a
+     quiet brand);
+   - **four corner radii**, as inner / element / container / page: tight (6 / 8 / 10 / 16) for a
+     tool people work in all day, softer (8 / 12 / 16 / 28) for a consumer product;
    - **one typeface** that is free to ship. Keep the template's unless the brief asks for character.
-2. Put the accent in `packages/theme/palette.config.json` as the seed, then regenerate the palette:
 
-```bash
-npm run palette -w @app/theme
-```
-
+   The greys are not a choice here: they are the component library's neutral theme.
+2. Put the accent in `packages/theme/palette.config.json` as the seed, and set `vibrancy`.
 3. Edit `packages/theme/src/brand.ts`: the colour pairs (each is `[light, dark]`), radii and font,
    and `character`: the look in a sentence or two, said as what it is. It opens `DESIGN.md`.
-4. Rebuild. This also rewrites `DESIGN.md`, which the design skill and its detector hold pages to:
+   A new typeface is also loaded in `apps/web/src/themes/brand/brand.fonts.css` (the family, at
+   weights 400, 500, 600 and 700): that file is yours to edit.
+4. Rebuild. This regenerates the palette, the theme and `DESIGN.md`, which the design skill and
+   its detector hold pages to:
 
 ```bash
 npm run theme
 ```
 
-5. Replace the icon, favicon and share image if the owner has supplied artwork. If not, leave
-   the template's in place and list "icon artwork" under what the owner still owes. Do not draw a
-   logo with shapes and call it done.
+5. Look at it. This takes pictures of sign-in, the app, settings and `/labs/brand` (a page that
+   shows every colour, corner and text size the brand sets, on real components), in light and
+   dark, at desktop and phone width, into `shots/`:
+
+```bash
+npm run build && npm run shots
+```
+
+   Open the pictures and judge them: the accent on a button and as link text, text on the quiet
+   accent fill, the status colours beside your accent, both colour schemes. Fix what is wrong in
+   `brand.ts`, never in a page.
+6. `apps/web/app/icon.svg` is a placeholder. Replace it, and the share image, if the owner has
+   supplied artwork. If not, leave it and add "icon artwork" to `## Open questions` in the brief.
+   Do not draw a logo with shapes and call it done.
 
 ## Gate
 
@@ -44,9 +57,8 @@ npm run theme:check
 ```
 
 ```bash
-npm test
+npm run check
 ```
 
 The theme tests hold every text colour to WCAG AA on every surface, in light and dark. If one
-fails, change the colour in `brand.ts`, not the test. Then build, open the product in a browser in
-both colour schemes, and look at sign-in, the app home and settings before reporting.
+fails, change the colour in `brand.ts`, not the test.

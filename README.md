@@ -15,7 +15,7 @@ repository. Each writes real files and ends at a check that must pass.
 
 | Step                | What it does                                                                      | Ends at                       |
 | ------------------- | --------------------------------------------------------------------------------- | ----------------------------- |
-| `/start <idea>`     | Writes the brief and the product config; removes the parts the idea does not need | `npm run check:brief`         |
+| `/start <idea>`     | Writes the brief and the product config; removes the parts the idea does not need | `check:brief`, then `check`   |
 | `/brand`            | Colours, corners and typeface for the whole product, from one file                | `npm run theme:check`         |
 | `/feature <name>`   | One slice end to end: table, API, tests and the UI for it                         | `npm run check`               |
 | `/site`             | Landing, pricing, FAQ and legal pages from the brief                              | `npm run doctor -w @app/web`  |

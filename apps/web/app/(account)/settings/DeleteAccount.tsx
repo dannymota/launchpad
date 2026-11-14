@@ -35,7 +35,7 @@ export function DeleteAccount() {
         isOpen={open}
         onOpenChange={setOpen}
         title="Delete your account?"
-        description="Your account, its data and its assistant connections are removed for good. This cannot be undone."
+        description="Your account and everything in it are removed for good. This cannot be undone."
         actionLabel="Delete account"
         onAction={remove}
         isActionLoading={busy}

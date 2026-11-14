@@ -227,7 +227,8 @@ describe("tools", () => {
 
     const listed = await mcp(tokens.access_token, { id: 2, method: "tools/list", params: {} });
     const names = (listed.message.result.tools as { name: string }[]).map((tool) => tool.name).sort();
-    expect(names).toEqual(["ping", "whoami"]);
+    // At least the two the template ships; a product lists its own beside them.
+    expect(names).toEqual(expect.arrayContaining(["ping", "whoami"]));
 
     const who = await mcp(tokens.access_token, {
       id: 3,
@@ -330,7 +331,9 @@ const assistants = async (browser: Browser) =>
 describe("more than one server", () => {
   it("serves each at its own route with the same connection, offering only the tools its scopes allow", async () => {
     const reader = await connect("reader@example.com", "app:read", ["app:read"]);
-    expect(toolNames(await mcp(reader.tokens.access_token, listTools))).toEqual(["ping", "whoami"]);
+    expect(toolNames(await mcp(reader.tokens.access_token, listTools))).toEqual(
+      expect.arrayContaining(["ping", "whoami"]),
+    );
     // A server with nothing to offer this connection has no tools at all, so it says it has no such method.
     const nothing = await mcp(reader.tokens.access_token, listTools, undefined, "/mcp/writer");
     expect(nothing.message.result?.tools ?? []).toEqual([]);

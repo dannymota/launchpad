@@ -98,10 +98,7 @@ export default async function SettingsPage() {
             {/* <<< mcp */}
 
             <Divider />
-            <Section
-              title="Delete account"
-              about="Removes your account, its data and its assistant connections for good."
-            >
+            <Section title="Delete account" about="Removes your account and everything in it for good.">
               <DeleteAccount />
             </Section>
           </VStack>

@@ -386,17 +386,21 @@ function main() {
   }
 
   // 6. Entries in other JSON files, which cannot carry a marker. A key is dropped from an
-  //    object, a value from a list, and an item from a list of objects by its "name".
+  //    object, a value from a list, and an item from a list of objects by its "name". A
+  //    section may be a path into the file ("permissions.allow").
   for (const [path, sections] of Object.entries(part.json ?? {})) {
     const full = inside(ROOT, path);
     if (!existsSync(full)) continue;
     const data = JSON.parse(readFileSync(full, "utf8"));
     let touched = false;
     for (const [section, keys] of Object.entries(sections)) {
-      const value = data[section];
+      const steps = section.split(".");
+      const last = steps.pop();
+      const holder = steps.reduce((at, step) => at?.[step], data);
+      const value = holder?.[last];
       if (Array.isArray(value)) {
-        data[section] = value.filter((item) => !keys.includes(typeof item === "object" && item ? item.name : item));
-        touched ||= data[section].length !== value.length;
+        holder[last] = value.filter((item) => !keys.includes(typeof item === "object" && item ? item.name : item));
+        touched ||= holder[last].length !== value.length;
       } else if (value && typeof value === "object") {
         for (const key of keys) {
           if (key in value) {

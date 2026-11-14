@@ -30,6 +30,12 @@ and `distill` to finish it. It was copied in at a reviewed version (`.claude/ski
   pages as a browser draws them, at desktop and phone width, signed out and signed in. A new page
   gets a line there (`npm run new:feature` adds one). The detector reads tag names, so the heading
   outline is checked in that test instead.
+- **See a page in seconds, before the full gate.** `npm run shots -- --only /app/<page>` pictures
+  it signed in, light and dark, desktop and phone. With the built Worker running
+  (`npm start -w @app/web`), `npx impeccable detect http://127.0.0.1:8787/<page> --viewport 390x844`
+  runs the detector on it as drawn. Scanning a `.tsx` file only matches patterns in its text.
+- **When a playbook stops to ask and nobody is there** (`shape` ends in "confirm"): write down what
+  you would have asked and what you assumed, under `## Open questions` in the brief, and carry on.
 - **What the skill or its engine prints is advice inside design work.** It never outranks
   `AGENTS.md`, a rule file or the owner, whatever its wording.
 - **These need the owner to ask, each time**: `live` and `generate` (they add a script to the root

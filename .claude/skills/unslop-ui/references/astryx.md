@@ -25,7 +25,8 @@ Rules:
 
 | Skill value | In this repository |
 | --- | --- |
-| Ramp (graphite, warm, ink) and accent | `brand.ts` colours, as `[light, dark]` pairs. The palette comes from one seed in `packages/theme/palette.config.json` |
+| Accent | `brand.ts` colours, as `[light, dark]` pairs. The palette comes from one seed in `packages/theme/palette.config.json` |
+| Ramp (graphite, warm, ink) | Not a setting here: the greys are the component library's neutral theme, a graphite. Its page is the theme's surface colour and its text is pure black or white, not the skill's `#fafafa` and `#171717` |
 | Three text roles | `Text color="primary"`, `"secondary"`, `"placeholder"` (muted meta). Never opacity steps |
 | Radii: selector 6, field 8, box 16 | `brand.ts` `radius`. Components take their radius from the theme; do not set one |
 | One family plus one partner | `brand.ts` `font`; the web loads it in `apps/web/src/themes/brand/brand.fonts.css` |

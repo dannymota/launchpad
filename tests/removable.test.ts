@@ -506,3 +506,25 @@ export const one = 1;
     }
   }, 120_000);
 });
+
+describe("entries the list drops from JSON files", () => {
+  const { PARTS: parts } = { PARTS } as {
+    PARTS: Record<string, Part & { json?: Record<string, Record<string, string[]>> }>;
+  };
+
+  it("each name something that is in the file, at the key (or the path into the file) given", () => {
+    for (const [name, part] of Object.entries(parts)) {
+      for (const [file, sections] of Object.entries(part.json ?? {})) {
+        const data = JSON.parse(fs.readFileSync(path.join(ROOT, file), "utf8"));
+        for (const [section, entries] of Object.entries(sections)) {
+          const value = section.split(".").reduce((at, step) => at?.[step], data);
+          expect(value, `${name}: ${file} has no "${section}"`).toBeTruthy();
+          const held = Array.isArray(value)
+            ? value.map((item: unknown) => (typeof item === "object" && item ? (item as { name: string }).name : item))
+            : Object.keys(value);
+          for (const entry of entries) expect(held, `${name}: ${file} ${section}`).toContain(entry);
+        }
+      }
+    }
+  });
+});

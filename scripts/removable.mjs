@@ -7,7 +7,8 @@
 //                   contain (a marker would show in prose)
 //   replace         wording to change where a sentence must lose a few words and stay, per
 //                   file, as [find, replacement] pairs. Every occurrence is replaced
-//   json            entries to drop from other JSON files, per file and top-level key
+//   json            entries to drop from other JSON files, per file and key (a key may be a
+//                   path into the file: "permissions.allow")
 //   write           files that take another form once it is gone
 //   regenerate      "auth" (sign-in tables), "db" (a migration for dropped tables, also
 //                   applied to the local database), "theme"
@@ -109,6 +110,14 @@ export const PARTS = {
       ".claude/settings.json": {
         enabledPlugins: ["expo@claude-plugins-official"],
         disabledMcpjsonServers: ["appllama"],
+        "permissions.allow": ["Bash(npx expo-doctor*)", "Bash(npx expo export *)"],
+      },
+      "biome.json": {
+        "files.includes": [
+          "!apps/mobile/PRODUCT.md",
+          "!.claude/skills/appllama-app-design-skill",
+          "!.claude/skills/appllama-usage",
+        ],
       },
       ".mcp.json": { mcpServers: ["expo", "appllama"] },
       ".claude/launch.json": { configurations: ["mobile preview"] },
@@ -177,7 +186,10 @@ export default function RootPage() {
       "apps/web": { dependencies: ["@app/mcp"] },
       "packages/backend": { dependencies: ["@cloudflare/workers-oauth-provider"] },
     },
-    json: { "knip.json": { workspaces: ["apps/mcp"] } },
+    json: {
+      "knip.json": { workspaces: ["apps/mcp"] },
+      ".claude/settings.json": { "permissions.allow": ["Bash(node scripts/oauth-test.mjs*)"] },
+    },
     dropLines: {
       "README.md": ["docs/MCP.md"],
       "AGENTS.md": ["apps/mcp", "mcp:test"],

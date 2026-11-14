@@ -77,6 +77,12 @@ async function main() {
     ? [...briefProblems(readFileSync(file, "utf8")), ...mismatches(readFileSync(file, "utf8"), product)]
     : ["There is no product/brief.md. /start <idea> writes it."];
   problems.push(...configProblems(product));
+  // The two documents a newcomer opens first still open with the template's name.
+  for (const name of ["README.md", "AGENTS.md"]) {
+    const doc = join(ROOT, name);
+    if (product.name !== "Launchpad" && existsSync(doc) && /^# Launchpad\s*$/m.test(readFileSync(doc, "utf8")))
+      problems.push(`${name} still describes the template: /start rewrites its title and opening for the product.`);
+  }
   if (problems.length) {
     console.error(`The brief is not ready:\n${problems.map((problem) => `  - ${problem}`).join("\n")}`);
     process.exit(1);

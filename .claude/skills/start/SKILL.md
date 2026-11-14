@@ -24,6 +24,10 @@ From the idea, decide each line below yourself. Mark the ones you are unsure of.
   - `analytics`: page views and events.
 - **Access before launch**: `private` (everything behind Cloudflare Access) unless told otherwise.
   After launch: `public-product`, `private-beta` or `internal-tool`.
+- **What the template does not do.** Read "What is deliberately not here" in
+  `docs/ARCHITECTURE.md` (shared team accounts, file uploads, push notifications and more). If the
+  idea needs one of them, do not assume it: put it under `## Open questions` as work to plan. Mail
+  is not sent until the product has a sending domain.
 - **Sign-in after launch**: emailed code always; Google and Apple when the people it is for expect them.
   A product with a mobile app offers both.
 
@@ -40,22 +44,35 @@ Then show the whole brief as a short summary and ask "go?". One confirmation, no
 
 ## 3. Write it down
 
-- `product/brief.md` with these sections, each filled in: `# <Name>`, then `## What it is`,
-  `## Who it is for`, `## The main thing people do`, `## What it is not`, `## Surfaces`,
-  `## Access`, `## Plans`, `## Voice` (three plain words and two example sentences in that voice),
-  `## Legal`, `## Open questions`. If the owner gave real proof (customers, numbers, a quote), add
-  `## Proof` with exactly that. Never invent any.
-- `product/product.config.ts`: name, slug, tagline, access preset and sign-in methods. Leave
-  `domains` empty unless the owner has them.
-  - `plans`: what people can be on, the free tier first.
-  - `mobile`: the bundle id, `com.<entity>.<slug>`.
-- Remove each optional part the product does not have, one at a time: `npm run remove -- <name>`.
-  Each removal is permanent; do it only for a clear "no" in the brief.
-- `npm run config:apply`, so the Worker, the database and everything else that repeats the name
-  carry the new one.
-- `npm run design:context`, which writes what the design skill reads about the product
-  (`PRODUCT.md`) from the brief. The skill reads it before it touches a screen. Do not write it
-  by hand or run `/impeccable init`.
+In this order. Each step leaves the checks passing for the next.
+
+1. `product/brief.md` with these sections, each filled in: `# <Name>`, then:
+   - `## What it is`, `## Who it is for`, `## The main thing people do`: a short paragraph each.
+   - `## What it is not`: a short list, one thing a line.
+   - `## Surfaces`: the optional parts it has and the ones it does not, surfaces and modules alike.
+   - `## Access`, `## Plans` (name every plan in the config), `## Legal`.
+   - `## Voice`: one paragraph, no list: three plain words for the voice, then two example
+     sentences written in it.
+   - `## Open questions`: what the owner still has to decide or supply, and every decision you
+     made without them, so they can overrule it.
+   - If the owner gave real proof (customers, numbers, a quote), add `## Proof` with exactly that.
+     Never invent any.
+2. `product/product.config.ts`: name, slug, tagline, access preset and sign-in methods. Leave
+   `domains` empty unless the owner has them.
+   - `plans`: what people can be on, the free tier first.
+   - `mobile`: the bundle id, `com.<entity>.<slug>`.
+3. `npm run config:apply`, so the Worker, the database and everything else that repeats the name
+   or the plans carry the new ones.
+4. Remove each optional part the product does not have, one at a time: `npm run remove -- <name>`.
+   Each removal is permanent, so each asks the owner first; do it only for a clear "no" in the
+   brief. A removal also brings the documents, the local database and the design files up to date.
+5. `README.md` and `AGENTS.md` still describe the template. Rewrite `README.md` as the product's:
+   its name, its tagline, a few lines on what it is from the brief, then how to run and check it
+   (keep those two sections). In `AGENTS.md` change the title and the first paragraph only, to say
+   what this product is and that it was made from the Launchpad template.
+6. `npm run design:context`, which writes what the design skill reads about the product
+   (`PRODUCT.md`) from the brief. The skill reads it before it touches a screen. Do not write it
+   by hand or run `/impeccable init`.
 
 ## 4. Gate
 
@@ -67,5 +84,6 @@ npm run check:brief
 npm run check
 ```
 
-Both must pass. Then tell the owner what the brief says in five lines, which parts were removed,
-and that `/brand` is next. Do not start building features in this step.
+Both must pass; run them here, once, not after each step above. Then tell the owner what the
+brief says in five lines, which parts were removed, what you decided without them, and that
+`/brand` is next. Do not start building features in this step.
