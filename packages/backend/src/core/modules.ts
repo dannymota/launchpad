@@ -31,6 +31,10 @@ export interface BackendModule {
 
 const registry: BackendModule[] = [];
 
+/**
+ * Adds a module to the registry. Called from src/modules/index.ts, once for each module.
+ * @public A product that has removed every module still keeps the registry for its own.
+ */
 export function registerModule(module: BackendModule): void {
   if (!registry.some((existing) => existing.name === module.name)) registry.push(module);
 }

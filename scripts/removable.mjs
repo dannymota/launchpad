@@ -86,6 +86,7 @@ export default function RootPage() {
       "apps/web": { dependencies: ["@app/mcp"] },
       "packages/backend": { dependencies: ["@cloudflare/workers-oauth-provider"] },
     },
+    json: { "knip.json": { workspaces: ["apps/mcp"] } },
     dropLines: {
       "AGENTS.md": ["apps/mcp", "mcp:test"],
       "README.md": ["docs/MCP.md"],
@@ -118,7 +119,8 @@ export default function RootPage() {
       "apps/web/app/labs/ai",
       "apps/web/tests/ai.workers.test.ts",
     ],
-    packageJson: { "packages/backend": { dependencies: ["@anthropic-ai/sdk"] } },
+    // zod is here only because the Anthropic SDK asks for it; the backend's own schemas live in packages/shared.
+    packageJson: { "packages/backend": { dependencies: ["@anthropic-ai/sdk", "zod"] } },
     dropLines: { ".github/workflows/removal.yml": ["          - ai"] },
     regenerate: ["db"],
   },
