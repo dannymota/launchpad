@@ -15,6 +15,7 @@ with optional surfaces (a mobile app, MCP servers) and modules beside it. Copy i
 | `npm run db:generate`                        | Turn schema changes into a migration (drizzle-kit)                           |
 | `npm run db:migrate:local`                   | Apply migrations to the local database                                       |
 | `npm run build` then `npm start -w @app/web` | Build, then run the built Worker on port 8787                                |
+| `npm run e2e`                                | Build, then drive the product in a browser: stranger, sign-in, sign-out      |
 | `npm run mcp:test`                           | End-to-end OAuth and MCP check against the running local Worker              |
 | `npm run remove -- <part>`                   | Take out a surface or module for good. `npm run remove` lists them           |
 | `node scripts/check-removal.mjs <part>`      | Prove a part still removes cleanly: on a copy, then full check and build     |

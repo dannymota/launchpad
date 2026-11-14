@@ -59,7 +59,12 @@ async function main(argv) {
 
   step(2, "Cloudflare Access against the access map");
   const access = await inspect({ cf, account, product, rules: edgePlan(product.areas), host });
-  if (!access.organization || access.needsPeople || access.steps.length) {
+  if (!access.organization) {
+    throw new Error(
+      "This Cloudflare account has no Zero Trust organization yet, so nothing is deployed. Create one in the dashboard (Zero Trust, Free plan), then run npm run access:apply.",
+    );
+  }
+  if (access.needsPeople || access.steps.length) {
     throw new Error(
       `Cloudflare Access does not match the access map, so nothing is deployed. Run: npm run access:apply -- ${target.name} --email <who may sign in>`,
     );

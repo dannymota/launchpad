@@ -39,10 +39,12 @@
     "new:feature": "node scripts/new-feature.mjs",
     "check:brief": "node scripts/check-brief.mjs",
     "check:listing": "node scripts/check-listing.mjs",
-    "knip": "knip --no-progress"
+    "knip": "knip --no-progress",
+    "e2e": "npm run build && playwright test"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.7",
+    "@playwright/test": "1.63.0",
     "@types/node": "26.6.6",
     "esbuild": "0.28.2",
     "knip": "6.45.1",
