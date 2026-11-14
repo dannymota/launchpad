@@ -26,6 +26,13 @@ export const PRODUCTS = {
   "signup-allowlist": defineProduct({ ...base, signup: { mode: "allowlist" } }),
   "signup-domain": defineProduct({ ...base, signup: { mode: "domain", domains: ["corp.example"] } }),
   "social-sign-in": defineProduct({ ...base, signIn: { emailCode: true, google: true, apple: true } }),
+  /** A launched product with an iOS and Android app. */
+  "with-app": defineProduct({
+    ...base,
+    domains: { app: "product.example", email: "" },
+    signIn: { emailCode: true, google: true, apple: true },
+    mobile: { bundleId: "com.example.testproduct", androidPackage: "com.example.testproduct", minVersion: "1.2.0" },
+  }),
 } satisfies Record<string, Product>;
 
 export type ProductName = keyof typeof PRODUCTS;

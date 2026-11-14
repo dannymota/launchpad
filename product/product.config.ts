@@ -21,4 +21,12 @@ export default defineProduct({
   access: { preset: "private" },
 
   signIn: { emailCode: true, google: false, apple: false },
+
+  // The iOS and Android app (apps/mobile). Remove this block for a product with no app.
+  mobile: {
+    bundleId: "com.example.launchpad",
+    androidPackage: "com.example.launchpad",
+    // Raise this when an old build can no longer work with the API; older builds are told to update.
+    minVersion: "1.0.0",
+  },
 });

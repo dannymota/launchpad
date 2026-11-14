@@ -49,6 +49,8 @@ export interface Env {
   APPLE_PRIVATE_KEY?: string;
   /** The iOS app's bundle id, so tokens from the native Apple sheet are accepted. */
   APPLE_APP_BUNDLE_ID?: string;
+  /** SHA-256 fingerprints of the keys that sign the Android app, comma-separated, for App Links. */
+  ANDROID_CERT_SHA256?: string;
 
   /** Cloudflare Turnstile on the sign-in code form. Both set = on. The site key is public. */
   TURNSTILE_SITE_KEY?: string;

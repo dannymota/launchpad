@@ -40,6 +40,8 @@ const ROUTES: Record<string, Route> = {
   "/callback/google": { methods: ["GET"], perIp: ["socialIp"], needs: ["google"] },
   // Apple answers with a cross-site form POST, which Better Auth turns into a GET.
   "/callback/apple": { methods: ["GET", "POST"], perIp: ["socialIp"], needs: ["apple"] },
+  // The native app opens Google or Apple sign-in in the system browser through this.
+  "/expo-authorization-proxy": { methods: ["GET"], perIp: ["socialIp"], needs: ["google", "apple"] },
   "/error": { methods: ["GET"], perIp: ["sessionIp"] },
 };
 

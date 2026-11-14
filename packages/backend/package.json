@@ -14,6 +14,7 @@
     "@app/product": "*",
     "@app/shared": "*",
     "@better-auth/drizzle-adapter": "1.7.23",
+    "@better-auth/expo": "1.7.23",
     "@orpc/openapi": "2.0.0-beta.50",
     "@orpc/server": "2.0.0-beta.50",
     "@orpc/zod": "2.0.0-beta.50",

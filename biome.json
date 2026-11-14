@@ -19,7 +19,9 @@
       "!apps/web/src/themes/brand/*.d.ts",
       "!packages/theme/src/palette.ts",
       "!packages/theme/src/palette.receipt.json",
-      "!packages/theme/src/generated"
+      "!packages/theme/src/generated",
+      "!.claude/skills/appllama-app-design-skill",
+      "!.claude/skills/appllama-usage"
     ]
   },
   "formatter": {

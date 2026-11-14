@@ -85,7 +85,9 @@ const WORKSPACES: Record<string, string> = {
 function resolve(spec: string, from: string): string | null {
   if (spec in WORKSPACES) return WORKSPACES[spec] ?? null;
   let base: string | null = null;
-  if (spec.startsWith("@/")) base = path.posix.join("apps/web", spec.slice(2));
+  // "@/" is each app's own alias: the web app's root, the mobile app's src folder.
+  if (spec.startsWith("@/"))
+    base = path.posix.join(from.startsWith("apps/mobile/") ? "apps/mobile/src" : "apps/web", spec.slice(2));
   else if (spec.startsWith(".")) base = path.posix.normalize(path.posix.join(path.posix.dirname(from), spec));
   if (base === null) return null;
   for (const candidate of [base, `${base}.ts`, `${base}.tsx`, `${base}.mjs`, `${base}/index.ts`, `${base}/index.tsx`]) {
@@ -152,6 +154,17 @@ describe("surfaces", () => {
     // Tests may seed and inspect the database directly; shipped code may not.
     const direct = outside.filter((file) => !/(^|\/)tests\//.test(file) && /\benv\.DB\b|\.prepare\(/.test(code(file)));
     expect([...imports, ...direct]).toEqual([]);
+  });
+
+  it("keep platform-only code behind the platform folder in the mobile app", () => {
+    // Only src/platform may import a module that exists on one platform; screens ask through it.
+    const platformOnly = /^(expo-apple-authentication|expo-secure-store|expo-haptics)(\/|$)/;
+    const outside = SOURCES.filter(
+      (file) => file.startsWith("apps/mobile/src/") && !file.startsWith("apps/mobile/src/platform/"),
+    );
+    expect(outside.flatMap((file) => packageUses(file, platformOnly).map((spec) => `${file} -> ${spec}`))).toEqual([]);
+    expect(SOURCES.some((file) => file === "apps/mobile/src/platform/index.ios.ts")).toBe(true);
+    expect(SOURCES.some((file) => file === "apps/mobile/src/platform/index.android.ts")).toBe(true);
   });
 
   it("keep the mobile app to the shared packages", () => {

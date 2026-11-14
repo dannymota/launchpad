@@ -1,0 +1,9 @@
+# Flows run in this order: settings assumes the session sign-in leaves behind.
+flows:
+  - sign-in.yaml
+  - settings.yaml
+executionOrder:
+  continueOnFailure: false
+  flowsOrder:
+    - sign-in
+    - settings

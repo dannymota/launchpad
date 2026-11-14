@@ -1,0 +1,28 @@
+# Runs the Maestro flows on Expo's simulators. Needs a paid Expo plan; on a Mac run
+# `maestro test .maestro` against a development build instead.
+name: End-to-end
+on:
+  workflow_dispatch: {}
+jobs:
+  build_ios:
+    type: build
+    params:
+      platform: ios
+      profile: development
+  build_android:
+    type: build
+    params:
+      platform: android
+      profile: preview
+  test_ios:
+    needs: [build_ios]
+    type: maestro
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      flow_path: [".maestro/sign-in.yaml", ".maestro/settings.yaml"]
+  test_android:
+    needs: [build_android]
+    type: maestro
+    params:
+      build_id: ${{ needs.build_android.outputs.build_id }}
+      flow_path: [".maestro/sign-in.yaml", ".maestro/settings.yaml"]

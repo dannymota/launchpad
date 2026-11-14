@@ -9,7 +9,7 @@ import { appleClientSecret } from "../core/apple-secret";
 import { authPlugins, authTableOptions, CODE_SECONDS } from "../core/auth-options";
 import { authSettings } from "../core/auth-settings";
 import { productOf } from "../core/product";
-import { signInMethods } from "../core/runtime";
+import { isLocalRun, signInMethods } from "../core/runtime";
 import { getDb, schema } from "../db/client";
 import type { Env } from "../env";
 import { sendEmail } from "../integrations/email/sender";
@@ -62,8 +62,9 @@ async function socialProviders(env: Env) {
 export async function getAuth(env: Env, origin: string) {
   const settings = authSettings(env);
   const providers = await socialProviders(env);
+  const product = productOf(env);
   return betterAuth({
-    appName: productOf(env).name,
+    appName: product.name,
     baseURL: origin,
     basePath: AUTH_BASE_PATH,
     secret: settings.secret,
@@ -79,8 +80,13 @@ export async function getAuth(env: Env, origin: string) {
       accountLinking: { enabled: true, trustedProviders: ["google", "apple"] },
     },
     socialProviders: providers,
-    // Apple returns the browser with a form POST from its own origin.
-    trustedOrigins: [origin, ...("apple" in providers ? ["https://appleid.apple.com"] : [])],
+    // Apple returns the browser with a form POST from its own origin. The native app is its
+    // URL scheme; a development build opened through Expo uses exp:// as well.
+    trustedOrigins: [
+      origin,
+      ...("apple" in providers ? ["https://appleid.apple.com"] : []),
+      ...(product.mobile ? [`${product.scheme}://`, ...(isLocalRun(env) ? ["exp://"] : [])] : []),
+    ],
     // Limits are applied before requests reach Better Auth (safety/auth-gate.ts).
     rateLimit: { enabled: false },
     telemetry: { enabled: false },

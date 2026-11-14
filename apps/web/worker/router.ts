@@ -9,6 +9,7 @@
 // A path belongs to exactly one handler; API and sign-in paths never fall through to a page.
 import {
   AUTH_BASE_PATH,
+  appLinks,
   authGate,
   bodyLimit,
   ConfigError,
@@ -153,7 +154,8 @@ export function createRouter({ pages, product, mcp = createMcp() }: RouterOption
       if (await overRateLimit(env, request)) return tooManyRequests();
       return handleApi(trusted, env);
     }
-    return pages.fetch(trusted, env, ctx);
+    // The files that let links to this domain open the native app.
+    return appLinks(path, env) ?? pages.fetch(trusted, env, ctx);
   }
 
   return async function handle(request: Request, rawEnv: Env, ctx: ExecutionContext): Promise<Response> {

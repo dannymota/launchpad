@@ -1,0 +1,16 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "info": {
+      "en-US": {
+        "title": "Launchpad",
+        "subtitle": "A starting point",
+        "description": "Replace this with what the app does and who it is for. /listing writes it from product/brief.md.",
+        "keywords": ["replace", "these", "keywords"],
+        "supportUrl": "https://example.com/support",
+        "privacyPolicyUrl": "https://example.com/privacy"
+      }
+    },
+    "categories": ["PRODUCTIVITY"]
+  }
+}

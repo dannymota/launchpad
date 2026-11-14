@@ -15,6 +15,7 @@ export {
 } from "./accounts/assistants";
 export { AUTH_BASE_PATH, type Auth, getAuth } from "./accounts/auth";
 export { assistantPrincipal, type Principal, requestPrincipal } from "./accounts/session";
+export { appLinks } from "./api/app-links";
 export type { ApiContext } from "./api/base";
 export { apiContext, handleApi, isApiPath, REST_PREFIX, RPC_PREFIX } from "./api/handlers";
 export { type Health, health } from "./api/health";

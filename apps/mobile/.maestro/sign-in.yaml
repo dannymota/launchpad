@@ -1,0 +1,29 @@
+# Signs in with an emailed code and lands on Home.
+# Needs a development build pointed at a local Worker, where the code is read from the outbox:
+#   maestro test .maestro/sign-in.yaml -e EMAIL=tester@example.com -e CODE=123456
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Sign in to continue."
+- tapOn:
+    id: "email"
+- inputText: ${EMAIL}
+- tapOn:
+    id: "submit"
+- assertVisible: "Enter your code"
+- tapOn:
+    id: "code"
+- inputText: ${CODE}
+- tapOn:
+    id: "submit"
+- assertVisible: "Account"
+- assertVisible: ${EMAIL}
+- takeScreenshot: home
+# Back must not return to sign-in: on Android it leaves the app.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - back
+      - assertNotVisible: "Sign in to continue."

@@ -1,0 +1,15 @@
+# From Home: opens Settings, signs out, and checks sign-in is the only screen left.
+appId: ${APP_ID}
+---
+- launchApp
+- tapOn: "Settings"
+- assertVisible: "Sign out"
+- assertVisible: "Delete account"
+- takeScreenshot: settings
+- tapOn:
+    id: "delete-account"
+- assertVisible: "Delete your account?"
+- tapOn: "Cancel"
+- tapOn:
+    id: "sign-out"
+- assertVisible: "Sign in to continue."

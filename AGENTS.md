@@ -10,6 +10,7 @@ MCP servers, with a place for a mobile app. Copy it per project. `docs/PLAN.md` 
 | `npm run dev`                                | Web app on the Workers runtime, with local D1 and KV                         |
 | `npm run check`                              | Lint, typecheck, boundary test, Workers-runtime tests. Run before finishing. |
 | `npm run format`                             | Biome: format and fix                                                        |
+| `npm run theme`                              | Rebuild the web theme and native tokens after editing the brand              |
 | `npm run db:generate`                        | Turn schema changes into a migration (drizzle-kit)                           |
 | `npm run db:migrate:local`                   | Apply migrations to the local database                                       |
 | `npm run build` then `npm start -w @app/web` | Build, then run the built Worker on port 8787                                |
@@ -25,8 +26,10 @@ code that lands in the `email_outbox` table instead of being sent.
 product/          product.config.ts: name, domains, access preset, signup mode, sign-in methods
 apps/web          pages (vinext, Astryx) and worker/: the one Worker that serves every request
 apps/mcp          MCP servers and the OAuth provider in front of them
+apps/mobile       the iOS and Android app (Expo). Own lockfile; rules in .claude/rules/mobile.md
 packages/backend  all server logic: db/ core/ safety/ integrations/ accounts/ features/ modules/ api/
 packages/shared   zod schemas, the API contract, the typed client, the access map. Runs anywhere.
+packages/theme    the brand: colours, corners, typeface. Feeds the web theme and the native theme.
 scripts/ tests/ docs/
 ```
 
@@ -53,6 +56,9 @@ scripts/ tests/ docs/
 - **Migrations are generated.** Edit `packages/backend/src/db/schema/*`, run `npm run db:generate`.
   Never edit or delete an applied file in `packages/backend/migrations`. `schema/auth.ts` is generated
   by Better Auth: `npx auth@1.7.23 generate --config ./auth.cli.ts --output ./src/db/schema/auth.ts`.
+- **The look is decided in one place**: `packages/theme/src/brand.ts`. Never set a colour or radius in
+  a page or a screen. `packages/theme/src/generated` and the files under `apps/web/src/themes/brand`
+  other than `brandTheme.ts` are built by `npm run theme`; do not edit them.
 - **Web UI is Astryx.** Start pages from `npx astryx template`, read props with `npx astryx component
   <Name>`. No `<div>`, no `style={{}}`, no raw hex or px. Run these from `apps/web`.
 - **New request paths go through `apps/web/worker/router.ts`.** Writes from other sites are refused

@@ -3,9 +3,9 @@
 A template for starting products. Copy it, describe the idea, and build on a base where sign-in,
 the API, an MCP server and the deploy path already work.
 
-**Status: under construction.** Phases 1 to 4 of `docs/PLAN.md` are done: the skeleton, sign-in
-with the access rules that decide who can reach what, the Worker's general protections, and the
-MCP server.
+**Status: under construction.** Phases 1 to 5 of `docs/PLAN.md` are done: the skeleton, sign-in
+with the access rules that decide who can reach what, the Worker's general protections, the MCP
+server, the brand theme, and the iOS and Android app.
 
 ## What works today
 
@@ -25,6 +25,10 @@ MCP server.
 - Connecting an assistant (`docs/MCP.md`): OAuth 2.1 with a consent page bound to the signed-in
   person, a permission per tool, a list of connected assistants with disconnect, and connections
   that end at once when revoked, replaced, or when a code is replayed.
+- One brand for web and mobile (`packages/theme`): the web theme is built from it and the native
+  colours are generated from the web theme. Contrast is tested in light and dark.
+- An iOS and Android app (`docs/MOBILE.md`): one Expo codebase with separate folders for what each
+  platform does differently, sign-in, the same typed API, and a browser preview of shared screens.
 - Protections on every request: a content security policy with a per-page script nonce, refusal of
   writes from other sites, a request size limit, an edge rate limit on the API, daily caps on mail,
   optional Cloudflare Turnstile on the sign-in form, and a daily clean-up of expired data.
