@@ -18,11 +18,19 @@ quietly in this step.
 | Build | `npm run build`, then `npm run doctor -w @app/web` | The bundle and the pages |
 | Brand | `npm run design:context -- --check`, then `npm run theme:check` | Generated theme and design files are current; contrast tests ran in `check` |
 | Browser | `npm run e2e` | A stranger, a sign-in, a sign-out, and the design detector on the pages listed in `tests/e2e/design.spec.ts` |
+| Packages | `npm audit --omit=dev --audit-level=high` | No known serious hole in what the product ships with |
 | Listings | `npm run check:listing` | Every store field is filled in and inside its limit |
 | Edge | `npm run access:check -- staging` | Cloudflare Access matches the access map |
 | Live | `npm run smoke -- staging` | Each area answers a stranger the way the map says |
 
 The last two need the Cloudflare token (see `/ship`). Without it, mark them "not run" with the reason.
+
+## Beyond the gates
+
+The gates say the code is sound, not that the product is what was promised. Before writing the
+report, read `product/brief.md` and the public pages beside the built product, and list under
+"Not ready" every promise that is not kept: a feature the site states as fact and nothing does, a
+plan limit nothing enforces, a page that tells a customer to do something with no page saying how.
 
 ## The report
 
