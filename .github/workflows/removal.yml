@@ -56,4 +56,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: node scripts/check-removal.mjs --feature note
+      - run: npx playwright install --with-deps chromium
+      # The generated page is driven in a browser too, and read by the design detector.
+      - run: node scripts/check-removal.mjs --feature note --e2e

@@ -38,8 +38,8 @@ detector alone: it found the heading slip above on its first run.
 How to apply it:
 
 1. Copy `.claude/skills/impeccable/`, `.claude/agents/impeccable-*.md`, `.claude/rules/design.md`,
-   `.impeccable/config.json`, `scripts/design-context.mjs`, `tests/design-context.test.ts` and
-   `tests/e2e/design.spec.ts`. Read the Impeccable section of `.claude/skills/VENDORED.md` first:
+   `.impeccable/config.json`, `scripts/design-context.mjs`, `tests/design-context.test.ts`,
+   `tests/e2e/design.spec.ts` and `tests/e2e/outbox.ts`. Read the Impeccable section of `.claude/skills/VENDORED.md` first:
    it says what the skill runs and what was switched off.
 2. `npm install --save-exact -D impeccable@4.9.1`.
 3. From the template's versions, take: the `env`, the two `impeccable` hook entries and the
@@ -47,7 +47,9 @@ How to apply it:
    `.claude/hooks/session-start.mjs`; the Impeccable block in `.gitignore`; the new excludes in
    `biome.json`; the `theme`, `theme:check` and `design:context` scripts in `package.json`;
    `tokenValue` exported from `scripts/build-tokens.mjs`; the line the generator adds to the design
-   test (`scripts/new-feature.mjs`); the `design:context` step in `.github/workflows/check.yml`.
+   test (`scripts/new-feature.mjs`); the `design:context` step in `.github/workflows/check.yml`; the two generated design files in
+   `.claude/hooks/guard.mjs`; the `design.md` and `ARCHITECTURE.md` lines under `mobile` in
+   `scripts/removable.mjs`.
 4. Add `character` to `packages/theme/src/brand.ts`: the look in a sentence or two.
 5. `npm run theme`, then `npm run design:context`. Commit `DESIGN.md` and `PRODUCT.md`.
 6. Add each of your own pages to `tests/e2e/design.spec.ts`, run `npm run e2e`, and fix what the

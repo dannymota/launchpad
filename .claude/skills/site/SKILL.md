@@ -43,7 +43,8 @@ npm run build
 npm run doctor -w @app/web
 ```
 
-Add each new page to the first test in `tests/e2e/design.spec.ts`, then:
+Add each new page to the stranger's test in `tests/e2e/design.spec.ts`, between its `>>> site`
+and `<<< site` lines, then:
 
 ```bash
 npm run e2e

@@ -418,7 +418,10 @@ function main(argv) {
   const created = files(feature);
   const taken = Object.keys(created).filter((file) => existsSync(join(ROOT, file)));
   if (taken.length) throw new Error(`These exist already, so nothing was written: ${taken.join(", ")}`);
-  const edits = insertions(feature).filter(([file]) => existsSync(join(ROOT, file)));
+  // A product may have dropped the design test; every other file must be there.
+  const edits = insertions(feature).filter(
+    ([file]) => file !== "tests/e2e/design.spec.ts" || existsSync(join(ROOT, file)),
+  );
   for (const [file, find] of edits) {
     if (!readFileSync(join(ROOT, file), "utf8").includes(find))
       throw new Error(`${file} has lost the line new features are added at:\n  ${find.trim()}`);

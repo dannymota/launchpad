@@ -46,9 +46,10 @@ emails, the app and the deploy scripts all read it.
   writes from other sites, a size limit, rate limits, caps on mail.
 - **Everything optional comes out cleanly**: `npm run remove -- <mobile|mcp|site|payments|ai|analytics>`.
   Each removal is proven by doing it on a copy and running the full check and build.
-- **A design check on every page.** [Impeccable](https://impeccable.style), a design skill with a
-  detector, is built in: it plans and reviews screens, and its detector reads each page as a
-  browser draws it (contrast, text size, heading order, the usual marks of a generated page).
+- **A design check on the main pages.** [Impeccable](https://impeccable.style), a design skill
+  with a detector, is built in: it plans and reviews screens, and its detector reads the home page,
+  sign-in, the app and settings as a browser draws them (contrast, text size, heading order, the
+  usual marks of a generated page). Each feature you generate is added to that check.
 - **An agent set up to work here**: short rules, a guard hook, a reviewer, and the skills above.
 
 ## Run it
@@ -86,7 +87,7 @@ npm run check
 
 Lint, types, unused code, the repository's own rules, and the tests that run on the Workers
 runtime. To drive the built product in a real browser as well (a stranger, a sign-in, a sign-out,
-and the design detector on every main page, signed out and signed in):
+and the design detector on the main pages, signed out and signed in):
 
 ```bash
 npm run e2e

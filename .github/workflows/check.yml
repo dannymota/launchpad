@@ -28,8 +28,8 @@ jobs:
       - run: npm run check
       # Generated files are committed; fail when one is out of date.
       - run: npm run config:check
-      - run: npm run theme:check
       - run: npm run design:context -- --check
+      - run: npm run theme:check
       - run: npm run build
       - run: npm run doctor -w @app/web
 

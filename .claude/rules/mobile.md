@@ -26,6 +26,7 @@ differ, this file wins.
   can find. A new screen gets a flow.
 - **Review a screen with `/impeccable audit` and `/impeccable critique`**: they read React Native
   source and judge it by each platform's own guidelines. Their detector and live mode are web-only.
+  Where a playbook and this file differ, this file wins.
 - **Check your work**: `npm run typecheck` and the three `export:*` scripts in `apps/mobile`, then
   `npm run preview` to see shared screens in a browser. Real devices are still required before a
   release: the preview does not run `src/platform` code.

@@ -43,8 +43,10 @@ its engine pinned to match. `rules/design.md` is the short account of how it is 
 
 - **It runs a program.** The skill's commands go through `skills/impeccable/scripts/impeccable` to
   a native engine. npm installs that engine (`impeccable` in the root `package.json`, pinned by the
-  lockfile), and the session-start hook links it next to the launcher, so nothing is downloaded.
-  The launcher also holds the engine to the checksums in `scripts/engine-checksums.txt`.
+  lockfile). At the start of a Claude Code session the hook checks it against the skill's own
+  checksum for it and links it next to the launcher, so nothing is downloaded. Where there is no
+  link (another agent, Windows without symlinks, `node_modules` installed after the session
+  began), the launcher downloads the same engine from GitHub and checks it the same way.
 - **It checks pages as they are edited.** Two hooks in `settings.json` run the engine after an
   edit to a page and once when the agent stops. They report; they never block an edit. Turn them
   off for a project with `/impeccable hooks off`.
@@ -52,9 +54,10 @@ its engine pinned to match. `rules/design.md` is the short account of how it is 
   One thing still reaches impeccable.style: asking it for a new visual direction (a redesign
   through its own workshop), which this template does not use, since the look is `brand.ts`.
 - **It starts no agent of its own.** Its live mode can start a second coding agent with
-  permission checks off when no chat is listening; `settings.json` sets
-  `IMPECCABLE_LIVE_COPY_AGENT=chat`, which forbids that. Live mode, `install`, `update` and `login`
-  always ask first.
+  permission checks off when no chat is listening. `settings.json` sets
+  `IMPECCABLE_LIVE_COPY_AGENT=chat`, which forbids that in every session Claude Code starts; set
+  the same variable yourself before running `npx impeccable live` from your own terminal. Inside
+  a session, live mode, `install`, `update` and `login` always ask first.
 - **What it reads is generated**: `PRODUCT.md` from the brief, `DESIGN.md` from the brand
   (`npm run design:context`).
 

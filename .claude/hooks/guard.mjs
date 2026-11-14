@@ -21,6 +21,10 @@ const GENERATED = [
     "This file is generated. Edit packages/theme/src/brand.ts or palette.config.json, then run `npm run theme`.",
   ],
   [
+    /^(DESIGN\.md|PRODUCT\.md|apps\/mobile\/PRODUCT\.md)$/,
+    "This file is generated. Edit product/brief.md or packages/theme/src/brand.ts, then run `npm run design:context`.",
+  ],
+  [
     /^apps\/web\/src\/themes\/brand\/brand\.(js|css|d\.ts)$/,
     "This file is built by `npm run theme` from brandTheme.ts and packages/theme/src/brand.ts.",
   ],

@@ -28,6 +28,9 @@ describe("writing files", () => {
     expect(refuseWrite("packages/backend/src/db/schema/auth.ts")).toContain("auth:generate");
     expect(refuseWrite("packages/theme/src/generated/tokens.ts")).toContain("npm run theme");
     expect(refuseWrite("apps/web/src/themes/brand/brand.css")).toContain("npm run theme");
+    for (const file of ["DESIGN.md", "PRODUCT.md", "apps/mobile/PRODUCT.md"]) {
+      expect(refuseWrite(file)).toContain("npm run design:context");
+    }
   });
 
   it("allows the files those are generated from, and ordinary source", () => {

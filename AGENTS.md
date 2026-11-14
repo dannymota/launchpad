@@ -94,8 +94,8 @@ says what the product is; read it before building anything, and do not build wha
 ## Before you say it is done
 
 `npm run check` passes. For a page or screen people will judge by eye: `/impeccable polish` it,
-`npm run e2e` (which runs the design detector on the pages), then the `unslop-ui` skill as a second
-look. For a feature, ask the `reviewer` agent to read the change in a fresh context, and fix what
+`npm run e2e` (which runs the design detector on the pages listed in `tests/e2e/design.spec.ts`),
+then the `unslop-ui` skill as a second look. For a feature, ask the `reviewer` agent to read the change in a fresh context, and fix what
 it finds.
 
 ## Hard rules

@@ -6,6 +6,7 @@
 //   node scripts/check-removal.mjs --all                 every part in scripts/removable.mjs
 //   node scripts/check-removal.mjs a+b                   remove several from the same copy
 //   node scripts/check-removal.mjs --feature note [a]    scaffold a feature first (`npm run new:feature`)
+//   node scripts/check-removal.mjs --e2e ...             then drive the result in a browser as well
 //
 // CI runs one name per job (.github/workflows/check.yml).
 import { execFileSync } from "node:child_process";
@@ -18,6 +19,8 @@ import { PARTS } from "./removable.mjs";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
 const keep = args.includes("--keep");
+/** `--e2e` also runs the browser tests on the copy, the design detector included. */
+const e2e = args.includes("--e2e");
 /** `--feature note` scaffolds a feature on the copy first, which proves the generator too. */
 const feature = args.includes("--feature") ? args[args.indexOf("--feature") + 1] : undefined;
 const named = args.filter((arg, index) => !arg.startsWith("--") && args[index - 1] !== "--feature");
@@ -86,7 +89,8 @@ for (const name of names) {
     if (left.length) throw new Error(`markers remain in: ${left.join(", ")}`);
     sh(copy, "npm", ["run", "check"]);
     sh(copy, "npm", ["run", "build"]);
-    console.log(`=== ${name}: check and build pass without it ===`);
+    if (e2e) sh(copy, "npx", ["playwright", "test", "--trace", "off"]);
+    console.log(`=== ${name}: check${e2e ? ", build and browser tests" : " and build"} pass without it ===`);
   } catch (error) {
     failed.push(name);
     console.error(String(error.message ?? error).split("\n")[0]);

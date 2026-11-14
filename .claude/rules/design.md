@@ -36,4 +36,4 @@ and `distill` to finish it. It was copied in at a reviewed version (`.claude/ski
   layout and want a looser content security policy; never commit either, and never loosen the
   Worker's policy for them), `foundations <id>` and `doctor --fix` (they change files outside design
   work), `install`, `update`, `login`, and anything that makes images with an API key.
-- On a phone screen the playbooks follow Apple's and Google's guidelines (`apps/mobile/PRODUCT.md` says `adaptive`); the detector, the per-edit check and `live` are web-only, and where a playbook and `.claude/rules/mobile.md` differ, the rule file wins.
+- **Phone screens**: `apps/mobile/PRODUCT.md` says `adaptive`, so the playbooks follow each platform's guidelines; the detector, the per-edit check and `live` are web-only. (Keep this bullet on one line: removing the app drops the line.)

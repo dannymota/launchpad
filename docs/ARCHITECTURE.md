@@ -112,10 +112,11 @@ screen never sets a colour.
 The `impeccable` skill (copied in, `.claude/skills/VENDORED.md`) plans and reviews screens. It is
 told what the product and its look are by two generated files, so there is no second copy to keep:
 
-| File                                   | Written from                                    | By                       |
-| -------------------------------------- | ----------------------------------------------- | ------------------------ |
-| `DESIGN.md`                            | `packages/theme/src/brand.ts`, the built theme  | `npm run theme`          |
-| `PRODUCT.md`, `apps/mobile/PRODUCT.md` | `product/brief.md`, `product/product.config.ts` | `npm run design:context` |
+| File                     | Written from                                    | By                       |
+| ------------------------ | ----------------------------------------------- | ------------------------ |
+| `DESIGN.md`              | `packages/theme/src/brand.ts`, the built theme  | `npm run theme`          |
+| `PRODUCT.md`             | `product/brief.md`, `product/product.config.ts` | `npm run design:context` |
+| `apps/mobile/PRODUCT.md` | the same, with the app's platform rules         | `npm run design:context` |
 
 `DESIGN.md` carries the brand's values and the template's rules for using them (components only,
 no literal colour, one accent), which is what keeps a design pass inside the component library.

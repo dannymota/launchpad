@@ -2,8 +2,17 @@
 // At the start of a session: make the checks runnable and say where things stand.
 // What it prints is added to the agent's context, so it stays short.
 import { spawnSync } from "node:child_process";
-import { randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { createHash, randomBytes } from "node:crypto";
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 
 const root = process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
@@ -18,8 +27,9 @@ if (!existsSync(at("node_modules"))) {
 }
 
 // Impeccable (the design skill) looks for its engine next to its launcher before it downloads
-// one. Point that place at the copy npm installed, which the lockfile pins: nothing is
-// downloaded, and the design check after each edit works with no network access.
+// one, and runs what it finds there on its version alone. So the copy npm installed is linked
+// there only after it matches the checksum the skill ships for it: the same engine, with
+// nothing downloaded, and the design check after each edit works with no network access.
 function linkDesignEngine() {
   const os = { darwin: "darwin", linux: "linux", win32: "windows" }[process.platform];
   const arch = { arm64: "arm64", x64: "x64" }[process.arch];
@@ -28,8 +38,23 @@ function linkDesignEngine() {
   const scripts = at(".claude/skills/impeccable/scripts");
   if (!existsSync(engine) || !existsSync(scripts)) return;
   const link = join(scripts, "bin", `${os}-${arch}`, exe);
+  const linked = lstatSync(link, { throwIfNoEntry: false });
+  // Something a person put there by hand is theirs: leave it.
+  if (linked && !linked.isSymbolicLink()) return;
   try {
-    if (existsSync(link) && realpathSync(link) === realpathSync(engine)) return;
+    const version = readFileSync(join(scripts, "VERSION"), "utf8").trim();
+    const asset = `impeccable-${os}-${arch}${os === "windows" ? ".exe" : ""}`;
+    const expected = readFileSync(join(scripts, "engine-checksums.txt"), "utf8")
+      .split("\n")
+      .map((line) => line.trim().split(/\s+/))
+      .find(([forVersion, forAsset]) => forVersion === version && forAsset === asset)?.[2];
+    const actual = createHash("sha256").update(readFileSync(engine)).digest("hex");
+    if (actual !== expected) {
+      rmSync(link, { force: true });
+      notes.push("The design engine npm installed is not the one the Impeccable skill pins, so it was not linked.");
+      return;
+    }
+    if (linked && realpathSync(link) === realpathSync(engine)) return;
     mkdirSync(dirname(link), { recursive: true });
     rmSync(link, { force: true });
     symlinkSync(relative(dirname(link), engine), link);

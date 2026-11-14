@@ -1,6 +1,7 @@
 // The files the Impeccable design skill reads (PRODUCT.md, DESIGN.md) are written from the
 // brief and the brand by scripts/design-context.mjs. These hold the mapping, the files on
 // disk, and the pin between the skill's text and the engine npm installs.
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -63,6 +64,39 @@ describe("PRODUCT.md from the brief", () => {
     expect(proven).toMatch(/## Evidence on Hand\n\n412 people on the waitlist\./);
   });
 
+  it("reads a brief the way a person writes one", () => {
+    const loose = `# Acme Notes
+
+## What it is
+
+A notebook.
+
+\`\`\`md
+## Not a section
+\`\`\`
+
+## What it is not:
+
+- A team wiki.
+- A place for files
+
+## voice
+
+1. Dry
+2. Exact
+
+## Proof ##
+
+412 people on the waitlist.
+`;
+    const out = context.productMd({ product, brief: loose, platform: "web" }) as string;
+    expect(out).toMatch(/## Product Purpose\n\nA notebook\.\n\n```md\n## Not a section\n```/);
+    expect(out).toContain("- What it is not: A team wiki; A place for files");
+    expect(out).toContain("- Voice: Dry; Exact");
+    expect(out).toMatch(/## Evidence on Hand\n\n412 people on the waitlist\./);
+    expect(out).not.toContain("## Not a section\n\n");
+  });
+
   it("tells the app to follow each phone, and the website to stay inside the component library", () => {
     const app = context.productMd({ product, brief, platform: "adaptive" }) as string;
     expect(app).toMatch(/## Platform\n\nadaptive\n/);
@@ -115,10 +149,16 @@ describe("the vendored skill and the engine npm installs", () => {
     expect([...pinned]).toEqual([engine]);
   });
 
-  it("checksums the same engine the lockfile pins", () => {
+  it("installs, on this machine, the very engine the skill's checksums name", () => {
+    const os = { darwin: "darwin", linux: "linux", win32: "windows" }[process.platform as string];
+    const exe = os === "windows" ? ".exe" : "";
+    const installed = path.join(ROOT, `node_modules/@impeccable/cli-${os}-${process.arch}/bin/impeccable${exe}`);
+    // The launcher runs a linked engine on its version alone, so this is what holds it to the checksum.
+    expect(fs.existsSync(installed), `${installed} is missing: run npm ci`).toBe(true);
     const engine = read(".claude/skills/impeccable/scripts/VERSION").trim();
-    const checksums = read(".claude/skills/impeccable/scripts/engine-checksums.txt");
-    expect(checksums).toMatch(new RegExp(`^${engine.replaceAll(".", "\\.")} impeccable-linux-x64 [0-9a-f]{64}$`, "m"));
+    const digest = crypto.createHash("sha256").update(fs.readFileSync(installed)).digest("hex");
+    const line = `${engine} impeccable-${os}-${process.arch}${exe} ${digest}`;
+    expect(read(".claude/skills/impeccable/scripts/engine-checksums.txt").split("\n")).toContain(line);
   });
 
   it("is switched to send nothing and to start no agent of its own", () => {

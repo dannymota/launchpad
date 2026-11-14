@@ -30,20 +30,23 @@ Unlike the others, this one is more than guidance: its commands run a native eng
   scripts (`scripts/impeccable`, `impeccable.cmd`) in full; the browser scripts and data files by
   search for network calls, `eval`, cookies and hard-coded hosts. No hidden or unrelated instruction
   was found. The engine is a compiled program: its source is in the same repository and was read
-  only where the documents left a question open, so the engine itself is trusted on its checksum,
-  not on a review.
+  only where the documents left a question open, so the engine itself is trusted as the release its
+  checksum names, not on a review.
 - **The engine is pinned twice.** `scripts/engine-checksums.txt` holds the SHA-256 of engine 0.1.24
-  for each platform, and the launcher refuses anything else. The root `package.json` pins
-  `impeccable` 4.9.1, whose lockfile entry holds the same engine; the Linux build was hashed and
-  matches. `tests/design-context.test.ts` fails if the skill and the package are ever different
-  releases.
+  for each platform; the launcher refuses a download or a cached copy that differs. The root
+  `package.json` pins `impeccable` 4.9.1, whose lockfile entry holds the same engine. The launcher
+  runs an engine it finds beside itself on its version alone, so the session-start hook links the
+  npm copy there only after hashing it against the same checksum file, and
+  `tests/design-context.test.ts` does the same on every test run. That test also fails if the skill
+  and the package are ever different releases.
 - **What it does beyond design, and what the template does about each:**
   - Sends usage reports and checks for updates: both off in `.impeccable/config.json`.
   - Asks impeccable.style for visual directions when a new look is started through its workshop:
     not used here; a new look is a change to `brand.ts`.
   - `live` and `generate` add a script to the root layout, can edit the content security policy in
     a framework config, and can start a coding agent with permission checks off: the last is
-    forbidden by `IMPECCABLE_LIVE_COPY_AGENT=chat` in `.claude/settings.json`, and both commands ask first.
+    forbidden by `IMPECCABLE_LIVE_COPY_AGENT=chat` in `.claude/settings.json` (for sessions Claude
+    Code starts; a terminal of your own needs the variable set there), and both commands ask first.
   - `foundations <id>` and `doctor --fix` change files outside design work (CI, dependencies,
     hosting config, its own records) without asking: the rule file says only on the owner's word.
   - Image generation falls back to an OpenAI key when one is in the environment, and sends a

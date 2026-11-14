@@ -51,8 +51,8 @@ npm run check
 npm run e2e
 ```
 
-The last one drives the product in a browser and runs the design detector on every page, the new
-one included (the scaffold added it to `tests/e2e/design.spec.ts`). Then run the Worker
+The last one drives the product in a browser and runs the design detector on the main pages and
+the new one (the scaffold added it to `tests/e2e/design.spec.ts`). Then run the Worker
 (`npm start -w @app/web`) and use the feature as a signed-in person: add, see, remove, and try an
 empty input. Ask the `reviewer` agent to
 read the change, fix what it finds, and only then report: what works, what you checked, what is left.

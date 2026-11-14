@@ -38,6 +38,7 @@ export const PARTS = {
       ".claude/skills/VENDORED.md": ["ppllama"],
       "AGENTS.md": ["apps/mobile "],
       ".claude/rules/design.md": ["apps/mobile"],
+      "docs/ARCHITECTURE.md": ["apps/mobile/PRODUCT.md"],
       "README.md": ["docs/MOBILE.md", "`/listing`"],
       ".github/workflows/removal.yml": ["          - mobile"],
     },

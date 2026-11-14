@@ -8,10 +8,18 @@ import { expect, type Page, test } from "@playwright/test";
 import { mailedCode } from "./outbox";
 
 const ROOT = path.resolve(import.meta.dirname, "../..");
-/** The detector attaches to the browser through this port. */
-const DEVTOOLS_PORT = 9343;
+/**
+ * The detector attaches to the browser through this port. It differs from run to run, so a
+ * browser left behind by a run that was killed is never the one that gets scanned.
+ */
+const DEVTOOLS_PORT = 9400 + (process.pid % 500);
 
-test.use({ launchOptions: { args: [`--remote-debugging-port=${DEVTOOLS_PORT}`] } });
+test.use({
+  launchOptions: { args: [`--remote-debugging-port=${DEVTOOLS_PORT}`] },
+  contextOptions: { reducedMotion: "reduce" },
+});
+// Each page is scanned twice, and each scan starts a program: give that room.
+test.describe.configure({ timeout: 180_000 });
 
 const SIZES = [
   { name: "desktop", width: 1280, height: 800 },
@@ -23,21 +31,43 @@ interface Finding {
   snippet?: string;
 }
 
-/** What the detector finds on the page as it is shown now, one line per finding. */
-function findingsOn(page: Page): string[] {
+/**
+ * What the detector finds on the page as it is shown now, one line per finding. `target` picks
+ * the page by a part of its address or title.
+ */
+function findingsOn(target: string): string[] {
   const run = spawnSync(
     "npx",
-    ["impeccable", "detect", "--json", "--no-advisory", "--cdp", String(DEVTOOLS_PORT), "--target", page.url()],
+    ["impeccable", "detect", "--json", "--no-advisory", "--cdp", String(DEVTOOLS_PORT), "--target", target],
     {
       cwd: ROOT,
       encoding: "utf8",
+      // The call blocks this process, so Playwright's own time limit cannot end it.
+      timeout: 60_000,
       env: { ...process.env, IMPECCABLE_NO_UPDATE_CHECK: "1", IMPECCABLE_NO_TELEMETRY: "1" },
     },
   );
   // 0 is clean and 2 is findings. Anything else means the page was not scanned at all.
-  if (run.status !== 0 && run.status !== 2)
-    throw new Error(`The detector could not scan ${page.url()}:\n${run.stderr}`);
+  if (run.status !== 0 && run.status !== 2) {
+    throw new Error(
+      `The detector could not scan ${target} (${run.error?.message ?? `exit ${run.status}`}):\n${run.stderr}`,
+    );
+  }
+  // A scan that worked but had something to say (a rule it could not run, for one).
+  if (run.stderr.trim()) console.warn(`Detector, on ${target}: ${run.stderr.trim()}`);
   return (JSON.parse(run.stdout) as Finding[]).map((found) => `${found.antipattern}: ${found.snippet ?? ""}`.trim());
+}
+
+/** The detector's findings on `page` at each size, with the page put back as it was. */
+async function findingsBySize(page: Page, target = page.url()): Promise<Record<string, string[]>> {
+  const before = page.viewportSize();
+  const found: Record<string, string[]> = {};
+  for (const size of SIZES) {
+    await page.setViewportSize(size);
+    found[size.name] = findingsOn(target);
+  }
+  if (before) await page.setViewportSize(before);
+  return found;
 }
 
 /**
@@ -56,15 +86,32 @@ async function outlineOf(page: Page): Promise<number[]> {
 }
 
 async function expectClean(page: Page, where: string) {
-  for (const size of SIZES) {
-    await page.setViewportSize(size);
-    const found = findingsOn(page).filter((finding) => !finding.startsWith("skipped-heading"));
-    expect(found, `${where} at ${size.name} width`).toEqual([]);
+  for (const [size, found] of Object.entries(await findingsBySize(page))) {
+    const real = found.filter((finding) => !finding.startsWith("skipped-heading"));
+    expect(real, `${where} at ${size} width`).toEqual([]);
   }
   const outline = await outlineOf(page);
   const skips = outline.filter((level, index) => level > (outline[index - 1] ?? 0) + 1);
   expect(skips, `${where}: heading levels ${outline.join(", ")} skip a level`).toEqual([]);
 }
+
+test("the detector sees this browser, at the size the test sets", async ({ page }) => {
+  // A page that is wrong on purpose. If this stops failing the detector, a clean result on the
+  // real pages below means nothing. The second paragraph is sized by the window: readable on a
+  // desktop, far too small on a phone.
+  await page.setContent(`<!doctype html><html lang="en"><head><title>design-canary</title></head>
+    <body style="margin:40px;background:#fff;font-family:sans-serif">
+      <h1 style="color:#111">Canary</h1>
+      <p style="font-size:16px;color:#c8c8c8">Pale grey text on white that fails contrast.</p>
+      <p style="font-size:2vw;color:#111">Text sized by the width of the window, for the phone pass.</p>
+    </body></html>`);
+  const found = await findingsBySize(page, "design-canary");
+  const rules = (size: string) => found[size].map((finding) => finding.split(":")[0]);
+  expect(rules("desktop")).toContain("low-contrast");
+  expect(rules("phone")).toContain("low-contrast");
+  expect(rules("phone")).toContain("tiny-text");
+  expect(rules("desktop")).not.toContain("tiny-text");
+});
 
 test("the pages a stranger sees pass the design detector", async ({ page }) => {
   // >>> site
