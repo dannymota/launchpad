@@ -73,7 +73,13 @@
       "Bash(git diff*)",
       "Bash(git log*)"
     ],
-    "ask": ["Bash(npm run deploy*)", "Bash(npm run setup*)", "Bash(npm run access:apply*)", "Bash(npm run remove*)"],
+    "ask": [
+      "Bash(npm run deploy*)",
+      "Bash(npm run setup*)",
+      "Bash(npm run access:apply*)",
+      "Bash(npm run remove*)",
+      "Bash(npm run teardown*)"
+    ],
     "deny": ["Read(./apps/web/.dev.vars)", "Read(./**/.env)", "Read(./**/.env.*)"]
   },
   "extraKnownMarketplaces": {

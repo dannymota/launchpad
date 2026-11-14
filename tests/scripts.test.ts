@@ -15,6 +15,7 @@ const files = {
   smoke: "../scripts/smoke.mjs",
   deploy: "../scripts/deploy.mjs",
   proxy: "../scripts/lib/proxy.mjs",
+  teardown: "../scripts/teardown.mjs",
 };
 // biome-ignore lint/suspicious/noExplicitAny: the scripts are plain JavaScript.
 type Any = any;
@@ -24,6 +25,7 @@ const setup = (await import(files.setup)) as Any;
 const smoke = (await import(files.smoke)) as Any;
 const deploy = (await import(files.deploy)) as Any;
 const proxy = (await import(files.proxy)) as Any;
+const teardown = (await import(files.teardown)) as Any;
 
 const product = (overrides: Partial<Parameters<typeof defineProduct>[0]> = {}): Product =>
   defineProduct({
@@ -270,6 +272,23 @@ describe("judging a deployed product from outside", () => {
     expect(smoke.judge(open, smoke.PROBES.site, behindAccess).ok).toBe(false);
   });
 
+  it("accepts the Access sign-in on /health when the whole host is behind Access", async () => {
+    const behind = async () =>
+      new Response(null, { status: 302, headers: { location: "https://team.cloudflareaccess.com/login" } });
+    const rows = await smoke.smoke("https://x.example", product(), behind);
+    expect(rows[0]).toMatchObject({ what: "/health", ok: true });
+    expect(rows.every((row: Any) => row.ok)).toBe(true);
+    // The same answer on a product whose site is public means the edge is hiding too much.
+    const launched = await smoke.smoke("https://x.example", product({ access: { preset: "public-product" } }), behind);
+    expect(launched[0]).toMatchObject({ what: "/health", ok: false });
+  });
+
+  it("fails /health when the address answers with something else", async () => {
+    const wrong = async () => new Response("<html>not it</html>", { status: 200 });
+    const rows = await smoke.smoke("https://x.example", product({ access: { preset: "public-product" } }), wrong);
+    expect(rows[0]).toMatchObject({ what: "/health", ok: false });
+  });
+
   it("checks /health and every area the product has", async () => {
     const item = product();
     const fetched: string[] = [];
@@ -316,5 +335,68 @@ describe("running behind a proxy", () => {
 
   it("leaves a direct connection alone", () => {
     expect(proxy.needsProxyRerun({})).toBe(false);
+  });
+});
+
+describe("taking staging down", () => {
+  const item = product();
+  const target = { name: "staging", worker: "acme-notes-staging", database: "acme-notes-staging-db" };
+  const label = access.names(item);
+  const account = (overrides: Record<string, unknown> = {}) => {
+    const answers: Record<string, unknown> = {
+      "/accounts/acc/workers/scripts/acme-notes-staging/settings": {
+        bindings: [
+          { type: "kv_namespace", name: "OAUTH_KV", namespace_id: "kv-1" },
+          { type: "d1", name: "DB", id: "db-1" },
+        ],
+      },
+      "/accounts/acc/storage/kv/namespaces?per_page=100": [
+        { id: "kv-1", title: "acme-notes-staging-oauth-kv" },
+        { id: "kv-9", title: "someone-elses-store" },
+      ],
+      "/accounts/acc/d1/database?name=acme-notes-staging-db": [
+        { name: "acme-notes-staging-db", uuid: "db-1" },
+        { name: "acme-notes-staging-db-old", uuid: "db-2" },
+      ],
+      "/accounts/acc/access/apps": [
+        { id: "app-1", name: label.protect, domain: HOST },
+        { id: "app-2", name: label.protect, domain: "acme-notes.example.workers.dev" },
+        { id: "app-3", name: "Another product: internal", domain: HOST },
+      ],
+      ...overrides,
+    };
+    return async (path: string) => {
+      if (!(path in answers)) throw new Error(`unexpected call: ${path}`);
+      return answers[path];
+    };
+  };
+  const steps = (cf: unknown) => teardown.teardownSteps({ cf, account: "acc", product: item, target, host: HOST });
+
+  it("lists exactly what belongs to this staging, Worker first", async () => {
+    const found = await steps(account());
+    expect(found.map((step: Any) => step.path)).toEqual([
+      "/accounts/acc/workers/scripts/acme-notes-staging?force=true",
+      "/accounts/acc/storage/kv/namespaces/kv-1",
+      "/accounts/acc/d1/database/db-1",
+      "/accounts/acc/access/apps/app-1",
+    ]);
+  });
+
+  it("leaves a store that is bound to the Worker but was not made for it", async () => {
+    const found = await steps(
+      account({ "/accounts/acc/storage/kv/namespaces?per_page=100": [{ id: "kv-1", title: "shared-store" }] }),
+    );
+    expect(found.find((step: Any) => step.what.includes("shared-store"))).toMatchObject({ skip: true });
+    expect(found.some((step: Any) => String(step.path).includes("kv/namespaces"))).toBe(false);
+  });
+
+  it("refuses production, and deletes nothing without the Worker's name", () => {
+    expect(() => teardown.parseArgs(["production", "--confirm", "acme-notes"])).toThrow("by hand");
+    expect(() => teardown.parseArgs([])).toThrow("staging");
+    expect(teardown.parseArgs(["staging"])).toEqual({ name: "staging", confirm: undefined });
+    expect(teardown.parseArgs(["staging", "--confirm", "acme-notes-staging"])).toEqual({
+      name: "staging",
+      confirm: "acme-notes-staging",
+    });
   });
 });

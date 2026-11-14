@@ -70,6 +70,18 @@ set and what each missing one would turn on (Google and Apple sign-in, Turnstile
 key and budgets, PostHog). Values go to Cloudflare through wrangler's standard input.
 `/health` on the deployed product shows what is on.
 
+## Taking staging down
+
+For a staging that was only a rehearsal, or one to rebuild from nothing:
+
+```bash
+npm run teardown -- staging
+```
+
+lists what belongs to it: the Worker, its database, its key-value store, its Access applications.
+Add `--confirm <the staging Worker's name>` to delete them, for good. Production is never taken
+down by a script.
+
 ## Changing who can get in
 
 - **Add or remove people**: `npm run access:apply -- <env> --email a@x.com --email b@y.com`

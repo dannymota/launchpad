@@ -44,18 +44,36 @@ export function judge(area, probe, answer) {
     : { ok: false, saw: `${answer.status}, expected ${probe.open.join(" or ")}` };
 }
 
+/**
+ * /health, as a stranger gets it. When the whole host is behind Cloudflare Access (the site is
+ * internal), /health is behind it too: the Access sign-in is then the right answer, and what
+ * the Worker would say cannot be read from outside.
+ */
+async function healthRow(origin, product, fetchImpl) {
+  const response = await fetchImpl(`${origin}/health`, { redirect: "manual" }).catch(() => null);
+  if (!response) return { what: "/health", ok: false, saw: "no answer" };
+  const location = response.headers.get("location") ?? "";
+  if (response.status >= 300 && response.status < 400 && /cloudflareaccess\.com/.test(location)) {
+    await response.body?.cancel();
+    const expected = product.areas.site.visibility === "internal";
+    return {
+      what: "/health",
+      ok: expected,
+      saw: expected ? "Access sign-in, as for the whole host" : "Access sign-in, but the site is meant to be public",
+    };
+  }
+  const health = await response.json().catch(() => null);
+  if (!health) return { what: "/health", ok: false, saw: `${response.status}, not the health report` };
+  return {
+    what: "/health",
+    ok: Boolean(health.ok) && health.access?.preset === product.access.preset && health.access?.configured === true,
+    saw: `preset ${health.access?.preset}, Access ${health.access?.configured ? "set up" : "NOT set up"}, build ${health.version}`,
+  };
+}
+
 export async function smoke(origin, product, fetchImpl = globalThis.fetch) {
   const rows = [];
-  const health = await fetchImpl(`${origin}/health`)
-    .then((response) => response.json())
-    .catch(() => null);
-  rows.push({
-    what: "/health",
-    ok: Boolean(health?.ok) && health.access?.preset === product.access.preset && health.access?.configured === true,
-    saw: health
-      ? `preset ${health.access?.preset}, Access ${health.access?.configured ? "set up" : "NOT set up"}, build ${health.version}`
-      : "no answer",
-  });
+  rows.push(await healthRow(origin, product, fetchImpl));
   for (const [name, area] of Object.entries(product.areas)) {
     const probe = PROBES[name];
     if (!probe) continue;

@@ -25,7 +25,8 @@ with optional surfaces (a mobile app, MCP servers) and modules beside it. Copy i
 | `npm run deploy -- <env>`                    | Check, build, migrate, deploy, set secrets, then check from outside          |
 | `npm run smoke -- <env or address>`          | Check each area of a deployed product as a stranger sees it                  |
 
-`<env>` is `staging` or `production`. Deploy, setup, Access changes and removal always ask first;
+`<env>` is `staging` or `production`. Deploy, setup, Access changes, removal and `npm run teardown`
+(which deletes a staging) always ask first;
 production also needs `--confirm <slug>`. `docs/OPERATIONS.md` has the whole procedure.
 
 Local runs read `apps/web/.dev.vars` (created at session start). `DEV_ACCESS_EMAIL` stands in for

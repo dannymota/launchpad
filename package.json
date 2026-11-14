@@ -40,7 +40,8 @@
     "check:brief": "node scripts/check-brief.mjs",
     "check:listing": "node scripts/check-listing.mjs",
     "knip": "knip --no-progress",
-    "e2e": "npm run build && playwright test"
+    "e2e": "npm run build && playwright test",
+    "teardown": "node scripts/teardown.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.7",
