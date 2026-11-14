@@ -39,23 +39,44 @@ export function briefProblems(text) {
   return problems;
 }
 
+/** The template's own tagline: a product that still has it has not been given one. */
+const TEMPLATE_TAGLINE = "A starting point with sign-in, an API and an assistant connection already working.";
+
 /** What still says "template" in a product config. */
 export function configProblems(product) {
   const problems = [];
   if (product.slug === "launchpad" || product.name === "Launchpad")
     problems.push("product.config.ts still has the template's name and slug.");
   if (!product.tagline.trim()) problems.push("product.config.ts has no tagline.");
+  if (product.tagline.trim() === TEMPLATE_TAGLINE) problems.push("product.config.ts still has the template's tagline.");
   if (product.mobile?.bundleId.startsWith("com.example."))
     problems.push("product.config.ts still has the example bundle id for the app.");
   return problems;
 }
 
+/** Where the brief and the config say different things about the same fact. */
+export function mismatches(text, product) {
+  const problems = [];
+  const title = /^# (.+)$/m.exec(text)?.[1].trim();
+  if (title && title !== product.name)
+    problems.push(`The brief is titled "${title}" but product.config.ts names the product "${product.name}".`);
+  const plans = text.split(/^## Plans\s*$/m)[1]?.split(/^## /m)[0] ?? "";
+  for (const plan of product.plans ?? []) {
+    if (!plans.toLowerCase().includes(plan.name.toLowerCase()))
+      problems.push(
+        `product.config.ts has a plan called "${plan.name}" that the brief's Plans section does not mention.`,
+      );
+  }
+  return problems;
+}
+
 async function main() {
   const file = join(ROOT, "product/brief.md");
+  const { product } = await loadProduct();
   const problems = existsSync(file)
-    ? briefProblems(readFileSync(file, "utf8"))
+    ? [...briefProblems(readFileSync(file, "utf8")), ...mismatches(readFileSync(file, "utf8"), product)]
     : ["There is no product/brief.md. /start <idea> writes it."];
-  problems.push(...configProblems((await loadProduct()).product));
+  problems.push(...configProblems(product));
   if (problems.length) {
     console.error(`The brief is not ready:\n${problems.map((problem) => `  - ${problem}`).join("\n")}`);
     process.exit(1);

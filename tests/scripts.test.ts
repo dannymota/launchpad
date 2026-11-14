@@ -16,6 +16,7 @@ const files = {
   deploy: "../scripts/deploy.mjs",
   proxy: "../scripts/lib/proxy.mjs",
   teardown: "../scripts/teardown.mjs",
+  brief: "../scripts/check-brief.mjs",
 };
 // biome-ignore lint/suspicious/noExplicitAny: the scripts are plain JavaScript.
 type Any = any;
@@ -26,6 +27,7 @@ const smoke = (await import(files.smoke)) as Any;
 const deploy = (await import(files.deploy)) as Any;
 const proxy = (await import(files.proxy)) as Any;
 const teardown = (await import(files.teardown)) as Any;
+const brief = (await import(files.brief)) as Any;
 
 const product = (overrides: Partial<Parameters<typeof defineProduct>[0]> = {}): Product =>
   defineProduct({
@@ -84,6 +86,43 @@ describe("wrangler.jsonc from the product config", () => {
   it("keeps every comment", () => {
     const comments = (text: string) => text.split("\n").filter((line) => line.trim().startsWith("//")).length;
     expect(comments(config.wranglerFor(original, product()))).toBe(comments(original));
+  });
+});
+
+describe("the gate after /start", () => {
+  const sections = brief.SECTIONS.map(
+    (name: string) => `## ${name}\n\n${name === "Plans" ? "Free, and Team at $19." : "Said."}`,
+  );
+  const text = `# Acme Notes\n\n${sections.join("\n\n")}\n`;
+  const plans = [
+    { id: "free", name: "Free", price: "Free", paid: false, includes: [] },
+    { id: "team", name: "Team", price: "$19", paid: true, includes: [] },
+  ];
+
+  it("passes a brief that has every section and agrees with the config", () => {
+    expect(brief.briefProblems(text)).toEqual([]);
+    expect(brief.mismatches(text, product({ plans }))).toEqual([]);
+    expect(brief.configProblems(product({ tagline: "Notes that find themselves." }))).toEqual([]);
+  });
+
+  it("names a missing or empty section", () => {
+    expect(brief.briefProblems(text.replace("## Voice\n\nSaid.", "## Voice\n\nTBD"))).toEqual([
+      'The "Voice" section is empty.',
+    ]);
+    expect(brief.briefProblems(text.replace("## Legal", "## Lawyers")).join(" ")).toContain(
+      '"Legal" section is missing',
+    );
+  });
+
+  it("catches a brief and a config that disagree, and a config still carrying the template's words", () => {
+    const pro = [{ id: "pro", name: "Pro", price: "$12 a month", paid: true, includes: [] }];
+    expect(brief.mismatches(text, product({ plans: pro })).join(" ")).toContain('plan called "Pro"');
+    expect(brief.mismatches(text.replace("# Acme Notes", "# Acme"), product({ plans })).join(" ")).toContain("titled");
+    const template = product({
+      tagline: "A starting point with sign-in, an API and an assistant connection already working.",
+    });
+    expect(brief.configProblems(template).join(" ")).toContain("template's tagline");
+    expect(brief.configProblems(product()).join(" ")).toContain("no tagline");
   });
 });
 
