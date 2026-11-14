@@ -43,5 +43,10 @@ export default defineConfig({
   ],
   test: {
     include: ["tests/**/*.workers.test.ts"],
+    // Vitest keeps transformed modules on disk and hands a warm worker the whole set at once.
+    // The Cloudflare pool has to send that set to the runtime as one WebSocket message, and
+    // with this many dependencies it passes the runtime's 32 MiB limit: workers then die with
+    // "Message is too large". Without the disk cache, modules are sent one at a time.
+    fsModuleCache: false,
   },
 });

@@ -1,6 +1,7 @@
 // The sign-in routes this app uses, and nothing else. Better Auth mounts many endpoints;
 // only the ones listed here are reachable, each behind its limits. An unlisted path under
 // /api/auth answers 404, so a flow that was never wired cannot be reached by accident.
+import { modules } from "../core/modules";
 import { type SignInMethods, signInMethods } from "../core/runtime";
 import type { Env } from "../env";
 import { clientAddress, clientNetwork, consumeLimit, type LimitName } from "./limits";
@@ -45,6 +46,14 @@ const ROUTES: Record<string, Route> = {
   "/error": { methods: ["GET"], perIp: ["sessionIp"] },
 };
 
+/** A route one of the optional modules serves, while that module is on. */
+function moduleRoute(env: Env, name: string): Route | undefined {
+  for (const module of modules()) {
+    if (module.authRoutes && Object.hasOwn(module.authRoutes, name) && module.on(env)) return module.authRoutes[name];
+  }
+  return undefined;
+}
+
 const notFound = () => Response.json({ code: "NOT_FOUND", message: "No such sign-in route." }, { status: 404 });
 
 async function emailIn(request: Request): Promise<string | null> {
@@ -63,7 +72,7 @@ async function emailIn(request: Request): Promise<string | null> {
 export async function authGate(request: Request, env: Env, basePath: string): Promise<Response | null> {
   const name = new URL(request.url).pathname.slice(basePath.length);
   // An own-key lookup: "constructor" and the like are not routes.
-  const route = Object.hasOwn(ROUTES, name) ? ROUTES[name] : undefined;
+  const route: Route | undefined = Object.hasOwn(ROUTES, name) ? ROUTES[name] : moduleRoute(env, name);
   if (!route?.methods.includes(request.method as Method)) return notFound();
   if (route.needs) {
     const methods = signInMethods(env);

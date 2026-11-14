@@ -27,6 +27,20 @@ export interface ProductConfig {
     google: boolean;
     apple: boolean;
   };
+  /**
+   * What people can be on. The first plan that is not `paid` is the free tier. A paid plan's
+   * Stripe price is a Worker variable, STRIPE_PRICE_<ID in capitals>, not written here.
+   */
+  plans?: {
+    /** Short and stable: "free", "pro". Stored on subscriptions, so do not rename a plan people are on. */
+    id: string;
+    name: string;
+    /** As shown to people: "$12 a month", "Free". */
+    price: string;
+    paid: boolean;
+    /** What the plan includes, a line each. */
+    includes: string[];
+  }[];
   /** The iOS and Android app. Leave out for a product with no mobile app. */
   mobile?: {
     /** iOS bundle identifier, e.g. "com.example.app". */
@@ -69,6 +83,12 @@ export function defineProduct(config: ProductConfig): Product {
   if (mode === "domain" && domains.length === 0) {
     throw new Error('product.config: signup.mode "domain" needs at least one entry in signup.domains.');
   }
+  const planIds = (config.plans ?? []).map((plan) => plan.id);
+  for (const id of planIds) {
+    if (!/^[a-z][a-z0-9-]{0,30}$/.test(id))
+      throw new Error(`product.config: plan id "${id}" must be lowercase letters, digits and dashes.`);
+  }
+  if (new Set(planIds).size !== planIds.length) throw new Error("product.config: two plans share an id.");
   if (config.mobile) {
     const { bundleId, androidPackage, minVersion } = config.mobile;
     if (!APP_ID.test(bundleId))

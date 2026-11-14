@@ -10,3 +10,6 @@ export {
   type User,
   UserSchema,
 } from "./schemas/account";
+// >>> ai
+export { type AiAnswerEvent, AiAnswerEventSchema, AiBudgetSchema } from "./schemas/ai";
+// <<< ai

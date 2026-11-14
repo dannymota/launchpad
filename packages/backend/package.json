@@ -8,23 +8,28 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit --incremental false && tsc -p tsconfig.test.json --noEmit --incremental false",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "auth:generate": "auth generate --config ./auth.cli.ts --output ./src/db/schema/auth.ts --yes"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "1.8.0",
     "@app/product": "*",
     "@app/shared": "*",
     "@better-auth/drizzle-adapter": "1.7.23",
     "@better-auth/expo": "1.7.23",
+    "@better-auth/stripe": "1.7.23",
     "@orpc/openapi": "2.0.0-beta.50",
     "@orpc/server": "2.0.0-beta.50",
     "@orpc/zod": "2.0.0-beta.50",
     "better-auth": "1.7.23",
     "drizzle-orm": "0.45.4",
     "jose": "6.2.17",
+    "stripe": "23.1.0",
     "zod": "4.6.7"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261113.1",
+    "auth": "1.7.23",
     "drizzle-kit": "0.31.11"
   }
 }

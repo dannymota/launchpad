@@ -22,6 +22,21 @@ export default defineProduct({
 
   signIn: { emailCode: true, google: false, apple: false },
 
+  // >>> payments
+  // Plans. The free tier comes first. A paid plan is sold once its Stripe price id is set on
+  // the Worker as STRIPE_PRICE_<ID IN CAPITALS> (here, STRIPE_PRICE_PRO).
+  plans: [
+    { id: "free", name: "Free", price: "Free", paid: false, includes: ["Everything you need to get started"] },
+    {
+      id: "pro",
+      name: "Pro",
+      price: "$12 a month",
+      paid: true,
+      includes: ["Everything in Free", "For people who use it every day"],
+    },
+  ],
+  // <<< payments
+
   // The iOS and Android app (apps/mobile). Remove this block for a product with no app.
   mobile: {
     bundleId: "com.example.launchpad",

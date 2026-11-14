@@ -52,6 +52,27 @@ export interface Env {
   /** SHA-256 fingerprints of the keys that sign the Android app, comma-separated, for App Links. */
   ANDROID_CERT_SHA256?: string;
 
+  // >>> payments
+  /** Payments (Stripe). Both set = on. Each paid plan's price is STRIPE_PRICE_<PLAN ID>, e.g. STRIPE_PRICE_PRO. */
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  // <<< payments
+
+  // >>> ai
+  /** AI (Claude). The key set = on. Calls stop once the month's budget is spent. */
+  ANTHROPIC_API_KEY?: string;
+  /** Send calls through Cloudflare AI Gateway: its Anthropic endpoint, "https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/anthropic". */
+  AI_GATEWAY_URL?: string;
+  /** The gateway's token, when the gateway requires one. */
+  AI_GATEWAY_TOKEN?: string;
+  /** The model to call. Default "claude-opus-5-5". */
+  AI_MODEL?: string;
+  /** Dollars the whole product may spend on model calls in a calendar month. Default 10. */
+  AI_MONTHLY_BUDGET_USD?: string;
+  /** Dollars one person may spend of that in a month. Default 2. */
+  AI_PERSON_MONTHLY_BUDGET_USD?: string;
+  // <<< ai
+
   /** Cloudflare Turnstile on the sign-in code form. Both set = on. The site key is public. */
   TURNSTILE_SITE_KEY?: string;
   TURNSTILE_SECRET_KEY?: string;

@@ -4,7 +4,15 @@
 import type { Env } from "@app/backend";
 import { createMcp, defineServers, SERVERS } from "@app/mcp";
 import { createRouter, type Pages } from "../worker/router";
-import { PRODUCT_HEADER, PRODUCTS, type ProductName, WRITER_SERVER } from "./products";
+import {
+  ENVIRONMENT_HEADER,
+  ENVIRONMENTS,
+  type EnvironmentName,
+  PRODUCT_HEADER,
+  PRODUCTS,
+  type ProductName,
+  WRITER_SERVER,
+} from "./products";
 
 // An HTML document, as a real page is, carrying what it was asked for in a script tag.
 const pages: Pages = {
@@ -31,6 +39,7 @@ export default {
   fetch(request, env, ctx) {
     const name = (request.headers.get(PRODUCT_HEADER) ?? "public-product") as ProductName;
     if (!(name in PRODUCTS)) return new Response(`Unknown test product "${name}"`, { status: 500 });
-    return routerFor(name)(request, env, ctx);
+    const extra = request.headers.get(ENVIRONMENT_HEADER) as EnvironmentName | null;
+    return routerFor(name)(request, extra ? { ...env, ...ENVIRONMENTS[extra] } : env, ctx);
   },
 } satisfies ExportedHandler<Env>;

@@ -3,6 +3,12 @@
 import { deleteAccount, listSessions, revokeSession } from "../accounts/account";
 import { listUsers, setBanned } from "../accounts/admin";
 import { listGrants, revokeGrant } from "../accounts/assistants";
+// >>> ai
+import { ask, budget } from "../modules/ai/runner";
+// <<< ai
+// >>> payments
+import { currentPlan } from "../modules/payments/plans";
+// <<< payments
 import { adminOnly, inPerson, os, signedIn, userErrors } from "./base";
 
 const ok = { ok: true as const };
@@ -46,6 +52,21 @@ export const router = os.router({
       return ok;
     }),
   },
+  // >>> ai
+  ai: {
+    ask: os.ai.ask
+      .use(inPerson)
+      .handler(({ context, input }) => userErrors(() => ask(context.env, context.principal.userId, input.prompt))),
+    budget: os.ai.budget.use(inPerson).handler(({ context }) => budget(context.env, context.principal.userId)),
+  },
+  // <<< ai
+  // >>> payments
+  billing: {
+    current: os.billing.current
+      .use(signedIn)
+      .handler(({ context }) => currentPlan(context.env, context.principal.userId)),
+  },
+  // <<< payments
   admin: {
     users: {
       list: os.admin.users.list.use(adminOnly).handler(({ context, input }) => listUsers(context.env, input)),

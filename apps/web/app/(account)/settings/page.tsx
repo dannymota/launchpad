@@ -1,5 +1,6 @@
 // Account settings (Astryx template: settings). One scrolling page: each section is a
 // heading with a sentence beside what it controls.
+import { Button } from "@astryxdesign/core/Button";
 import { Divider } from "@astryxdesign/core/Divider";
 import { Grid } from "@astryxdesign/core/Grid";
 import { HStack, Layout, LayoutContent, LayoutHeader, StackItem, VStack } from "@astryxdesign/core/Layout";
@@ -72,6 +73,15 @@ export default async function SettingsPage() {
                 </Section>
               </>
             )}
+
+            {/* >>> payments */}
+            <Divider />
+            <Section title="Plan" about="What you're on, and where to change it.">
+              <HStack>
+                <Button label="Plan and billing" href="/settings/billing" />
+              </HStack>
+            </Section>
+            {/* <<< payments */}
 
             <Divider />
             <Section

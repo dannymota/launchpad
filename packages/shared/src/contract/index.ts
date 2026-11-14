@@ -12,6 +12,9 @@ import { oc } from "@orpc/contract";
 import { openapi } from "@orpc/openapi";
 import * as z from "zod";
 import { AdminUserSchema, AssistantSchema, OkSchema, SessionSchema, UserSchema } from "../schemas/account";
+// >>> ai
+import { AiAnswerStreamSchema, AiBudgetSchema } from "../schemas/ai";
+// <<< ai
 
 // Two namespaces are tied to an access area, so the edge can tell them apart by path:
 //   public.*  what the public site calls without a sign-in. REST paths start with /public/.
@@ -108,6 +111,57 @@ export const contract = {
       .input(z.object({ confirm: z.literal("delete my account") }))
       .output(OkSchema),
   },
+  // >>> ai
+  ai: {
+    ask: oc
+      .meta(
+        openapi({
+          method: "POST",
+          path: "/ai/ask",
+          operationId: "askAi",
+          summary: "Ask the assistant a question",
+          description:
+            "Streams the model's answer as it is written, ending with how it finished. Each call counts against this month's AI budget and is refused once that is spent.",
+        }),
+      )
+      .input(z.object({ prompt: z.string().trim().min(1).max(4000) }))
+      .output(AiAnswerStreamSchema),
+    budget: oc
+      .meta(
+        openapi({
+          method: "GET",
+          path: "/ai/budget",
+          operationId: "aiBudget",
+          summary: "How much of my AI budget is left",
+          description: "Returns what this account has used of its share of this month's AI budget.",
+        }),
+      )
+      .output(AiBudgetSchema),
+  },
+  // <<< ai
+  // >>> payments
+  billing: {
+    current: oc
+      .meta(
+        openapi({
+          method: "GET",
+          path: "/billing/current",
+          operationId: "currentPlan",
+          summary: "Which plan am I on",
+          description: "Returns the plan this account is on right now, and whether a paid plan is set to end.",
+        }),
+      )
+      .output(
+        z.object({
+          plan: z.string().describe('The plan\'s id from the product config, e.g. "free" or "pro".'),
+          status: z.string().describe('"none" on the free plan; otherwise "active" or "trialing".'),
+          endsAtPeriodEnd: z
+            .boolean()
+            .describe("True when a paid plan was cancelled and runs out at the end of the period."),
+        }),
+      ),
+  },
+  // <<< payments
   admin: {
     users: {
       list: oc

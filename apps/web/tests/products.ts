@@ -26,6 +26,15 @@ export const PRODUCTS = {
   "signup-allowlist": defineProduct({ ...base, signup: { mode: "allowlist" } }),
   "signup-domain": defineProduct({ ...base, signup: { mode: "domain", domains: ["corp.example"] } }),
   "social-sign-in": defineProduct({ ...base, signIn: { emailCode: true, google: true, apple: true } }),
+  // >>> payments
+  "with-plans": defineProduct({
+    ...base,
+    plans: [
+      { id: "free", name: "Free", price: "Free", paid: false, includes: ["The basics"] },
+      { id: "pro", name: "Pro", price: "$12 a month", paid: true, includes: ["Everything"] },
+    ],
+  }),
+  // <<< payments
   /** A launched product with an iOS and Android app. */
   "with-app": defineProduct({
     ...base,
@@ -36,6 +45,32 @@ export const PRODUCTS = {
 } satisfies Record<string, Product>;
 
 export type ProductName = keyof typeof PRODUCTS;
+
+/** Settings a test can switch on for one request, on top of the test Worker's own. */
+export const ENVIRONMENTS = {
+  // >>> ai
+  ai: { ANTHROPIC_API_KEY: "sk-ant-test-runtime" },
+  /** Through an AI Gateway that asks for a token, on the cheapest model. */
+  "ai-gateway": {
+    ANTHROPIC_API_KEY: "sk-ant-test-runtime",
+    AI_GATEWAY_URL: "https://gateway.ai.cloudflare.com/v1/test-account/test-gateway/anthropic",
+    AI_GATEWAY_TOKEN: "gateway-token-test",
+    AI_MODEL: "claude-haiku-5-5",
+  },
+  /** Room for exactly one call at a time in a person's share. */
+  "ai-tight": { ANTHROPIC_API_KEY: "sk-ant-test-runtime", AI_PERSON_MONTHLY_BUDGET_USD: "1" },
+  "ai-spent": { ANTHROPIC_API_KEY: "sk-ant-test-runtime", AI_MONTHLY_BUDGET_USD: "0" },
+  // <<< ai
+  // >>> payments
+  stripe: {
+    STRIPE_SECRET_KEY: "sk_test_runtime",
+    STRIPE_WEBHOOK_SECRET: "whsec_runtime",
+    STRIPE_PRICE_PRO: "price_pro_test",
+  },
+  // <<< payments
+} satisfies Record<string, Record<string, string>>;
+export type EnvironmentName = keyof typeof ENVIRONMENTS;
+export const ENVIRONMENT_HEADER = "x-test-env";
 
 /**
  * A second MCP server, only in tests: it proves that the registry serves more than one, and

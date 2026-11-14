@@ -1,5 +1,8 @@
 // What the surfaces may use. Pages and the Worker import from here; nothing outside this
 // package reaches into its folders.
+// Registers the optional modules before anything asks the registry.
+import "./modules";
+
 export {
   type ActiveGrant,
   activeGrant,

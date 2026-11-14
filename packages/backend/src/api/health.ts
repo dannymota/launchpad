@@ -1,6 +1,7 @@
 // What /health reports: which build is running and which optional features are configured.
 // Nothing here is secret; the endpoint is public so a deploy can be checked from outside.
 
+import { moduleStates } from "../core/modules";
 import { productOf } from "../core/product";
 import { captchaOn, emailMode, type SignInMethods, signInMethods } from "../core/runtime";
 import type { Env } from "../env";
@@ -18,6 +19,8 @@ export interface Health {
   signIn: SignInMethods & { captcha: boolean };
   /** For the native app: builds older than `minVersion` should ask the person to update. Null with no app. */
   mobile: { minVersion: string } | null;
+  /** Optional modules in this product, and whether each has the settings it needs. */
+  modules: Record<string, "on" | "off">;
 }
 
 export function health(env: Env): Health {
@@ -30,5 +33,6 @@ export function health(env: Env): Health {
     access: { preset: product.access.preset, configured: accessConfigured(env) },
     signIn: { ...signInMethods(env), captcha: captchaOn(env) },
     mobile: product.mobile ? { minVersion: product.mobile.minVersion } : null,
+    modules: moduleStates(env),
   };
 }

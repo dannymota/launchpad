@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { appleClientSecret } from "../core/apple-secret";
 import { authPlugins, authTableOptions, CODE_SECONDS } from "../core/auth-options";
 import { authSettings } from "../core/auth-settings";
+import { modules } from "../core/modules";
 import { productOf } from "../core/product";
 import { isLocalRun, signInMethods } from "../core/runtime";
 import { getDb, schema } from "../db/client";
@@ -105,6 +106,8 @@ export async function getAuth(env: Env, origin: string) {
       },
     },
     plugins: authPlugins({
+      // What the optional modules add (payments, for one), while each is on.
+      extra: modules().flatMap((module) => module.authPlugins?.(env) ?? []),
       sendCode: async ({ email, code }) => {
         // An address that has no account and may not create one gets no mail. The caller sees
         // the same answer either way, so this cannot be used to learn who has an account.

@@ -7,7 +7,7 @@ import { exports, env as workerEnv } from "cloudflare:workers";
 import type { Env } from "@app/backend";
 import type { D1Migration } from "@cloudflare/vitest-plugin";
 import { importJWK, SignJWT } from "jose";
-import { PRODUCT_HEADER, type ProductName } from "./products";
+import { ENVIRONMENT_HEADER, type EnvironmentName, PRODUCT_HEADER, type ProductName } from "./products";
 
 export const ORIGIN = "http://localhost";
 export const ADMIN_EMAIL = "admin@example.com";
@@ -41,6 +41,8 @@ let nextAddress = 1;
 export interface BrowserOptions {
   /** Which product config the Worker runs with. Default: a launched product with open signup. */
   product?: ProductName;
+  /** Extra settings to switch on for this browser's requests (tests/products.ts). */
+  environment?: EnvironmentName;
   /** Come through Cloudflare Access as this email. */
   accessEmail?: string;
   /** Or with this exact token, to try ones Access would never issue. */
@@ -79,6 +81,7 @@ export class Browser {
     headers.set("host", new URL(ORIGIN).host);
     if (!headers.has("cf-connecting-ip")) headers.set("cf-connecting-ip", this.address);
     if (this.options.product) headers.set(PRODUCT_HEADER, this.options.product);
+    if (this.options.environment) headers.set(ENVIRONMENT_HEADER, this.options.environment);
     const jwt = await this.accessJwt();
     if (jwt) headers.set("cf-access-jwt-assertion", jwt);
     if (this.cookies.size)
