@@ -18,7 +18,8 @@ import { chromium } from "@playwright/test";
 
 const ROOT = resolve(fileURLToPath(import.meta.url), "../..");
 const WEB = join(ROOT, "apps/web");
-const PORT = 8791;
+// `SHOTS_PORT=8796 npm run shots` when another copy of the product holds the port.
+const PORT = Number(process.env.SHOTS_PORT) || 8791;
 const STATE = ".wrangler/shots";
 const ORIGIN = `http://127.0.0.1:${PORT}`;
 
