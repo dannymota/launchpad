@@ -25,6 +25,8 @@ describe("writing files", () => {
   it("refuses generated files and says how to regenerate each", () => {
     expect(refuseWrite("packages/backend/migrations/0001_new.sql")).toContain("db:generate");
     expect(refuseWrite("packages/backend/migrations/meta/_journal.json")).toContain("db:generate");
+    // And the way to replace one that is not committed, which is a command and not an edit.
+    expect(refuseWrite("packages/backend/migrations/0001_new.sql")).toContain("npm run db:redo");
     expect(refuseWrite("packages/backend/src/db/schema/auth.ts")).toContain("auth:generate");
     expect(refuseWrite("packages/theme/src/generated/tokens.ts")).toContain("npm run theme");
     expect(refuseWrite("apps/web/src/themes/brand/brand.css")).toContain("npm run theme");
@@ -99,6 +101,7 @@ describe("running commands", () => {
       "npm run dev",
       "npx wrangler dev --port 8787",
       "npm run db:generate",
+      "npm run db:redo",
       "git status",
       "git commit -m 'Add notes'",
       "npx astryx component Button",

@@ -514,6 +514,8 @@ describe("entries the list drops from JSON files", () => {
 
   it("each name something that is in the file, at the key (or the path into the file) given", () => {
     for (const [name, part] of Object.entries(parts)) {
+      // A part that has been removed took its entries with it.
+      if (removed(part)) continue;
       for (const [file, sections] of Object.entries(part.json ?? {})) {
         const data = JSON.parse(fs.readFileSync(path.join(ROOT, file), "utf8"));
         for (const [section, entries] of Object.entries(sections)) {

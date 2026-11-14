@@ -28,8 +28,10 @@ and `distill` to finish it. It was copied in at a reviewed version (`.claude/ski
   and said in your reply; never silence a whole rule or file without the owner.
 - **The gate is `tests/e2e/design.spec.ts`**, part of `npm run e2e`: it runs the detector on the
   pages as a browser draws them, at desktop and phone width, signed out and signed in. A new page
-  gets a line there (`npm run new:feature` adds one). The detector reads tag names, so the heading
-  outline is checked in that test instead.
+  gets its lines there. `npm run new:feature` adds them: the page with no row, then with one added
+  through its form, which is then deleted through the page. Keep them in step with the form.
+  The detector reads tag names, so the heading outline is checked in that test instead. So is a
+  page wider than the window (a long word that cannot wrap), which the detector does not report.
 - **See a page in seconds, before the full gate.** `npm run shots -- --only /app/<page>` pictures
   it signed in, light and dark, desktop and phone. With the built Worker running
   (`npm start -w @app/web`), `npx impeccable detect http://127.0.0.1:8787/<page> --viewport 390x844`

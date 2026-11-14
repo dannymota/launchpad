@@ -22,6 +22,7 @@
     "test:workers": "npm run test:workers -w @app/web",
     "db:generate": "npm run db:generate -w @app/backend",
     "db:migrate:local": "npm run db:migrate:local -w @app/web",
+    "db:redo": "node scripts/db-redo.mjs",
     "check": "npm run lint && npm run typecheck && npm run knip && npm test && npm run test:workers",
     "mcp:test": "node scripts/oauth-test.mjs",
     "theme": "npm run palette -w @app/theme && npm run theme -w @app/web && node scripts/build-tokens.mjs && node scripts/design-context.mjs",

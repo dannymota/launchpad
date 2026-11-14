@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const GENERATED = [
   [
     /^packages\/backend\/migrations\//,
-    "Migrations are generated. Edit packages/backend/src/db/schema, then run `npm run db:generate`.",
+    "Migrations are generated, never written by hand. Edit packages/backend/src/db/schema, then run `npm run db:generate`. To replace one that is not committed yet (a new table that changed shape), run `npm run db:redo`.",
   ],
   [
     /^packages\/backend\/src\/db\/schema\/auth\.ts$/,

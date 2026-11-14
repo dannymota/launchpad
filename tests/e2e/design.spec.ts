@@ -2,6 +2,8 @@
 // text size, heading order, overflow, and the usual tells of a generated page. It reads the
 // page Playwright has open, so signed-in pages are covered too. Rules: `npx impeccable detect
 // --list-rules`. An exception goes in .impeccable/config.json with a reason, never here.
+// Two things the detector does not report are measured here: the heading outline, and a page
+// that is wider than the window.
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { expect, type Page, test } from "@playwright/test";
@@ -60,14 +62,36 @@ function findingsOn(target: string): string[] {
   return (JSON.parse(run.stdout) as Finding[]).map((found) => `${found.antipattern}: ${found.snippet ?? ""}`.trim());
 }
 
-/** The detector's findings on `page` in each view, with the page put back as it was. */
+/**
+ * A finding when the page is wider than the window, so that it scrolls sideways: the document
+ * itself, or a frame as wide as the window that holds the page (Astryx's Layout scrolls its
+ * content in one). A long word that cannot wrap does this to a phone, and the detector does
+ * not report it. A narrower box that scrolls sideways on purpose (a wide table) is not the page.
+ */
+async function widerThanWindow(page: Page): Promise<string[]> {
+  return page.locator("html, body *").evaluateAll((elements) => {
+    const view = elements[0]?.ownerDocument.defaultView;
+    if (!view) return [];
+    const frames = elements.filter((element) => {
+      if (element.scrollWidth <= element.clientWidth + 1) return false;
+      if (element.localName === "html") return true;
+      const fillsWindow = element.getBoundingClientRect().width >= view.innerWidth - 1;
+      return fillsWindow && /auto|scroll/.test(view.getComputedStyle(element).overflowX);
+    });
+    return frames.map(
+      (frame) => `wider-than-window: ${frame.scrollWidth}px of content in a window ${view.innerWidth}px wide`,
+    );
+  });
+}
+
+/** What is found on `page` in each view, by the detector and by measuring, with the page put back as it was. */
 async function findingsByView(page: Page, target = page.url()): Promise<Record<string, string[]>> {
   const before = page.viewportSize();
   const found: Record<string, string[]> = {};
   for (const view of VIEWS) {
     await page.setViewportSize({ width: view.width, height: view.height });
     await page.emulateMedia({ colorScheme: view.scheme });
-    found[view.name] = findingsOn(target);
+    found[view.name] = [...findingsOn(target), ...(await widerThanWindow(page))];
   }
   await page.emulateMedia({ colorScheme: "light" });
   if (before) await page.setViewportSize(before);
@@ -103,6 +127,7 @@ test("the detector sees this browser, at the size and in the colours the test se
   // A page that is wrong on purpose. If this stops failing the detector, a clean result on the
   // real pages below means nothing. The second paragraph is sized by the window: readable on a
   // desktop, far too small on a phone. The third is readable in light and too faint in dark.
+  // The fourth cannot wrap: it fits a desktop window and runs off the side of a phone.
   await page.setContent(`<!doctype html><html lang="en"><head><title>design-canary</title>
     <style>:root { color-scheme: light dark }</style></head>
     <body style="margin:40px;background:light-dark(#ffffff,#222222);font-family:sans-serif">
@@ -110,6 +135,7 @@ test("the detector sees this browser, at the size and in the colours the test se
       <p style="font-size:16px;color:#9a9a9a">Mid grey text that fails contrast on white and on near-black.</p>
       <p style="font-size:2vw;color:light-dark(#111111,#eeeeee)">Text sized by the width of the window.</p>
       <p style="font-size:16px;color:light-dark(#111111,#3a3a3a)">Text that only the dark colours make too faint.</p>
+      <p style="font-size:16px;white-space:nowrap;color:light-dark(#111111,#eeeeee)">One line that is not allowed to wrap, and is wider than a phone.</p>
     </body></html>`);
   const found = await findingsByView(page, "design-canary");
   const rules = (view: string) => found[view].map((finding) => finding.split(":")[0]);
@@ -119,6 +145,9 @@ test("the detector sees this browser, at the size and in the colours the test se
   // The faint dark text is reported with its colour, and only when the page is shown in dark.
   expect(found["desktop, dark"].join("\n")).toContain("#3a3a3a");
   expect(found.desktop.join("\n")).not.toContain("#3a3a3a");
+  // The line that cannot wrap makes the page wider than a phone, and only a phone.
+  expect(rules("phone")).toContain("wider-than-window");
+  expect(rules("desktop")).not.toContain("wider-than-window");
 });
 
 test("the pages a stranger sees pass the design detector", async ({ page }) => {
