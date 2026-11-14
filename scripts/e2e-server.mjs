@@ -1,16 +1,19 @@
 #!/usr/bin/env node
 // Starts the built Worker for the browser tests: a fresh local database every run, the
 // product as it is after launch (public, own sign-in), and nobody standing in for
-// Cloudflare Access. Playwright starts and stops this (playwright.config.ts).
+// Cloudflare Access. Playwright starts and stops this (playwright.config.ts), and so does
+// scripts/shots.mjs.
 import { execFileSync, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { existsSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const E2E_PORT = 8790;
-/** Where the tests' local database lives. tests/e2e reads the mail outbox from it. */
-const E2E_STATE = ".wrangler/e2e";
+// The port and the database folder are the browser tests' by default; `npm run shots` runs a
+// second copy beside them by setting both.
+const E2E_PORT = Number(process.env.PRODUCT_PORT) || 8790;
+/** Where this run's local database lives. The mail outbox is read from it. */
+const E2E_STATE = process.env.PRODUCT_STATE || ".wrangler/e2e";
 
 const WEB = join(resolve(dirname(fileURLToPath(import.meta.url)), ".."), "apps/web");
 
@@ -46,7 +49,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       "--ip",
       "127.0.0.1",
       "--inspector-port",
-      "9342",
+      String(E2E_PORT + 552),
       ...Object.entries(settings).flatMap(([name, value]) => ["--var", `${name}:${value}`]),
     ],
     { cwd: WEB, stdio: "inherit" },

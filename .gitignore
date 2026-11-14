@@ -8,6 +8,7 @@ next-env.d.ts
 coverage/
 test-results/
 playwright-report/
+shots/
 
 # local secrets
 .dev.vars*

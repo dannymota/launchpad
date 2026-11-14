@@ -87,6 +87,29 @@ describe("wrangler.jsonc from the product config", () => {
   });
 });
 
+describe("the other files that carry the product's name and plans", () => {
+  it("renames the package in the lockfile, in both places it is held, and nothing else", () => {
+    const lock = `{\n  "name": "launchpad",\n  "packages": {\n    "": {\n      "name": "launchpad"\n    },\n    "node_modules/x": {\n      "name": "x"\n    }\n  }\n}`;
+    const out = config.lockFor(lock, "acme-notes");
+    expect(out.match(/"name": "acme-notes"/g)).toHaveLength(2);
+    expect(out).toContain('"name": "x"');
+  });
+
+  it("lists a price setting for each paid plan, named after the plan's id", () => {
+    const example = "A=1\n# >>> payments\n# STRIPE_SECRET_KEY=\n# STRIPE_PRICE_PRO=\n# <<< payments\n";
+    const plans = [
+      { id: "free", name: "Free", price: "Free", paid: false, includes: [] },
+      { id: "team", name: "Team", price: "$19", paid: true, includes: [] },
+      { id: "big-co", name: "Big", price: "$99", paid: true, includes: [] },
+    ];
+    expect(config.devVarsExampleFor(example, { plans })).toBe(
+      "A=1\n# >>> payments\n# STRIPE_SECRET_KEY=\n# STRIPE_PRICE_TEAM=\n# STRIPE_PRICE_BIG_CO=\n# <<< payments\n",
+    );
+    // With payments removed there is no price line, and none is added.
+    expect(config.devVarsExampleFor("A=1\n", { plans })).toBe("A=1\n");
+  });
+});
+
 describe("Access applications from the access map", () => {
   const apps = (item: Product, policies = [access.allowPolicy({ emails: ["owner@example.com"] })]) =>
     access.wantedApps(item, edgePlan(item.areas), HOST, { idpId: "idp-1", policies });

@@ -10,3 +10,13 @@
 @import "@astryxdesign/core/astryx.css";
 @import "@astryxdesign/core/tailwind-theme.css";
 @import "tailwindcss/utilities.css" layer(utilities);
+
+/* The page itself. Astryx paints a background only inside its own components, so without
+   this rule the page is the browser's default, which in dark mode is not a colour of the
+   theme. A page is a surface: the darker "body" colour is the frame an AppShell draws
+   behind one. */
+@layer base {
+  body {
+    background-color: var(--color-background-surface);
+  }
+}

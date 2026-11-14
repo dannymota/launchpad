@@ -24,8 +24,8 @@
     "db:migrate:local": "npm run db:migrate:local -w @app/web",
     "check": "npm run lint && npm run typecheck && npm run knip && npm test && npm run test:workers",
     "mcp:test": "node scripts/oauth-test.mjs",
-    "theme": "npm run theme -w @app/web && node scripts/build-tokens.mjs && node scripts/design-context.mjs",
-    "theme:check": "npm run theme && git diff --exit-code -- apps/web/src/themes packages/theme/src/generated DESIGN.md",
+    "theme": "npm run palette -w @app/theme && npm run theme -w @app/web && node scripts/build-tokens.mjs && node scripts/design-context.mjs",
+    "theme:check": "npm run theme && git diff --exit-code -- apps/web/src/themes packages/theme/src DESIGN.md",
     "design:context": "node scripts/design-context.mjs",
     "remove": "node scripts/remove.mjs",
     "check:removal": "node scripts/check-removal.mjs",
@@ -42,6 +42,7 @@
     "check:listing": "node scripts/check-listing.mjs",
     "knip": "knip --no-progress",
     "e2e": "npm run build && playwright test",
+    "shots": "node scripts/shots.mjs",
     "teardown": "node scripts/teardown.mjs"
   },
   "devDependencies": {

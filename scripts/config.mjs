@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Carries product/product.config.ts into the few files that cannot read it when they run:
 // the Worker's name, its databases and domain in apps/web/wrangler.jsonc, the root package
-// name, and the app's title in both store listings.
+// name (and the lockfile's copy of it), the price setting each paid plan needs in
+// apps/web/.dev.vars.example, and the app's title in both store listings.
 //
 //   npm run config:apply   write what the config says
 //   npm run config:check   change nothing; fail when a file is out of step
@@ -50,6 +51,30 @@ const withValue = (file, key, value, all = false) =>
     `$1${JSON.stringify(value)}`,
   );
 
+/** package-lock.json with the root package's name, which it holds twice (the first two "name" keys). */
+export function lockFor(text, slug) {
+  let left = 2;
+  return text.replace(/("name":\s*)"[^"]*"/g, (found, key) => (left-- > 0 ? `${key}${JSON.stringify(slug)}` : found));
+}
+
+/** The Worker variable that holds a paid plan's Stripe price (packages/backend/src/modules/payments/plans.ts). */
+const priceSetting = (planId) => `STRIPE_PRICE_${planId.toUpperCase().replaceAll("-", "_")}`;
+
+/**
+ * apps/web/.dev.vars.example with one commented price line per paid plan, in place of
+ * whatever price lines it had. A file with none (payments removed) is left as it is.
+ */
+export function devVarsExampleFor(text, product) {
+  const lines = text.split("\n");
+  const isPrice = (line) => /^#?\s*STRIPE_PRICE_[A-Z0-9_]+=/.test(line);
+  const first = lines.findIndex(isPrice);
+  if (first < 0) return text;
+  const wanted = (product.plans ?? []).filter((plan) => plan.paid).map((plan) => `# ${priceSetting(plan.id)}=`);
+  const kept = lines.filter((line) => !isPrice(line));
+  kept.splice(first, 0, ...wanted);
+  return kept.join("\n");
+}
+
 /** Each file this script owns a part of, with what it should hold. */
 export function plan(product, root = ROOT) {
   const files = new Map();
@@ -58,6 +83,10 @@ export function plan(product, root = ROOT) {
   const manifest = join(root, "package.json");
   // The first "name" in package.json is the package's own.
   files.set(manifest, withValue(manifest, "name", product.slug));
+  const lock = join(root, "package-lock.json");
+  if (existsSync(lock)) files.set(lock, lockFor(readFileSync(lock, "utf8"), product.slug));
+  const example = join(root, "apps/web/.dev.vars.example");
+  if (existsSync(example)) files.set(example, devVarsExampleFor(readFileSync(example, "utf8"), product));
   const listing = join(root, "apps/mobile/store.config.json");
   if (existsSync(listing)) files.set(listing, withValue(listing, "title", product.name, true));
   // Google Play's title is a text file per language.

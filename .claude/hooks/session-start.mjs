@@ -77,13 +77,12 @@ if (!existsSync(at("apps/web/.dev.vars"))) {
   notes.push("Created apps/web/.dev.vars: a random local secret, and dev@example.com as the local Access identity.");
 }
 
-if (existsSync(at("node_modules")) && !existsSync(at("apps/web/.wrangler/state/v3/d1"))) {
+// The local database follows the migrations in the repository: a pull, a new feature or a
+// removal can add one. Applying is quick and does nothing when there is nothing new.
+if (existsSync(at("node_modules"))) {
   const migrate = run("npx", ["wrangler", "d1", "migrations", "apply", "DB", "--local"], at("apps/web"));
-  notes.push(
-    migrate.status === 0
-      ? "Applied migrations to the local database."
-      : "Local migrations failed: run `npm run db:migrate:local`.",
-  );
+  if (migrate.status !== 0) notes.push("Local migrations failed: run `npm run db:migrate:local`.");
+  else if (!/No migrations to apply/i.test(migrate.stdout)) notes.push("Applied new migrations to the local database.");
 }
 
 // Where the product stands: its name and access preset, and whether it has a brief yet.

@@ -21,10 +21,12 @@ test.use({
 // Each page is scanned twice, and each scan starts a program: give that room.
 test.describe.configure({ timeout: 180_000 });
 
-const SIZES = [
-  { name: "desktop", width: 1280, height: 800 },
-  { name: "phone", width: 390, height: 844 },
-];
+/** How each page is looked at. Dark is checked at one size: it changes colours, not layout. */
+const VIEWS = [
+  { name: "desktop", width: 1280, height: 800, scheme: "light" },
+  { name: "phone", width: 390, height: 844, scheme: "light" },
+  { name: "desktop, dark", width: 1280, height: 800, scheme: "dark" },
+] as const;
 
 interface Finding {
   antipattern: string;
@@ -58,14 +60,16 @@ function findingsOn(target: string): string[] {
   return (JSON.parse(run.stdout) as Finding[]).map((found) => `${found.antipattern}: ${found.snippet ?? ""}`.trim());
 }
 
-/** The detector's findings on `page` at each size, with the page put back as it was. */
-async function findingsBySize(page: Page, target = page.url()): Promise<Record<string, string[]>> {
+/** The detector's findings on `page` in each view, with the page put back as it was. */
+async function findingsByView(page: Page, target = page.url()): Promise<Record<string, string[]>> {
   const before = page.viewportSize();
   const found: Record<string, string[]> = {};
-  for (const size of SIZES) {
-    await page.setViewportSize(size);
-    found[size.name] = findingsOn(target);
+  for (const view of VIEWS) {
+    await page.setViewportSize({ width: view.width, height: view.height });
+    await page.emulateMedia({ colorScheme: view.scheme });
+    found[view.name] = findingsOn(target);
   }
+  await page.emulateMedia({ colorScheme: "light" });
   if (before) await page.setViewportSize(before);
   return found;
 }
@@ -86,31 +90,35 @@ async function outlineOf(page: Page): Promise<number[]> {
 }
 
 async function expectClean(page: Page, where: string) {
-  for (const [size, found] of Object.entries(await findingsBySize(page))) {
+  for (const [view, found] of Object.entries(await findingsByView(page))) {
     const real = found.filter((finding) => !finding.startsWith("skipped-heading"));
-    expect(real, `${where} at ${size} width`).toEqual([]);
+    expect(real, `${where} (${view})`).toEqual([]);
   }
   const outline = await outlineOf(page);
   const skips = outline.filter((level, index) => level > (outline[index - 1] ?? 0) + 1);
   expect(skips, `${where}: heading levels ${outline.join(", ")} skip a level`).toEqual([]);
 }
 
-test("the detector sees this browser, at the size the test sets", async ({ page }) => {
+test("the detector sees this browser, at the size and in the colours the test sets", async ({ page }) => {
   // A page that is wrong on purpose. If this stops failing the detector, a clean result on the
   // real pages below means nothing. The second paragraph is sized by the window: readable on a
-  // desktop, far too small on a phone.
-  await page.setContent(`<!doctype html><html lang="en"><head><title>design-canary</title></head>
-    <body style="margin:40px;background:#fff;font-family:sans-serif">
-      <h1 style="color:#111">Canary</h1>
-      <p style="font-size:16px;color:#c8c8c8">Pale grey text on white that fails contrast.</p>
-      <p style="font-size:2vw;color:#111">Text sized by the width of the window, for the phone pass.</p>
+  // desktop, far too small on a phone. The third is readable in light and too faint in dark.
+  await page.setContent(`<!doctype html><html lang="en"><head><title>design-canary</title>
+    <style>:root { color-scheme: light dark }</style></head>
+    <body style="margin:40px;background:light-dark(#ffffff,#222222);font-family:sans-serif">
+      <h1 style="color:light-dark(#111111,#eeeeee)">Canary</h1>
+      <p style="font-size:16px;color:#9a9a9a">Mid grey text that fails contrast on white and on near-black.</p>
+      <p style="font-size:2vw;color:light-dark(#111111,#eeeeee)">Text sized by the width of the window.</p>
+      <p style="font-size:16px;color:light-dark(#111111,#3a3a3a)">Text that only the dark colours make too faint.</p>
     </body></html>`);
-  const found = await findingsBySize(page, "design-canary");
-  const rules = (size: string) => found[size].map((finding) => finding.split(":")[0]);
-  expect(rules("desktop")).toContain("low-contrast");
-  expect(rules("phone")).toContain("low-contrast");
+  const found = await findingsByView(page, "design-canary");
+  const rules = (view: string) => found[view].map((finding) => finding.split(":")[0]);
+  for (const view of Object.keys(found)) expect(rules(view), view).toContain("low-contrast");
   expect(rules("phone")).toContain("tiny-text");
   expect(rules("desktop")).not.toContain("tiny-text");
+  // The faint dark text is reported with its colour, and only when the page is shown in dark.
+  expect(found["desktop, dark"].join("\n")).toContain("#3a3a3a");
+  expect(found.desktop.join("\n")).not.toContain("#3a3a3a");
 });
 
 test("the pages a stranger sees pass the design detector", async ({ page }) => {

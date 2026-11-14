@@ -33,6 +33,14 @@ describe.each(["light", "dark"] as const)("%s mode", (scheme) => {
     }
   });
 
+  it("keeps text readable on the quiet accent fill (a selected row, a highlighted note)", () => {
+    expect(contrast(color.text, color.accentMuted), "text on the muted accent").toBeGreaterThanOrEqual(AA_TEXT);
+    expect(
+      contrast(color.textSecondary, color.accentMuted),
+      "secondary text on the muted accent",
+    ).toBeGreaterThanOrEqual(AA_TEXT);
+  });
+
   it("keeps the label on an accent button readable", () => {
     expect(contrast(color.onAccent, color.accent)).toBeGreaterThanOrEqual(AA_TEXT);
   });
