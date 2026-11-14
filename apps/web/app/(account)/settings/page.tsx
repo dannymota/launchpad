@@ -1,6 +1,8 @@
 // Account settings (Astryx template: settings). One scrolling page: each section is a
 // heading with a sentence beside what it controls.
+// >>> payments
 import { Button } from "@astryxdesign/core/Button";
+// <<< payments
 import { Divider } from "@astryxdesign/core/Divider";
 import { Grid } from "@astryxdesign/core/Grid";
 import { HStack, Layout, LayoutContent, LayoutHeader, StackItem, VStack } from "@astryxdesign/core/Layout";

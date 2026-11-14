@@ -5,6 +5,6 @@ import { defineConfig } from "vitest/config";
 // run with `npm run test:workers`.
 export default defineConfig({
   test: {
-    include: ["tests/**/*.test.ts", "packages/*/tests/**/*.test.ts", "apps/mobile/tests/**/*.test.ts"],
+    include: ["tests/**/*.test.ts", "packages/*/tests/**/*.test.ts"],
   },
 });

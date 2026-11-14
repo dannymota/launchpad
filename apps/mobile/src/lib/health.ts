@@ -1,8 +1,9 @@
 // What the server offers this build: which sign-in methods are on, and the oldest app
 // version it still serves. Read once at launch.
+
+import { compareVersions } from "@app/shared/version";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ACCESS_HEADERS, API_ORIGIN, APP_VERSION } from "./config";
-import { compareVersions } from "./version";
 
 export interface ServerInfo {
   signIn: { emailCode: boolean; google: boolean; apple: boolean; captcha: boolean };

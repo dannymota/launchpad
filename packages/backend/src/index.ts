@@ -26,6 +26,7 @@ export { type AppRouter, router } from "./api/router";
 export { runScheduled } from "./api/scheduled";
 export { type ServerApi, serverApi } from "./api/server-client";
 export { ConfigError, UserError } from "./core/errors";
+export { moduleRoute } from "./core/modules";
 export { productOf, withProduct } from "./core/product";
 export { ORIGIN_HEADER, type RequestFacts, requestFacts, trustedHeaders } from "./core/request";
 export { captchaOn, isLocalRun, type SignInMethods, signInMethods } from "./core/runtime";

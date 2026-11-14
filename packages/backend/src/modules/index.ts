@@ -5,6 +5,10 @@ import { registerModule } from "../core/modules";
 import { ai } from "./ai/module";
 
 // <<< ai
+// >>> analytics
+import { analytics } from "./analytics/module";
+
+// <<< analytics
 // >>> payments
 import { payments } from "./payments/module";
 
@@ -13,6 +17,9 @@ import { payments } from "./payments/module";
 // >>> ai
 registerModule(ai);
 // <<< ai
+// >>> analytics
+registerModule(analytics);
+// <<< analytics
 // >>> payments
 registerModule(payments);
 // <<< payments

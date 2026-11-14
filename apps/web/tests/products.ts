@@ -61,6 +61,10 @@ export const ENVIRONMENTS = {
   "ai-tight": { ANTHROPIC_API_KEY: "sk-ant-test-runtime", AI_PERSON_MONTHLY_BUDGET_USD: "1" },
   "ai-spent": { ANTHROPIC_API_KEY: "sk-ant-test-runtime", AI_MONTHLY_BUDGET_USD: "0" },
   // <<< ai
+  // >>> analytics
+  posthog: { POSTHOG_KEY: "phc_test_runtime" },
+  "posthog-eu": { POSTHOG_KEY: "phc_test_runtime", POSTHOG_HOST: "https://eu.i.posthog.com" },
+  // <<< analytics
   // >>> payments
   stripe: {
     STRIPE_SECRET_KEY: "sk_test_runtime",

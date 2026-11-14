@@ -25,7 +25,9 @@
     "check": "npm run lint && npm run typecheck && npm test && npm run test:workers",
     "mcp:test": "node scripts/oauth-test.mjs",
     "theme": "npm run theme -w @app/web && node scripts/build-native.mjs",
-    "theme:check": "npm run theme && git diff --exit-code -- apps/web/src/themes packages/theme/src/generated"
+    "theme:check": "npm run theme && git diff --exit-code -- apps/web/src/themes packages/theme/src/generated",
+    "remove": "node scripts/remove.mjs",
+    "check:removal": "node scripts/check-removal.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.7",

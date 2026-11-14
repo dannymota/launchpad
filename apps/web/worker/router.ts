@@ -22,6 +22,7 @@ import {
   isCrossSiteAuthCallback,
   isCrossSiteWrite,
   isLocalRun,
+  moduleRoute,
   productOf,
   type ResponseContext,
   requestPrincipal,
@@ -154,6 +155,10 @@ export function createRouter({ pages, product, mcp = createMcp() }: RouterOption
       if (await overRateLimit(env, request)) return tooManyRequests();
       return handleApi(trusted, env);
     }
+    // A path an optional module serves itself (the analytics proxy, for one). Its service's
+    // paths may end in a slash, which the access check drops; nothing else may differ.
+    const owned = moduleRoute(env, path);
+    if (owned) return exact || url.pathname === `${path}/` ? owned.handle(trusted, env) : notFound();
     // The files that let links to this domain open the native app.
     return appLinks(path, env) ?? pages.fetch(trusted, env, ctx);
   }

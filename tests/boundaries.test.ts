@@ -75,6 +75,7 @@ const WORKSPACES: Record<string, string> = {
   "@app/shared/contract": "packages/shared/src/contract/index.ts",
   "@app/shared/client": "packages/shared/src/client.ts",
   "@app/shared/product": "packages/shared/src/product/index.ts",
+  "@app/shared/version": "packages/shared/src/version.ts",
   "@app/product": "product/product.config.ts",
   "@app/theme": "packages/theme/src/index.ts",
   "@app/theme/native": "packages/theme/src/native.ts",

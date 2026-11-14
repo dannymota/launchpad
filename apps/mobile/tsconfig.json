@@ -8,6 +8,7 @@
       "@app/shared": ["../../packages/shared/src/index.ts"],
       "@app/shared/client": ["../../packages/shared/src/client.ts"],
       "@app/shared/product": ["../../packages/shared/src/product/index.ts"],
+      "@app/shared/version": ["../../packages/shared/src/version.ts"],
       "@app/theme/native": ["../../packages/theme/src/native.ts"]
     }
   },

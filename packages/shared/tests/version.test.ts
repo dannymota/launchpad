@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareVersions } from "../src/lib/version";
+import { compareVersions } from "../src/version";
 
 describe("compareVersions", () => {
   it("orders versions by number, not by text", () => {

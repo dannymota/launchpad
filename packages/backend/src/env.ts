@@ -73,6 +73,13 @@ export interface Env {
   AI_PERSON_MONTHLY_BUDGET_USD?: string;
   // <<< ai
 
+  // >>> analytics
+  /** Analytics (PostHog): the project's API key, "phc_...". Set = on. It is public: every visitor's browser gets it. */
+  POSTHOG_KEY?: string;
+  /** Where PostHog takes events. Default "https://us.i.posthog.com"; use "https://eu.i.posthog.com" for an EU project. */
+  POSTHOG_HOST?: string;
+  // <<< analytics
+
   /** Cloudflare Turnstile on the sign-in code form. Both set = on. The site key is public. */
   TURNSTILE_SITE_KEY?: string;
   TURNSTILE_SECRET_KEY?: string;
