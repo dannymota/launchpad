@@ -32,6 +32,7 @@ export const router = os.router({
         return ok;
       }),
     },
+    // >>> mcp
     assistants: {
       list: os.account.assistants.list.use(inPerson).handler(async ({ context }) => ({
         assistants: (await listGrants(context.env, context.principal.userId)).map((grant) => ({
@@ -47,6 +48,7 @@ export const router = os.router({
         return ok;
       }),
     },
+    // <<< mcp
     delete: os.account.delete.use(inPerson).handler(async ({ context }) => {
       await userErrors(() => deleteAccount(context.env, context.principal));
       return ok;

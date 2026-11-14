@@ -1,9 +1,11 @@
 // What `npm run remove -- <name>` takes out. For each part:
 //
-//   paths        folders and files that exist only for it
-//   packageJson  entries to drop, per workspace folder and section
-//   write        files that take another form once it is gone
-//   regenerate   "auth" (sign-in tables), "db" (a migration for dropped tables), "theme"
+//   paths           folders and files that exist only for it
+//   packageJson     entries to drop, per workspace folder and section
+//   packageJsonSet  entries that change, per workspace folder and section
+//   dropLines       lines of prose to drop, by the text they contain (a marker would show in a document)
+//   write           files that take another form once it is gone
+//   regenerate      "auth" (sign-in tables), "db" (a migration for dropped tables), "theme"
 //
 // Lines the part adds to shared files are not listed here: they sit between
 // ">>> name" and "<<< name" markers and are found by searching.
@@ -16,6 +18,59 @@
 
 /** @type {Record<string, Part>} */
 export const PARTS = {
+  mobile: {
+    what: "the iOS and Android app, with app links, the native theme and the Appllama skills",
+    paths: [
+      "apps/mobile",
+      "apps/web/tests/mobile.workers.test.ts",
+      "packages/backend/src/api/app-links.ts",
+      "packages/shared/src/version.ts",
+      "packages/shared/tests/version.test.ts",
+      "packages/theme/src/native.ts",
+      "docs/MOBILE.md",
+      ".claude/rules/mobile.md",
+      ".claude/skills/appllama-app-design-skill",
+      ".claude/skills/appllama-usage",
+      ".claude/skills/VENDORED.md",
+    ],
+    packageJson: {
+      "packages/backend": { dependencies: ["@better-auth/expo"] },
+      "packages/shared": { exports: ["./version"] },
+      "packages/theme": { exports: ["./native"] },
+    },
+  },
+  site: {
+    what: "the public website (landing, pricing, legal): the root then goes straight to the app",
+    paths: ["apps/web/app/(site)"],
+    write: {
+      "apps/web/app/page.tsx": `// This product has no public website: the root goes straight to the app.
+import { redirect } from "next/navigation";
+
+export default function RootPage() {
+  redirect("/app");
+}
+`,
+    },
+  },
+  mcp: {
+    what: "the MCP servers, assistant sign-in (OAuth), the consent page and connected assistants",
+    paths: [
+      "apps/mcp",
+      "apps/web/app/(account)/connect",
+      "apps/web/app/(account)/settings/AssistantRows.tsx",
+      "apps/web/tests/mcp.workers.test.ts",
+      "packages/backend/src/accounts/assistants.ts",
+      "packages/backend/src/db/schema/mcp.ts",
+      "packages/shared/src/assistant-scopes.ts",
+      "scripts/oauth-test.mjs",
+      "docs/MCP.md",
+    ],
+    packageJson: {
+      ".": { workspaces: ["apps/mcp"], scripts: ["mcp:test"] },
+      "apps/web": { dependencies: ["@app/mcp"] },
+    },
+    regenerate: ["db"],
+  },
   payments: {
     what: "Stripe subscriptions, the billing page and the plans in the product config",
     paths: [

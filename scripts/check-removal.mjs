@@ -19,9 +19,7 @@ const args = process.argv.slice(2);
 const keep = args.includes("--keep");
 const names = args.includes("--all") ? Object.keys(PARTS) : args.filter((arg) => !arg.startsWith("--"));
 if (names.length === 0) {
-  console.error(
-    "Usage: node scripts/check-removal.mjs <name>... | --all   (parts: " + Object.keys(PARTS).join(", ") + ")",
-  );
+  console.error(`Usage: node scripts/check-removal.mjs <name>... | --all   (parts: ${Object.keys(PARTS).join(", ")})`);
   process.exit(1);
 }
 

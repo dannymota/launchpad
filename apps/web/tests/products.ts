@@ -1,6 +1,8 @@
 // The product configs the Workers-runtime tests run against. A test picks one per request
 // (see harness.ts); the default is a launched product with open signup.
+// >>> mcp
 import type { McpServerDefinition } from "@app/mcp";
+// <<< mcp
 import { defineProduct, type Product, type ProductConfig } from "@app/shared/product";
 
 const base: ProductConfig = {
@@ -17,11 +19,13 @@ export const PRODUCTS = {
   private: defineProduct({ ...base, access: { preset: "private" } }),
   "internal-tool": defineProduct({ ...base, access: { preset: "internal-tool" } }),
   "private-beta": defineProduct({ ...base, access: { preset: "private-beta" } }),
+  // >>> mcp
   /** Before launch, with assistants able to reach the MCP endpoints from outside. */
   "private-mcp-public": defineProduct({
     ...base,
     access: { preset: "private", areas: { mcp: { visibility: "public" } } },
   }),
+  // <<< mcp
   "signup-closed": defineProduct({ ...base, signup: { mode: "closed" } }),
   "signup-allowlist": defineProduct({ ...base, signup: { mode: "allowlist" } }),
   "signup-domain": defineProduct({ ...base, signup: { mode: "domain", domains: ["corp.example"] } }),
@@ -35,6 +39,7 @@ export const PRODUCTS = {
     ],
   }),
   // <<< payments
+  // >>> mobile
   /** A launched product with an iOS and Android app. */
   "with-app": defineProduct({
     ...base,
@@ -42,6 +47,7 @@ export const PRODUCTS = {
     signIn: { emailCode: true, google: true, apple: true },
     mobile: { bundleId: "com.example.testproduct", androidPackage: "com.example.testproduct", minVersion: "1.2.0" },
   }),
+  // <<< mobile
 } satisfies Record<string, Product>;
 
 export type ProductName = keyof typeof PRODUCTS;
@@ -76,6 +82,7 @@ export const ENVIRONMENTS = {
 export type EnvironmentName = keyof typeof ENVIRONMENTS;
 export const ENVIRONMENT_HEADER = "x-test-env";
 
+// >>> mcp
 /**
  * A second MCP server, only in tests: it proves that the registry serves more than one, and
  * that a tool is offered only to a connection holding the scope it needs.
@@ -86,4 +93,5 @@ export const WRITER_SERVER: McpServerDefinition = {
   version: "0.0.0",
   tools: { "system.ping": "app:write" },
 };
+// <<< mcp
 export const PRODUCT_HEADER = "x-test-product";

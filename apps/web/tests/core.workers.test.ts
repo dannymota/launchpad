@@ -33,7 +33,15 @@ describe("cross-site writes", () => {
   const from = (origin: string) => ({ origin, "content-type": "application/json" });
 
   it("are refused for the API and for sign-in", async () => {
-    for (const path of ["/rpc/system/ping", "/api/auth/sign-out", "/api/auth/sign-in/email-otp", "/authorize"]) {
+    const paths = [
+      "/rpc/system/ping",
+      "/api/auth/sign-out",
+      "/api/auth/sign-in/email-otp",
+      // >>> mcp
+      "/authorize",
+      // <<< mcp
+    ];
+    for (const path of paths) {
       const response = await new Browser().fetch(path, {
         method: "POST",
         headers: from("https://evil.example"),
@@ -59,6 +67,7 @@ describe("cross-site writes", () => {
       body: "state=abc&code=xyz",
     });
     expect(apple.status).not.toBe(403);
+    // >>> mcp
     for (const path of ["/oauth/token", "/oauth/register", "/mcp"]) {
       const response = await new Browser().fetch(path, {
         method: "POST",
@@ -67,6 +76,7 @@ describe("cross-site writes", () => {
       });
       expect(response.status, path).not.toBe(403);
     }
+    // <<< mcp
   });
 
   it("do not stop reads", async () => {

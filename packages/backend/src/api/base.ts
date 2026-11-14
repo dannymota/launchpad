@@ -21,13 +21,15 @@ export const signedIn = os.middleware(async ({ context, next }) => {
   return next({ context: { principal } });
 });
 
-/** Requires the person themselves: an assistant acting for them is refused. */
+/** Requires the person themselves, not something acting for them. */
 export const inPerson = os.middleware(async ({ context, next }) => {
   const principal = await context.loadPrincipal();
   if (!principal) throw new ORPCError("UNAUTHORIZED", { message: "Sign in to continue." });
+  // >>> mcp
   if (principal.via === "assistant") {
     throw new ORPCError("FORBIDDEN", { message: "Only you can do this, not a connected assistant." });
   }
+  // <<< mcp
   return next({ context: { principal } });
 });
 

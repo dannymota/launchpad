@@ -71,6 +71,7 @@ export const contract = {
         .input(z.object({ id: z.string().min(1).max(200) }))
         .output(OkSchema),
     },
+    // >>> mcp
     assistants: {
       list: oc
         .meta(
@@ -97,6 +98,7 @@ export const contract = {
         .input(z.object({ id: z.string().min(1).max(200) }))
         .output(OkSchema),
     },
+    // <<< mcp
     delete: oc
       .meta(
         openapi({

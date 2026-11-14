@@ -14,7 +14,9 @@ export async function runScheduled(env: Env): Promise<void> {
   await db.batch([
     db.delete(schema.auth_session).where(lt(schema.auth_session.expires_at, now)),
     db.delete(schema.auth_verification).where(lt(schema.auth_verification.expires_at, now)),
+    // >>> mcp
     db.delete(schema.consent_identity).where(lt(schema.consent_identity.expires_at, Math.floor(now.getTime() / 1000))),
+    // <<< mcp
     db.delete(schema.email_outbox).where(lt(schema.email_outbox.created_at, new Date(now.getTime() - OUTBOX_KEEP_MS))),
   ]);
   await pruneLimits(env);

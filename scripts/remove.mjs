@@ -127,19 +127,46 @@ function main() {
     if (!dryRun) writeFileSync(full, content);
   }
 
-  // 4. Packages and scripts only it used.
+  // 4. Lines in prose, where a marker would show: each is dropped by the text it contains.
+  for (const [path, needles] of Object.entries(part.dropLines ?? {})) {
+    const full = inside(ROOT, path);
+    if (!existsSync(full)) continue;
+    const lines = readFileSync(full, "utf8").split("\n");
+    const kept = lines.filter((line) => !needles.some((needle) => line.includes(needle)));
+    if (kept.length === lines.length) continue;
+    changed = true;
+    console.log(`  cut     ${path} (${lines.length - kept.length} line${lines.length - kept.length === 1 ? "" : "s"})`);
+    if (!dryRun) writeFileSync(full, kept.join("\n"));
+  }
+
+  // 5. Packages and scripts only it used.
   const installs = new Set();
-  for (const [folder, entries] of Object.entries(part.packageJson ?? {})) {
+  const folders = new Set([...Object.keys(part.packageJson ?? {}), ...Object.keys(part.packageJsonSet ?? {})]);
+  for (const folder of folders) {
+    const entries = part.packageJson?.[folder] ?? {};
     const file = join(inside(ROOT, folder), "package.json");
     if (!existsSync(file)) continue;
     const manifest = JSON.parse(readFileSync(file, "utf8"));
     let touched = false;
     for (const [section, keys] of Object.entries(entries)) {
       for (const key of keys) {
-        if (manifest[section] && key in manifest[section]) {
+        if (Array.isArray(manifest[section]) && manifest[section].includes(key)) {
+          manifest[section] = manifest[section].filter((entry) => entry !== key);
+          touched = true;
+          console.log(`  drop    ${join(folder, "package.json")} ${section}: ${key}`);
+        } else if (manifest[section] && !Array.isArray(manifest[section]) && key in manifest[section]) {
           delete manifest[section][key];
           touched = true;
           console.log(`  drop    ${join(folder, "package.json")} ${section}.${key}`);
+        }
+      }
+    }
+    for (const [section, values] of Object.entries(part.packageJsonSet?.[folder] ?? {})) {
+      for (const [key, value] of Object.entries(values)) {
+        if (manifest[section]?.[key] !== undefined && manifest[section][key] !== value) {
+          manifest[section][key] = value;
+          touched = true;
+          console.log(`  set     ${join(folder, "package.json")} ${section}.${key}`);
         }
       }
     }
@@ -166,7 +193,11 @@ function main() {
   const toFormat = edited.filter(
     (file) => existsSync(join(ROOT, file)) && /\.(ts|tsx|mjs|js|json|jsonc|css)$/.test(file),
   );
-  if (toFormat.length) run("npx", ["biome", "check", "--write", "--no-errors-on-unmatched", ...toFormat]);
+  if (toFormat.length) {
+    // A cut can leave an import with nothing using it; those go too.
+    run("npx", ["biome", "lint", "--write", "--unsafe", "--only=correctness/noUnusedImports", ...toFormat]);
+    run("npx", ["biome", "check", "--write", "--no-errors-on-unmatched", ...toFormat]);
+  }
 
   console.log(`\nRemoved ${name}. Now run: npm run check`);
   for (const note of part.notes ?? []) console.log(`Note: ${note}`);

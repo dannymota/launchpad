@@ -17,8 +17,10 @@ export interface Health {
   access: { preset: string; configured: boolean };
   /** `captcha`: the email-code form needs a Turnstile token, which a native app cannot get. */
   signIn: SignInMethods & { captcha: boolean };
+  // >>> mobile
   /** For the native app: builds older than `minVersion` should ask the person to update. Null with no app. */
   mobile: { minVersion: string } | null;
+  // <<< mobile
   /** Optional modules in this product, and whether each has the settings it needs. */
   modules: Record<string, "on" | "off">;
 }
@@ -32,7 +34,9 @@ export function health(env: Env): Health {
     email: emailMode(env),
     access: { preset: product.access.preset, configured: accessConfigured(env) },
     signIn: { ...signInMethods(env), captcha: captchaOn(env) },
+    // >>> mobile
     mobile: product.mobile ? { minVersion: product.mobile.minVersion } : null,
+    // <<< mobile
     modules: moduleStates(env),
   };
 }

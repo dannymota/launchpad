@@ -9,7 +9,9 @@
 // A path belongs to exactly one handler; API and sign-in paths never fall through to a page.
 import {
   AUTH_BASE_PATH,
+  // >>> mobile
   appLinks,
+  // <<< mobile
   authGate,
   bodyLimit,
   ConfigError,
@@ -31,7 +33,9 @@ import {
   verifyAccess,
   withProduct,
 } from "@app/backend";
+// >>> mcp
 import { createMcp, type Mcp } from "@app/mcp";
+// <<< mcp
 import { type Area, type AreaName, areaFor, normalizePath, type Product } from "@app/shared/product";
 
 export interface Pages {
@@ -42,8 +46,10 @@ export interface RouterOptions {
   pages: Pages;
   /** Defaults to product/product.config.ts. Tests pass their own to try every preset. */
   product?: Product;
+  // >>> mcp
   /** Defaults to the servers in apps/mcp/servers. Tests pass their own. */
   mcp?: Mcp;
+  // <<< mcp
 }
 
 const json = (body: unknown, status: number) =>
@@ -96,10 +102,20 @@ async function overRateLimit(env: Env, request: Request): Promise<boolean> {
   return !success;
 }
 
-export function createRouter({ pages, product, mcp = createMcp() }: RouterOptions) {
-  /** Other sites may write only where the protocol requires it: OAuth and MCP machine calls, and Apple's callback. */
-  const crossSiteWriteAllowed = (method: string, path: string) =>
-    mcp.isMachinePath(path) || isCrossSiteAuthCallback(method, path, AUTH_BASE_PATH);
+export function createRouter(options: RouterOptions) {
+  const { pages, product } = options;
+  // >>> mcp
+  const mcp = options.mcp ?? createMcp();
+  // <<< mcp
+  /** Other sites may write only where a protocol requires it. */
+  const crossSiteWriteAllowed = (method: string, path: string) => {
+    // >>> mcp
+    // OAuth and MCP machine calls come from assistants, not from this site's pages.
+    if (mcp.isMachinePath(path)) return true;
+    // <<< mcp
+    // Apple returns the browser with a form POST from its own origin.
+    return isCrossSiteAuthCallback(method, path, AUTH_BASE_PATH);
+  };
 
   async function route(request: Request, env: Env, ctx: ExecutionContext, context: ResponseContext): Promise<Response> {
     const url = new URL(request.url);
@@ -142,12 +158,14 @@ export function createRouter({ pages, product, mcp = createMcp() }: RouterOption
     // Machine endpoints answer only to the path as written: a spelling the access check had
     // to decode or lowercase never reaches them.
     const exact = path === url.pathname;
-    const machine = mcp.isMcpPath(path) || isAuthPath(path) || isApiPath(path);
-    if (machine && !exact) return notFound();
+    // >>> mcp
     if (mcp.isMcpPath(path)) {
+      if (!exact) return notFound();
       if (mcp.isMachinePath(path) && (await overRateLimit(env, request))) return tooManyRequests();
       return mcp.handle(trusted, env, ctx);
     }
+    // <<< mcp
+    if ((isAuthPath(path) || isApiPath(path)) && !exact) return notFound();
     if (isAuthPath(path)) {
       return (await authGate(trusted, env, AUTH_BASE_PATH)) ?? (await getAuth(env, url.origin)).handler(trusted);
     }
@@ -159,8 +177,12 @@ export function createRouter({ pages, product, mcp = createMcp() }: RouterOption
     // paths may end in a slash, which the access check drops; nothing else may differ.
     const owned = moduleRoute(env, path);
     if (owned) return exact || url.pathname === `${path}/` ? owned.handle(trusted, env) : notFound();
+    // >>> mobile
     // The files that let links to this domain open the native app.
-    return appLinks(path, env) ?? pages.fetch(trusted, env, ctx);
+    const links = appLinks(path, env);
+    if (links) return links;
+    // <<< mobile
+    return pages.fetch(trusted, env, ctx);
   }
 
   return async function handle(request: Request, rawEnv: Env, ctx: ExecutionContext): Promise<Response> {

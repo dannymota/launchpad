@@ -35,7 +35,9 @@ export default async function SettingsPage() {
   const principal = await requireUser("/settings");
   const viaAccess = principal.via === "access";
   const { sessions } = viaAccess ? { sessions: [] } : await api().account.sessions.list();
+  // >>> mcp
   const { assistants } = await api().account.assistants.list();
+  // <<< mcp
 
   return (
     <Layout
@@ -85,6 +87,7 @@ export default async function SettingsPage() {
             </Section>
             {/* <<< payments */}
 
+            {/* >>> mcp */}
             <Divider />
             <Section
               title="Connected assistants"
@@ -92,6 +95,7 @@ export default async function SettingsPage() {
             >
               <AssistantRows initial={assistants} />
             </Section>
+            {/* <<< mcp */}
 
             <Divider />
             <Section

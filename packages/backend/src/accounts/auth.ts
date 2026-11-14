@@ -47,8 +47,10 @@ async function socialProviders(env: Env) {
           apple: {
             clientId: env.APPLE_CLIENT_ID as string,
             clientSecret: await appleClientSecret(env),
+            // >>> mobile
             // Lets the token from the native Apple sheet on iOS through: its audience is the app.
             appBundleIdentifier: env.APPLE_APP_BUNDLE_ID,
+            // <<< mobile
           },
         }
       : {}),
@@ -81,12 +83,14 @@ export async function getAuth(env: Env, origin: string) {
       accountLinking: { enabled: true, trustedProviders: ["google", "apple"] },
     },
     socialProviders: providers,
-    // Apple returns the browser with a form POST from its own origin. The native app is its
-    // URL scheme; a development build opened through Expo uses exp:// as well.
+    // Apple returns the browser with a form POST from its own origin.
     trustedOrigins: [
       origin,
       ...("apple" in providers ? ["https://appleid.apple.com"] : []),
+      // >>> mobile
+      // The native app is its URL scheme; a development build opened through Expo uses exp:// as well.
       ...(product.mobile ? [`${product.scheme}://`, ...(isLocalRun(env) ? ["exp://"] : [])] : []),
+      // <<< mobile
     ],
     // Limits are applied before requests reach Better Auth (safety/auth-gate.ts).
     rateLimit: { enabled: false },

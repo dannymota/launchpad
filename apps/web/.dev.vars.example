@@ -16,3 +16,26 @@ ADMIN_EMAILS=you@example.com
 
 # Try the product as it will be after launch, without editing product/product.config.ts:
 # DEV_PRESET=public-product
+
+# Optional modules. Each stays off until its settings are filled in; /health shows which are on.
+
+# >>> payments
+# Payments (Stripe test mode). The price is the paid plan's, named after its id in the product config.
+# STRIPE_SECRET_KEY=
+# STRIPE_WEBHOOK_SECRET=
+# STRIPE_PRICE_PRO=
+# <<< payments
+
+# >>> ai
+# AI (Claude). Calls stop once the month's budget is spent.
+# ANTHROPIC_API_KEY=
+# AI_GATEWAY_URL=https://gateway.ai.cloudflare.com/v1/<account id>/<gateway>/anthropic
+# AI_MONTHLY_BUDGET_USD=10
+# AI_PERSON_MONTHLY_BUDGET_USD=2
+# <<< ai
+
+# >>> analytics
+# Analytics (PostHog). The project key is public; it starts with phc_.
+# POSTHOG_KEY=
+# POSTHOG_HOST=https://us.i.posthog.com
+# <<< analytics

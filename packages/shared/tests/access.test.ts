@@ -23,7 +23,9 @@ describe("presets", () => {
       labs: "internal",
       api: "internal",
       adminApi: "internal",
+      // >>> mcp
       mcp: "internal",
+      // <<< mcp
     });
   });
 
@@ -48,11 +50,13 @@ describe("presets", () => {
 });
 
 describe("overrides", () => {
+  // >>> mcp
   it("can open the MCP endpoints while the product stays internal", () => {
     const map = resolveAccess({ preset: "private", areas: { mcp: { visibility: "public" } } });
     expect(map.mcp).toMatchObject({ visibility: "public", identity: "session" });
     expect(map.account.visibility).toBe("internal");
   });
+  // <<< mcp
 
   it("refuses to make admin or labs public", () => {
     expect(() => resolveAccess({ preset: "public-product", areas: { admin: { visibility: "public" } } })).toThrow(
@@ -98,11 +102,13 @@ describe("paths", () => {
     expect(area("/api/administrators")).toBe("api");
     expect(area("/rpc/public/waitlist/join")).toBe("publicApi");
     expect(area("/rpc/publications")).toBe("api");
+    // >>> mcp
     expect(area("/authorize")).toBe("account");
     expect(area("/connect/consent")).toBe("account");
     expect(area("/mcp")).toBe("mcp");
     expect(area("/oauth/token")).toBe("mcp");
     expect(area("/.well-known/oauth-protected-resource/mcp")).toBe("mcp");
+    // <<< mcp
     expect(area("/.well-known/apple-app-site-association")).toBe("site");
   });
 
@@ -150,16 +156,22 @@ describe("edge plan", () => {
 
   it("protects each internal prefix for a private beta, and lets the public API through", () => {
     expect(plan("private-beta")).toEqual([
+      // >>> mcp
       "protect /.well-known/oauth-",
+      // <<< mcp
       "protect /admin",
       "protect /api",
       "bypass /api/public",
       "protect /app",
+      // >>> mcp
       "protect /authorize",
       "protect /connect",
+      // <<< mcp
       "protect /labs",
+      // >>> mcp
       "protect /mcp",
       "protect /oauth",
+      // <<< mcp
       "protect /rpc",
       "bypass /rpc/public",
       "protect /settings",
@@ -167,6 +179,7 @@ describe("edge plan", () => {
     ]);
   });
 
+  // >>> mcp
   it("lets public MCP endpoints through a protected host", () => {
     expect(plan("private", { mcp: { visibility: "public" } })).toEqual([
       "protect *",
@@ -175,4 +188,5 @@ describe("edge plan", () => {
       "bypass /oauth",
     ]);
   });
+  // <<< mcp
 });

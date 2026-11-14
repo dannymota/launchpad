@@ -1,9 +1,13 @@
+// >>> mcp
 export { isScope, REQUIRED_SCOPE, SCOPES, type Scope } from "./assistant-scopes";
+// <<< mcp
 export {
   type AdminUser,
   AdminUserSchema,
+  // >>> mcp
   type Assistant,
   AssistantSchema,
+  // <<< mcp
   OkSchema,
   type Session,
   SessionSchema,

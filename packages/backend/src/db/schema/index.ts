@@ -5,5 +5,7 @@ export * from "./ai";
 // <<< ai
 export * from "./auth";
 export * from "./email";
+// >>> mcp
 export * from "./mcp";
+// <<< mcp
 export * from "./safety";

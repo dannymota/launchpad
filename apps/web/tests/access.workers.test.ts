@@ -22,7 +22,9 @@ const PROBES: Record<AreaName, { path: string; method?: "POST"; reached: (status
       reached: (status, body) => status === 404 && body.includes("No such API route"),
     },
     adminApi: { path: "/api/admin/users", reached: (status, body) => status === 200 && body.includes('"users"') },
+    // >>> mcp
     mcp: { path: "/mcp", method: "POST", reached: (status) => status === 401 },
+    // <<< mcp
   };
 
 const VISITORS = {

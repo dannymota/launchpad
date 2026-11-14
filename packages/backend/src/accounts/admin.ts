@@ -53,10 +53,12 @@ export async function setBanned(env: Env, admin: Principal, userId: string, bann
   await db.batch([
     update,
     db.delete(schema.auth_session).where(eq(schema.auth_session.user_id, userId)),
+    // >>> mcp
     db
       .update(schema.assistant_grants)
       .set({ revoked_at: new Date(), revoked_reason: "banned" })
       .where(eq(schema.assistant_grants.user_id, userId)),
     db.delete(schema.consent_identity).where(eq(schema.consent_identity.user_id, userId)),
+    // <<< mcp
   ]);
 }

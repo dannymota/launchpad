@@ -8,15 +8,19 @@ import type { OAuthHelpers } from "@cloudflare/workers-oauth-provider";
 export interface Env {
   /** D1: every table in packages/backend/src/db/schema. */
   DB: D1Database;
+  // >>> mcp
   /** KV: OAuth provider state for MCP connections (clients, grants, tokens). */
   OAUTH_KV: KVNamespace;
+  // <<< mcp
   /** Static assets built by vinext. */
   ASSETS: Fetcher;
   /** Cloudflare Email Service. Absent in local dev and tests, where mail goes to the outbox table. */
   EMAIL?: { send(message: { from: string; to: string; subject: string; text: string }): Promise<unknown> };
   CF_VERSION_METADATA?: { id: string; tag?: string; timestamp?: string };
+  // >>> mcp
   /** Set by the OAuth provider on requests it routes; absent everywhere else. */
   OAUTH_PROVIDER?: OAuthHelpers;
+  // <<< mcp
   /** Set by the Worker's router for the request. Absent = the repo's product/product.config.ts. */
   PRODUCT?: Product;
 
@@ -47,10 +51,12 @@ export interface Env {
   APPLE_TEAM_ID?: string;
   APPLE_KEY_ID?: string;
   APPLE_PRIVATE_KEY?: string;
+  // >>> mobile
   /** The iOS app's bundle id, so tokens from the native Apple sheet are accepted. */
   APPLE_APP_BUNDLE_ID?: string;
   /** SHA-256 fingerprints of the keys that sign the Android app, comma-separated, for App Links. */
   ANDROID_CERT_SHA256?: string;
+  // <<< mobile
 
   // >>> payments
   /** Payments (Stripe). Both set = on. Each paid plan's price is STRIPE_PRICE_<PLAN ID>, e.g. STRIPE_PRICE_PRO. */

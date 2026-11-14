@@ -33,8 +33,15 @@ export const AREA_PATHS = {
   signIn: ["/sign-in"],
   /** The signed-in product. */
   product: ["/app"],
-  /** Account pages and the assistant consent step: they need the person. */
-  account: ["/settings", "/connect", "/authorize"],
+  /** Account pages: they need the person. */
+  account: [
+    "/settings",
+    // >>> mcp
+    // The assistant consent step.
+    "/connect",
+    "/authorize",
+    // <<< mcp
+  ],
   /** Internal in every preset. */
   admin: ["/admin"],
   labs: ["/labs"],
@@ -44,8 +51,10 @@ export const AREA_PATHS = {
   publicApi: ["/rpc/public", "/api/public"],
   /** Procedures only admins call. Internal in every preset, like the admin pages. */
   adminApi: ["/rpc/admin", "/api/admin"],
+  // >>> mcp
   /** MCP and OAuth machine endpoints: called by assistants, protected by OAuth tokens. */
   mcp: ["/mcp", "/oauth", "/.well-known/oauth-"],
+  // <<< mcp
 } as const satisfies Record<string, readonly string[]>;
 
 export type AreaName = keyof typeof AREA_PATHS;
@@ -95,7 +104,9 @@ function fromPreset(preset: Preset): Record<AreaName, Omit<Area, "prefixes">> {
     api: { ...product, auth: "none" },
     publicApi: { visibility: shape.site, auth: "none", identity: "session" },
     adminApi: { visibility: "internal", auth: "admin", identity: "access" },
+    // >>> mcp
     mcp: { ...product, auth: "none" },
+    // <<< mcp
   };
 }
 

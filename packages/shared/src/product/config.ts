@@ -41,6 +41,7 @@ export interface ProductConfig {
     /** What the plan includes, a line each. */
     includes: string[];
   }[];
+  // >>> mobile
   /** The iOS and Android app. Leave out for a product with no mobile app. */
   mobile?: {
     /** iOS bundle identifier, e.g. "com.example.app". */
@@ -50,20 +51,25 @@ export interface ProductConfig {
     /** The oldest app version the API still serves. Older builds are told to update. */
     minVersion: string;
   };
+  // <<< mobile
 }
 
 /** The config with its defaults filled in and its access map worked out. */
 export interface Product extends ProductConfig {
   areas: AccessMap;
   signup: { mode: SignupMode; domains: string[] };
+  // >>> mobile
   /** The app's URL scheme ("acme" opens acme://…). The slug without dashes, so it is valid on both platforms. */
   scheme: string;
+  // <<< mobile
 }
 
 const SLUG = /^[a-z][a-z0-9-]{1,30}[a-z0-9]$/;
 const DOMAIN = /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
+// >>> mobile
 const APP_ID = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/i;
 const VERSION = /^\d+\.\d+\.\d+$/;
+// <<< mobile
 
 /** Checks a config and fills in what it leaves out. Throws with the field to fix. */
 export function defineProduct(config: ProductConfig): Product {
@@ -89,6 +95,7 @@ export function defineProduct(config: ProductConfig): Product {
       throw new Error(`product.config: plan id "${id}" must be lowercase letters, digits and dashes.`);
   }
   if (new Set(planIds).size !== planIds.length) throw new Error("product.config: two plans share an id.");
+  // >>> mobile
   if (config.mobile) {
     const { bundleId, androidPackage, minVersion } = config.mobile;
     if (!APP_ID.test(bundleId))
@@ -98,6 +105,13 @@ export function defineProduct(config: ProductConfig): Product {
     if (!VERSION.test(minVersion))
       throw new Error(`product.config: mobile.minVersion "${minVersion}" must look like 1.0.0.`);
   }
-  const scheme = config.slug.replaceAll("-", "");
-  return { ...config, areas: resolveAccess(config.access), signup: { mode, domains }, scheme };
+  // <<< mobile
+  return {
+    ...config,
+    areas: resolveAccess(config.access),
+    signup: { mode, domains },
+    // >>> mobile
+    scheme: config.slug.replaceAll("-", ""),
+    // <<< mobile
+  };
 }

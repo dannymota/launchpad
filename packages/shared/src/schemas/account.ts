@@ -17,6 +17,7 @@ export const SessionSchema = z.object({
 });
 export type Session = z.infer<typeof SessionSchema>;
 
+// >>> mcp
 /** An assistant (an MCP client) the person connected to their account. */
 export const AssistantSchema = z.object({
   id: z.string(),
@@ -26,6 +27,7 @@ export const AssistantSchema = z.object({
   lastUsedAt: z.iso.datetime().nullable().describe("Roughly when it last made a call; null if never."),
 });
 export type Assistant = z.infer<typeof AssistantSchema>;
+// <<< mcp
 
 /** An account, as an admin sees it. */
 export const AdminUserSchema = UserSchema.extend({

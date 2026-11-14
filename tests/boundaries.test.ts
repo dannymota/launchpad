@@ -27,7 +27,7 @@ const GENERATED = new Set([
   "packages/backend/src/db/schema/auth.ts",
   "apps/web/astryx-themes.ts",
   "packages/theme/src/palette.ts",
-  "packages/theme/src/generated/native-tokens.ts",
+  "packages/theme/src/generated/tokens.ts",
 ]);
 
 function walk(dir: string, out: string[] = []): string[] {
@@ -75,11 +75,17 @@ const WORKSPACES: Record<string, string> = {
   "@app/shared/contract": "packages/shared/src/contract/index.ts",
   "@app/shared/client": "packages/shared/src/client.ts",
   "@app/shared/product": "packages/shared/src/product/index.ts",
+  // >>> mobile
   "@app/shared/version": "packages/shared/src/version.ts",
+  // <<< mobile
   "@app/product": "product/product.config.ts",
   "@app/theme": "packages/theme/src/index.ts",
+  // >>> mobile
   "@app/theme/native": "packages/theme/src/native.ts",
+  // <<< mobile
+  // >>> mcp
   "@app/mcp": "apps/mcp/index.ts",
+  // <<< mcp
 };
 
 /** The repo file a specifier points at, or null for an npm package or a built-in. */
@@ -128,8 +134,11 @@ describe("surfaces", () => {
       const from = surfaceOf(file);
       const to = surfaceOf(target);
       if (!from.startsWith("apps/") || !to.startsWith("apps/") || from === to) return false;
+      // >>> mcp
       // The Worker mounts the MCP surface, and its tests mount it with extra servers.
-      return !(/^apps\/web\/(worker|tests)\//.test(file) && to === "apps/mcp");
+      if (/^apps\/web\/(worker|tests)\//.test(file) && to === "apps/mcp") return false;
+      // <<< mcp
+      return true;
     });
     expect(crossing).toEqual([]);
   });
@@ -157,6 +166,7 @@ describe("surfaces", () => {
     expect([...imports, ...direct]).toEqual([]);
   });
 
+  // >>> mobile
   it("keep platform-only code behind the platform folder in the mobile app", () => {
     // Only src/platform may import a module that exists on one platform; screens ask through it.
     const platformOnly = /^(expo-apple-authentication|expo-secure-store|expo-haptics)(\/|$)/;
@@ -177,6 +187,7 @@ describe("surfaces", () => {
     );
     expect(reaching).toEqual([]);
   });
+  // <<< mobile
 });
 
 describe("the product config", () => {

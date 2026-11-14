@@ -8,17 +8,27 @@ import { getDb, schema } from "../db/client";
 import type { Env } from "../env";
 import { getAuth } from "./auth";
 
+/**
+ * How a request is identified. "session": a signed-in browser or app. "access": the
+ * Cloudflare Access email, in an internal area that takes it as the sign-in.
+ */
+export type Via =
+  | "session"
+  | "access"
+  // >>> mcp
+  // An MCP client acting under a grant the person approved.
+  | "assistant";
+// <<< mcp
+
 export interface Principal {
   userId: string;
   email: string;
   name: string;
-  /**
-   * "session": a signed-in browser or app. "access": the Cloudflare Access email, in an
-   * internal area that takes it as the sign-in. "assistant": an MCP client acting under a grant.
-   */
-  via: "session" | "access" | "assistant";
+  via: Via;
+  // >>> mcp
   /** Granted OAuth scopes. Empty unless via is "assistant". */
   scopes: string[];
+  // <<< mcp
   /** True only for an Access-verified email listed in ADMIN_EMAILS. */
   admin: boolean;
   /** The Better Auth session behind the request, and when it signed in. Null unless via is "session". */
@@ -39,7 +49,9 @@ export async function sessionPrincipal(env: Env, origin: string, headers: Header
     email,
     name,
     via: "session",
+    // >>> mcp
     scopes: [],
+    // <<< mcp
     admin: false,
     sessionId: session.session.id,
     signedInAt: new Date(session.session.createdAt).getTime(),
@@ -70,13 +82,16 @@ export async function accessPrincipal(env: Env, verifiedEmail: string): Promise<
     email: user.email,
     name: user.name,
     via: "access",
+    // >>> mcp
     scopes: [],
+    // <<< mcp
     admin,
     sessionId: null,
     signedInAt: null,
   };
 }
 
+// >>> mcp
 /** The account an assistant grant acts for. Null when the account is gone or banned. */
 export async function assistantPrincipal(env: Env, userId: string, scopes: string[]): Promise<Principal | null> {
   const [user] = await getDb(env).select().from(schema.auth_user).where(eq(schema.auth_user.id, userId)).limit(1);
@@ -92,6 +107,7 @@ export async function assistantPrincipal(env: Env, userId: string, scopes: strin
     signedInAt: null,
   };
 }
+// <<< mcp
 
 /**
  * Who a request that came through the Worker's router is acting for. The router has already

@@ -37,11 +37,13 @@ export default defineProduct({
   ],
   // <<< payments
 
-  // The iOS and Android app (apps/mobile). Remove this block for a product with no app.
+  // >>> mobile
+  // The iOS and Android app (apps/mobile). `npm run remove -- mobile` takes it out with the app.
   mobile: {
     bundleId: "com.example.launchpad",
     androidPackage: "com.example.launchpad",
     // Raise this when an old build can no longer work with the API; older builds are told to update.
     minVersion: "1.0.0",
   },
+  // <<< mobile
 });

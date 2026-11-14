@@ -1,9 +1,12 @@
 // The brand, checked: every text colour can be read on every background it lands on, in
-// light and dark, and the native theme carries the same values as the web theme it came from.
+// light and dark, and the generated tokens carry the same values as the brand they came from.
 import { describe, expect, it } from "vitest";
 import { brand } from "../src/brand";
-import { nativeTokens } from "../src/generated/native-tokens";
+import { tokens } from "../src/generated/tokens";
+// >>> mobile
 import { nativeTheme } from "../src/native";
+
+// <<< mobile
 
 /** WCAG relative luminance of a #rrggbb colour. */
 function luminance(hex: string): number {
@@ -23,7 +26,7 @@ const AA_TEXT = 4.5;
 const AA_LARGE = 3;
 
 describe.each(["light", "dark"] as const)("%s mode", (scheme) => {
-  const color = nativeTokens.color[scheme];
+  const color = tokens.color[scheme];
   const surfaces = { background: color.background, surface: color.surface, card: color.card, muted: color.muted };
 
   it("keeps body text readable on every surface", () => {
@@ -52,14 +55,15 @@ describe.each(["light", "dark"] as const)("%s mode", (scheme) => {
   });
 });
 
-describe("the native theme", () => {
-  it("carries the brand's accent and radii unchanged", () => {
-    expect(nativeTokens.color.light.accent).toBe(brand.color.accent[0].toLowerCase());
-    expect(nativeTokens.color.dark.accent).toBe(brand.color.accent[1].toLowerCase());
-    expect(nativeTokens.radius).toEqual(brand.radius);
+describe("the generated tokens", () => {
+  it("carry the brand's accent and radii unchanged", () => {
+    expect(tokens.color.light.accent).toBe(brand.color.accent[0].toLowerCase());
+    expect(tokens.color.dark.accent).toBe(brand.color.accent[1].toLowerCase());
+    expect(tokens.radius).toEqual(brand.radius);
   });
 
-  it("differs by platform only where the platforms do", () => {
+  // >>> mobile
+  it("differ on a phone by platform only where the platforms do", () => {
     const ios = nativeTheme("light", "ios");
     const android = nativeTheme("light", "android");
     expect(ios.color).toEqual(android.color);
@@ -67,4 +71,5 @@ describe("the native theme", () => {
     expect([ios.minTouch, android.minTouch]).toEqual([44, 48]);
     expect(ios.space(4)).toBe(16);
   });
+  // <<< mobile
 });

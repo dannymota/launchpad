@@ -58,6 +58,7 @@ describe("response headers", () => {
     );
   });
 
+  // >>> mcp
   it("keep a handler's own policy when it sets one", async () => {
     const response = await new Browser().fetch("/authorize", { method: "POST", headers: { origin: ORIGIN } });
     await response.body?.cancel();
@@ -70,6 +71,7 @@ describe("response headers", () => {
     expect(handoff.headers.get("content-security-policy")).toContain("default-src 'none'; style-src 'unsafe-inline'");
     expect(handoff.headers.get("x-frame-options")).toBe("DENY");
   });
+  // <<< mcp
 
   it("keep everything out of search engines except the public site on the product's own domain", () => {
     const request = new Request("https://product.example/pricing");
@@ -235,9 +237,11 @@ describe("the daily clean-up", () => {
       env.DB.prepare(
         "insert into auth_verification (id, identifier, value, expires_at, created_at, updated_at) values ('expired-code', 'x', 'y', ?, ?, ?)",
       ).bind(past, past, past),
+      // >>> mcp
       env.DB.prepare(
         "insert into consent_identity (handle_hash, user_id, client_name, redirect_host, scope, expires_at) values ('expired-consent', ?, 'c', 'h', '[]', ?)",
       ).bind(userId, Math.floor(past / 1000)),
+      // <<< mcp
       env.DB.prepare("insert into rate_limits (bucket, window_started_at, attempts) values ('old-bucket', ?, 3)").bind(
         Date.now() - 2 * 86_400_000,
       ),
@@ -248,7 +252,9 @@ describe("the daily clean-up", () => {
     const count = async (sql: string) => (await env.DB.prepare(sql).first<{ n: number }>())?.n;
     expect(await count("select count(*) as n from auth_session where id = 'expired-session'")).toBe(0);
     expect(await count("select count(*) as n from auth_verification where id = 'expired-code'")).toBe(0);
+    // >>> mcp
     expect(await count("select count(*) as n from consent_identity where handle_hash = 'expired-consent'")).toBe(0);
+    // <<< mcp
     expect(await count("select count(*) as n from rate_limits where bucket = 'old-bucket'")).toBe(0);
     // The live session survives.
     expect((await browser.fetch("/api/account/whoami")).status).toBe(200);
