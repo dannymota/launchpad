@@ -1,0 +1,54 @@
+# Every push and pull request: the same checks a person runs locally, on a clean machine.
+name: check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Lint, types, repo rules and the Workers-runtime tests.
+      - run: npm run check
+      # Generated files are committed; fail when one is out of date.
+      - run: npm run config:check
+      - run: npm run theme:check
+      - run: npm run build
+      - run: npm run doctor -w @app/web
+
+  # >>> mobile
+  mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      # The app has its own lockfile, so Expo's version pins never constrain the web app.
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx expo export --platform ios --output-dir dist/ios
+      - run: npx expo export --platform android --output-dir dist/android
+  # <<< mobile

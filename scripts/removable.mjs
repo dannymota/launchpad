@@ -32,8 +32,14 @@ export const PARTS = {
       ".claude/rules/mobile.md",
       ".claude/skills/appllama-app-design-skill",
       ".claude/skills/appllama-usage",
+      ".claude/skills/listing",
     ],
-    dropLines: { ".claude/skills/VENDORED.md": ["ppllama"], "AGENTS.md": ["apps/mobile "] },
+    dropLines: {
+      ".claude/skills/VENDORED.md": ["ppllama"],
+      "AGENTS.md": ["apps/mobile "],
+      "README.md": ["docs/MOBILE.md", "`/listing`"],
+      ".github/workflows/removal.yml": ["          - mobile"],
+    },
     json: {
       ".claude/settings.json": {
         enabledPlugins: ["expo@claude-plugins-official"],
@@ -50,7 +56,8 @@ export const PARTS = {
   },
   site: {
     what: "the public website (landing, pricing, legal): the root then goes straight to the app",
-    paths: ["apps/web/app/(site)"],
+    paths: ["apps/web/app/(site)", ".claude/skills/site"],
+    dropLines: { ".github/workflows/removal.yml": ["          - site"], "README.md": ["`/site`"] },
     write: {
       "apps/web/app/page.tsx": `// This product has no public website: the root goes straight to the app.
 import { redirect } from "next/navigation";
@@ -78,7 +85,11 @@ export default function RootPage() {
       ".": { workspaces: ["apps/mcp"], scripts: ["mcp:test"] },
       "apps/web": { dependencies: ["@app/mcp"] },
     },
-    dropLines: { "AGENTS.md": ["apps/mcp", "mcp:test"] },
+    dropLines: {
+      "AGENTS.md": ["apps/mcp", "mcp:test"],
+      "README.md": ["docs/MCP.md"],
+      ".github/workflows/removal.yml": ["          - mcp"],
+    },
     regenerate: ["db"],
   },
   payments: {
@@ -93,6 +104,7 @@ export default function RootPage() {
       "apps/web": { dependencies: ["@better-auth/stripe"] },
     },
     json: { ".claude/settings.json": { enabledPlugins: ["stripe@claude-plugins-official"] } },
+    dropLines: { ".github/workflows/removal.yml": ["          - payments"] },
     regenerate: ["auth", "db"],
   },
   ai: {
@@ -106,6 +118,7 @@ export default function RootPage() {
       "apps/web/tests/ai.workers.test.ts",
     ],
     packageJson: { "packages/backend": { dependencies: ["@anthropic-ai/sdk"] } },
+    dropLines: { ".github/workflows/removal.yml": ["          - ai"] },
     regenerate: ["db"],
   },
   analytics: {
@@ -129,5 +142,6 @@ export default function RootPage() {
         ],
       },
     },
+    dropLines: { ".github/workflows/removal.yml": ["          - analytics"] },
   },
 };

@@ -20,8 +20,9 @@ interface Part {
 // A variable, so TypeScript does not look for types of the plain .mjs files.
 const modules = { list: "../scripts/removable.mjs", remove: "../scripts/remove.mjs" };
 const { PARTS } = (await import(modules.list)) as { PARTS: Record<string, Part> };
-const { cutMarked } = (await import(modules.remove)) as {
+const { cutMarked, dropDangling } = (await import(modules.remove)) as {
   cutMarked(text: string, part: string, file?: string): { text: string; cut: number };
+  dropDangling(text: string, file: string, deleted: string[]): { text: string; dropped: number };
 };
 
 const exists = (file: string) => fs.existsSync(path.join(ROOT, file));
@@ -139,5 +140,54 @@ describe("cutting a marked block", () => {
   it("refuses a block that is not closed, or closed twice", () => {
     expect(() => cutMarked("// >>> x\na\n", "x", "file.ts")).toThrow("never closed");
     expect(() => cutMarked("a\n// <<< x\n", "x", "file.ts")).toThrow("without");
+  });
+});
+
+describe("imports of a deleted file", () => {
+  const deleted = ["packages/backend/src/modules/ai", "packages/shared/src/schemas/ai.ts"];
+
+  it("are dropped, whatever their form, and nothing else is", () => {
+    const text = [
+      'import { ask } from "../modules/ai/runner";',
+      'import type { Budget } from "../modules/ai/ledger";',
+      'import { currentPlan } from "../modules/payments/plans";',
+      "export {",
+      "  type Thing,",
+      "  thing,",
+      '} from "../modules/ai/settings";',
+      'export * from "../modules/ai";',
+      'import "./modules";',
+      'import { os } from "./base";',
+      "export function keep() {",
+      "  return 1;",
+      "}",
+      "",
+    ].join("\n");
+    const result = dropDangling(text, "packages/backend/src/api/router.ts", deleted);
+    expect(result.dropped).toBe(4);
+    expect(result.text).toBe(
+      [
+        'import { currentPlan } from "../modules/payments/plans";',
+        'import "./modules";',
+        'import { os } from "./base";',
+        "export function keep() {",
+        "  return 1;",
+        "}",
+        "",
+      ].join("\n"),
+    );
+  });
+
+  it("match a deleted file by its path, not by a name that starts the same", () => {
+    const text = 'import { a } from "../schemas/ai";\nimport { b } from "../schemas/aircraft";\n';
+    const result = dropDangling(text, "packages/shared/src/contract/index.ts", deleted);
+    expect(result.text).toBe('import { b } from "../schemas/aircraft";\n');
+  });
+
+  it("never reach past a statement to a later import", () => {
+    const text = 'export function f() {\n  return 1\n}\nimport { ask } from "../modules/ai/runner";\n';
+    expect(dropDangling(text, "packages/backend/src/api/x.ts", deleted).text).toBe(
+      "export function f() {\n  return 1\n}\n",
+    );
   });
 });

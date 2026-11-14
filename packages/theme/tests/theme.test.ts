@@ -3,10 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { brand } from "../src/brand";
 import { tokens } from "../src/generated/tokens";
-// >>> mobile
 import { nativeTheme } from "../src/native";
-
-// <<< mobile
 
 /** WCAG relative luminance of a #rrggbb colour. */
 function luminance(hex: string): number {

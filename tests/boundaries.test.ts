@@ -104,7 +104,11 @@ function resolve(spec: string, from: string): string | null {
   return null;
 }
 
-const SOURCES = [...walk("apps"), ...walk("packages"), ...walk("product"), ...walk("scripts"), ...walk("tests")];
+/** The feature generator holds source code as text; what that text imports is checked once it is written out. */
+const TEMPLATES = new Set(["scripts/new-feature.mjs"]);
+const SOURCES = [...walk("apps"), ...walk("packages"), ...walk("product"), ...walk("scripts"), ...walk("tests")].filter(
+  (file) => !TEMPLATES.has(file),
+);
 const specs = new Map(SOURCES.map((file) => [file, runtimeImports(file)]));
 const graph = new Map(
   SOURCES.map((file) => [

@@ -2,9 +2,7 @@
 // page renderer that reports what it was asked for. A test names the product config it
 // wants in a request header; production has no such switch.
 import type { Env } from "@app/backend";
-// >>> mcp
 import { createMcp, defineServers, SERVERS } from "@app/mcp";
-// <<< mcp
 import { createRouter, type Pages } from "../worker/router";
 import {
   ENVIRONMENT_HEADER,

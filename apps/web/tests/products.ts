@@ -1,8 +1,6 @@
 // The product configs the Workers-runtime tests run against. A test picks one per request
 // (see harness.ts); the default is a launched product with open signup.
-// >>> mcp
 import type { McpServerDefinition } from "@app/mcp";
-// <<< mcp
 import { defineProduct, type Product, type ProductConfig } from "@app/shared/product";
 
 const base: ProductConfig = {

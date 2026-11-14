@@ -1,7 +1,7 @@
 // The one place mail leaves the app. Everything that sends goes through sendEmail().
 
 import { UserError } from "../../core/errors";
-import { emailMode } from "../../core/runtime";
+import { emailMode, mailFrom } from "../../core/runtime";
 import { getDb, schema } from "../../db/client";
 import type { Env } from "../../env";
 import { consumeLimit } from "../../safety/limits";
@@ -30,7 +30,7 @@ export async function sendEmail(env: Env, message: OutgoingEmail): Promise<"sent
     throw new UserError(429, "email_cap_reached", "Too many emails for now. Try again tomorrow.");
   }
   if (mode === "on") {
-    await env.EMAIL!.send({ from: env.EMAIL_FROM!, to: message.to, subject: message.subject, text: message.text });
+    await env.EMAIL!.send({ from: mailFrom(env), to: message.to, subject: message.subject, text: message.text });
     return "sent";
   }
   await getDb(env)

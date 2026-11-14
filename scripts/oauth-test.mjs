@@ -283,9 +283,10 @@ const listed = await mcp(
   init.sessionId,
 );
 const toolNames = (listed.message?.result?.tools ?? []).map((tool) => tool.name);
+// A product adds its own tools; the two the template ships are always there.
 ok(
-  toolNames.length === 2,
-  `tools/list returns the contract's two tools (${toolNames.join(", ")})`,
+  toolNames.includes("ping") && toolNames.includes("whoami"),
+  `tools/list returns the tools this connection may use (${toolNames.join(", ")})`,
   JSON.stringify(listed),
 );
 

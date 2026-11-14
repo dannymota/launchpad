@@ -7,7 +7,8 @@ export interface McpServerDefinition {
   /** "/mcp", or a path under it such as "/mcp/admin". The access map's mcp area covers them all. */
   route: string;
   /** Shown to the person by their assistant. */
-  name: string;
+  /** What assistants see the server called. Defaults to the product's name. */
+  name?: string;
   version: string;
   /**
    * Contract procedure path → the scope a connection must hold to call it. A procedure is a
@@ -23,7 +24,7 @@ export function defineServers(servers: McpServerDefinition[]): McpServerDefiniti
   const seen = new Set<string>();
   for (const server of servers) {
     if (server.route !== ROOT && !server.route.startsWith(`${ROOT}/`)) {
-      throw new Error(`MCP server "${server.name}" must be served at ${ROOT} or under it, not ${server.route}.`);
+      throw new Error(`The MCP server at ${server.route} must be served at ${ROOT} or under it.`);
     }
     if (server.route.endsWith("/") || seen.has(server.route)) {
       throw new Error(`MCP server route ${server.route} is repeated or ends with a slash.`);

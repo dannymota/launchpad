@@ -3,12 +3,8 @@
 import { deleteAccount, listSessions, revokeSession } from "../accounts/account";
 import { listUsers, setBanned } from "../accounts/admin";
 import { listGrants, revokeGrant } from "../accounts/assistants";
-// >>> ai
 import { ask, budget } from "../modules/ai/runner";
-// <<< ai
-// >>> payments
 import { currentPlan } from "../modules/payments/plans";
-// <<< payments
 import { adminOnly, inPerson, os, signedIn, userErrors } from "./base";
 
 const ok = { ok: true as const };
@@ -69,6 +65,7 @@ export const router = os.router({
       .handler(({ context }) => currentPlan(context.env, context.principal.userId)),
   },
   // <<< payments
+  // New features go above this line: `npm run new:feature` adds them here.
   admin: {
     users: {
       list: os.admin.users.list.use(adminOnly).handler(({ context, input }) => listUsers(context.env, input)),

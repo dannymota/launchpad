@@ -15,6 +15,22 @@ every agent reads first; this folder holds what backs it.
 | `agents/reviewer.md` | Reviews a finished change in a fresh context |
 | `launch.json` | Dev servers the desktop app can start and preview |
 
+## Skills
+
+| Skill | Use it to |
+| --- | --- |
+| `start` | Turn an idea into `product/brief.md` and the product config |
+| `brand` | Set colours, corners and typeface from the brief |
+| `feature` | Build one feature end to end, from a working scaffold |
+| `site` | Write the public website from the brief |
+| `listing` | Write the App Store and Google Play listings |
+| `ship` | Deploy to staging behind Cloudflare Access |
+| `launch-check` | Run every check and list what is left |
+| `go-live` | Put the product on its domain and open it |
+| `upgrade-template` | Bring a product up to a newer version of the template |
+| `unslop-ui` | Audit and fix a web screen that looks generated (copied in; see `skills/VENDORED.md`) |
+| `appllama-*` | The build bar for mobile screens (copied in) |
+
 `.mcp.json` at the root lists documentation servers for the stack: Astryx, Better Auth,
 Cloudflare and Expo. Each asks for approval the first time it is used.
 

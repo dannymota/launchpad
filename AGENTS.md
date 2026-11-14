@@ -18,6 +18,14 @@ with optional surfaces (a mobile app, MCP servers) and modules beside it. Copy i
 | `npm run mcp:test`                           | End-to-end OAuth and MCP check against the running local Worker              |
 | `npm run remove -- <part>`                   | Take out a surface or module for good. `npm run remove` lists them           |
 | `node scripts/check-removal.mjs <part>`      | Prove a part still removes cleanly: on a copy, then full check and build     |
+| `npm run new:feature -- <name>`              | Scaffold a working slice: table, API, tests, page, screen                    |
+| `npm run config:apply`                       | Carry the product config into wrangler.jsonc and the package and store names |
+| `npm run access:plan -- <env>`               | Show the Cloudflare Access setup the access map needs (`apply` makes it so)  |
+| `npm run deploy -- <env>`                    | Check, build, migrate, deploy, set secrets, then check from outside          |
+| `npm run smoke -- <env or address>`          | Check each area of a deployed product as a stranger sees it                  |
+
+`<env>` is `staging` or `production`. Deploy, setup, Access changes and removal always ask first;
+production also needs `--confirm <slug>`. `docs/OPERATIONS.md` has the whole procedure.
 
 Local runs read `apps/web/.dev.vars` (created at session start). `DEV_ACCESS_EMAIL` stands in for
 Cloudflare Access; `DEV_PRESET=public-product` tries the launched setup, where sign-in is an emailed
@@ -71,6 +79,12 @@ scripts/ tests/ docs/
 - **Everything optional stays removable.** What a module or surface adds to shared files sits
   between `>>> name` and `<<< name` markers and is listed in `scripts/removable.mjs`
   (`.claude/rules/modules.md`).
+
+## The pipeline
+
+A product is built in steps, each a skill in `.claude/skills/`: `/start` (the brief and config),
+`/brand`, `/feature`, `/site`, `/listing`, `/ship`, `/launch-check`, `/go-live`. `product/brief.md`
+says what the product is; read it before building anything, and do not build what it rules out.
 
 ## Before you say it is done
 

@@ -9,9 +9,7 @@
 // A path belongs to exactly one handler; API and sign-in paths never fall through to a page.
 import {
   AUTH_BASE_PATH,
-  // >>> mobile
   appLinks,
-  // <<< mobile
   authGate,
   bodyLimit,
   ConfigError,
@@ -33,9 +31,7 @@ import {
   verifyAccess,
   withProduct,
 } from "@app/backend";
-// >>> mcp
 import { createMcp, type Mcp } from "@app/mcp";
-// <<< mcp
 import { type Area, type AreaName, areaFor, normalizePath, type Product } from "@app/shared/product";
 
 export interface Pages {

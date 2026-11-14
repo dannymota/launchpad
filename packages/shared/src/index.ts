@@ -1,6 +1,4 @@
-// >>> mcp
 export { isScope, REQUIRED_SCOPE, SCOPES, type Scope } from "./assistant-scopes";
-// <<< mcp
 export {
   type AdminUser,
   AdminUserSchema,
@@ -14,6 +12,4 @@ export {
   type User,
   UserSchema,
 } from "./schemas/account";
-// >>> ai
 export { type AiAnswerEvent, AiAnswerEventSchema, AiBudgetSchema } from "./schemas/ai";
-// <<< ai

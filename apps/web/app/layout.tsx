@@ -1,17 +1,19 @@
-// >>> analytics
 import { productOf } from "@app/backend";
-// <<< analytics
 import type { Metadata } from "next";
 import "./globals.css";
-// >>> analytics
 import { getEnv } from "@/lib/server";
 import { Analytics } from "./_components/Analytics";
-// <<< analytics
 import { Providers } from "./providers";
 
-export const metadata: Metadata = {
-  title: { default: "Launchpad", template: "%s · Launchpad" },
-};
+/** The product's name and tagline, and its own address once it has one, from product/product.config.ts. */
+export function generateMetadata(): Metadata {
+  const { name, tagline, domains } = productOf(getEnv());
+  return {
+    title: { default: name, template: `%s · ${name}` },
+    description: tagline || undefined,
+    metadataBase: domains.app ? new URL(`https://${domains.app}`) : undefined,
+  };
+}
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

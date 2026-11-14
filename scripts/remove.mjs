@@ -12,11 +12,12 @@
 //   ...
 //   // <<< payments
 //
-// and are cut out with their markers. When tables go, a migration that drops them is
-// generated. Afterwards run `npm run check`: it must pass with the part gone.
+// and are cut out with their markers. Imports are never marked: an import or re-export of a
+// deleted file is dropped, and so is any import the cuts leave unused. When tables go, a
+// migration that drops them is generated. Afterwards run `npm run check`: it must pass.
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve, sep } from "node:path";
+import { dirname, join, posix, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PARTS } from "./removable.mjs";
 
@@ -69,7 +70,40 @@ export function cutMarked(text, part, file = "") {
   }
   if (inside) throw new Error(`${file}: ">>> ${part}" is never closed`);
   // Cutting a block can leave two blank lines where it stood.
-  return { text: cut ? kept.join("\n").replace(/\n{3,}/g, "\n\n") : text, cut };
+  // and a blank line at the end of the file.
+  return {
+    text: cut
+      ? kept
+          .join("\n")
+          .replace(/\n{3,}/g, "\n\n")
+          .replace(/\n+$/, "\n")
+      : text,
+    cut,
+  };
+}
+
+const CLAUSE = String.raw`(?:type\s+)?(?:\*(?:\s+as\s+[\w$]+)?|\{[^}]*\}|[\w$]+(?:\s*,\s*(?:\{[^}]*\}|\*\s+as\s+[\w$]+))?)`;
+const FROM_RELATIVE = new RegExp(
+  String.raw`^[ \t]*(?:import|export)\s+${CLAUSE}\s*from\s+["'](\.{1,2}/[^"']+)["'];?[ \t]*\n`,
+  "gm",
+);
+
+/**
+ * `text` (the contents of `file`) without the import and export statements that take from a
+ * deleted file or folder. This is why a marker is never needed around such a statement.
+ */
+export function dropDangling(text, file, deleted) {
+  let dropped = 0;
+  const out = text.replace(FROM_RELATIVE, (statement, spec) => {
+    const target = posix.normalize(posix.join(posix.dirname(file), spec));
+    const candidates = [target, `${target}.ts`, `${target}.tsx`, `${target}.mjs`];
+    const gone = deleted.some((path) =>
+      candidates.some((candidate) => candidate === path || candidate.startsWith(`${path}/`)),
+    );
+    if (gone) dropped += 1;
+    return gone ? "" : statement;
+  });
+  return { text: out, dropped };
 }
 
 function inside(root, target) {
@@ -96,9 +130,11 @@ function main() {
   let changed = false;
 
   // 1. Whole folders and files.
+  const deleted = [];
   for (const path of part.paths ?? []) {
     const full = inside(ROOT, path);
     if (!existsSync(full)) continue;
+    deleted.push(path);
     changed = true;
     console.log(`  delete  ${path}`);
     if (!dryRun) rmSync(full, { recursive: true, force: true });
@@ -107,14 +143,23 @@ function main() {
   // 2. Marked blocks in the files that stay.
   const edited = [];
   for (const file of sourceFiles()) {
+    // In a dry run the deleted files are still there; they are not part of what stays.
+    if (deleted.some((path) => file === path || file.startsWith(`${path}/`))) continue;
     const before = readFileSync(join(ROOT, file), "utf8");
-    if (!before.includes(`>>> ${name}`)) continue;
-    const { text, cut } = cutMarked(before, name, file);
-    if (!cut) continue;
+    const marked = before.includes(`>>> ${name}`) ? cutMarked(before, name, file) : { text: before, cut: 0 };
+    // Imports and re-exports of what was just deleted go too, marked or not.
+    const dangling = /\.(ts|tsx|mjs)$/.test(file)
+      ? dropDangling(marked.text, file, deleted)
+      : { text: marked.text, dropped: 0 };
+    if (!marked.cut && !dangling.dropped) continue;
     changed = true;
     edited.push(file);
-    console.log(`  cut     ${file} (${cut} block${cut === 1 ? "" : "s"})`);
-    if (!dryRun) writeFileSync(join(ROOT, file), text);
+    const what = [
+      marked.cut && `${marked.cut} block${marked.cut === 1 ? "" : "s"}`,
+      dangling.dropped && `${dangling.dropped} import${dangling.dropped === 1 ? "" : "s"}`,
+    ];
+    console.log(`  cut     ${file} (${what.filter(Boolean).join(", ")})`);
+    if (!dryRun) writeFileSync(join(ROOT, file), dangling.text);
   }
 
   // 3. Files that take another form once the part is gone.
@@ -135,6 +180,7 @@ function main() {
     const kept = lines.filter((line) => !needles.some((needle) => line.includes(needle)));
     if (kept.length === lines.length) continue;
     changed = true;
+    edited.push(path);
     console.log(`  cut     ${path} (${lines.length - kept.length} line${lines.length - kept.length === 1 ? "" : "s"})`);
     if (!dryRun) writeFileSync(full, kept.join("\n"));
   }
@@ -174,6 +220,7 @@ function main() {
     changed = true;
     // apps/mobile keeps its own lockfile; everything else installs from the root.
     installs.add(folder === "apps/mobile" ? "apps/mobile" : ".");
+    edited.push(join(folder, "package.json"));
     if (!dryRun) writeFileSync(file, `${JSON.stringify(manifest, null, 2)}\n`);
   }
 
@@ -200,6 +247,7 @@ function main() {
     }
     if (!touched) continue;
     changed = true;
+    edited.push(path);
     console.log(`  cut     ${path}`);
     if (!dryRun) writeFileSync(full, `${JSON.stringify(data, null, 2)}\n`);
   }
@@ -218,7 +266,7 @@ function main() {
   if (part.regenerate?.includes("db")) run("npm", ["run", "db:generate"]);
   if (part.regenerate?.includes("theme")) run("npm", ["run", "theme"]);
   const toFormat = edited.filter(
-    (file) => existsSync(join(ROOT, file)) && /\.(ts|tsx|mjs|js|json|jsonc|css)$/.test(file),
+    (file) => existsSync(join(ROOT, file)) && /\.(ts|tsx|mjs|js|json|jsonc|css|md|yml|yaml)$/.test(file),
   );
   if (toFormat.length) {
     // A cut can leave an import with nothing using it; those go too.

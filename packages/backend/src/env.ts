@@ -31,7 +31,10 @@ export interface Env {
   APP_ENV: string;
   /** Signs sessions and codes. At least 32 characters; the app refuses to start without it. */
   BETTER_AUTH_SECRET: string;
-  /** The address mail is sent from, on a domain onboarded in Cloudflare Email Service. Empty = no mail. */
+  /**
+   * The address mail is sent from. Leave it empty to send from no-reply@ the sending domain in
+   * the product config (domains.email); with neither set there is no mail.
+   */
   EMAIL_FROM?: string;
 
   /** Cloudflare Access: the team's domain, e.g. "acme.cloudflareaccess.com". */

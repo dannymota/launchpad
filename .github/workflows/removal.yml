@@ -1,0 +1,59 @@
+# Proves that every optional part still comes out cleanly, and that the feature generator
+# still produces a working slice. Each job removes one part on a copy of the repository, then
+# runs the full check and the build there. It is slow, so it runs when the removal machinery
+# or a module changes, once a week, and on demand; not on every push.
+name: removal
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 5 * * 1"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - "packages/backend/src/modules/**"
+      - ".github/workflows/removal.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: removal-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  remove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # One row per part in scripts/removable.mjs. `npm run remove` deletes a part's row with it.
+        part:
+          - mobile
+          - mcp
+          - site
+          - payments
+          - ai
+          - analytics
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/check-removal.mjs ${{ matrix.part }}
+
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/check-removal.mjs --feature note

@@ -1,8 +1,6 @@
 // The parts of the Better Auth config that decide the database shape. Shared by the runtime
 // instance (auth.ts) and the schema generator (auth.cli.ts) so the two can never disagree.
-// >>> mobile
 import { expo } from "@better-auth/expo";
-// <<< mobile
 import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
 import { admin, emailOTP } from "better-auth/plugins";
 

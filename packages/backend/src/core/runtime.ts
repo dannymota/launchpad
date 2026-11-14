@@ -11,9 +11,20 @@ export function isLocalRun(env: Pick<Env, "APP_ENV">): boolean {
   return env.APP_ENV === "local" || env.APP_ENV === "test";
 }
 
+/**
+ * The address mail is sent from: EMAIL_FROM when it is set, otherwise no-reply@ the sending
+ * domain in the product config. Empty when neither is set, which means no mail.
+ */
+export function mailFrom(env: Env): string {
+  const set = env.EMAIL_FROM?.trim();
+  if (set) return set;
+  const domain = productOf(env).domains.email;
+  return domain ? `no-reply@${domain}` : "";
+}
+
 /** "on": real mail. "outbox": the local table. "off": a deployed build with no sending domain. */
-export function emailMode(env: Pick<Env, "EMAIL" | "EMAIL_FROM" | "APP_ENV">): "on" | "outbox" | "off" {
-  if (env.EMAIL && env.EMAIL_FROM) return "on";
+export function emailMode(env: Env): "on" | "outbox" | "off" {
+  if (env.EMAIL && mailFrom(env)) return "on";
   return isLocalRun(env) ? "outbox" : "off";
 }
 

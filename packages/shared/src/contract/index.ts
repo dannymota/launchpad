@@ -12,9 +12,7 @@ import { oc } from "@orpc/contract";
 import { openapi } from "@orpc/openapi";
 import * as z from "zod";
 import { AdminUserSchema, AssistantSchema, OkSchema, SessionSchema, UserSchema } from "../schemas/account";
-// >>> ai
 import { AiAnswerStreamSchema, AiBudgetSchema } from "../schemas/ai";
-// <<< ai
 
 // Two namespaces are tied to an access area, so the edge can tell them apart by path:
 //   public.*  what the public site calls without a sign-in. REST paths start with /public/.
@@ -164,6 +162,7 @@ export const contract = {
       ),
   },
   // <<< payments
+  // New features go above this line: `npm run new:feature` adds them here.
   admin: {
     users: {
       list: oc

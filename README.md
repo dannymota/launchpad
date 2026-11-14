@@ -1,38 +1,52 @@
 # Launchpad
 
 A template for starting products. Copy it, describe the idea, and build on a base where sign-in,
-the API, an MCP server and the deploy path already work.
+the API, the deploy path and the rules for who can reach what already work. Until launch the
+product sits behind Cloudflare Access; going public is a change of one setting.
 
-**Status: under construction.** Phases 1 to 5 of `docs/PLAN.md` are done: the skeleton, sign-in
-with the access rules that decide who can reach what, the Worker's general protections, the MCP
-server, the brand theme, and the iOS and Android app.
+Stack: Cloudflare Workers and D1, vinext (the Next.js App Router on Vite), Better Auth, oRPC,
+Drizzle, Astryx for the web UI, Expo for the app.
 
-## What works today
+## From an idea to a product
 
-- One Cloudflare Worker (vinext) serving pages, sign-in, the API and an MCP server.
-- One API definition (oRPC) answering as a typed client, a REST endpoint and an MCP tool.
-- **Access in one config.** `product/product.config.ts` picks a preset: `private` (everything behind
-  Cloudflare Access, the default before launch), `internal-tool`, `private-beta` or
-  `public-product`. Each area of the product is public or internal, and separately needs a sign-in
-  or not. The Worker enforces it on every request, and a generated test tries every area of every
-  preset as five kinds of visitor.
-- **Sign-in.** Before launch the Cloudflare Access email is the sign-in, so there is no second
-  login. After launch: an emailed code, and Google and Apple once their keys are set. Signup can be
-  open, closed, by allowlist or by email domain. Only the sign-in routes the app uses exist, each
-  with attempt limits.
-- Account pages: where you are signed in, sign out a device, delete the account. An admin page to
-  list and ban accounts, always behind Cloudflare Access.
-- Connecting an assistant (`docs/MCP.md`): OAuth 2.1 with a consent page bound to the signed-in
-  person, a permission per tool, a list of connected assistants with disconnect, and connections
-  that end at once when revoked, replaced, or when a code is replayed.
-- One brand for web and mobile (`packages/theme`): the web theme is built from it and the native
-  colours are generated from the web theme. Contrast is tested in light and dark.
-- An iOS and Android app (`docs/MOBILE.md`): one Expo codebase with separate folders for what each
-  platform does differently, sign-in, the same typed API, and a browser preview of shared screens.
-- Protections on every request: a content security policy with a per-page script nonce, refusal of
-  writes from other sites, a request size limit, an edge rate limit on the API, daily caps on mail,
-  optional Cloudflare Turnstile on the sign-in form, and a daily clean-up of expired data.
-- Checks: Biome, TypeScript, a boundary test for the repo layout, and Workers-runtime tests.
+Each step is a skill in `.claude/skills/`, run from a Claude Code session in a copy of this
+repository. Each writes real files and ends at a check that must pass.
+
+| Step                | What it does                                                                      | Ends at                       |
+| ------------------- | --------------------------------------------------------------------------------- | ----------------------------- |
+| `/start <idea>`     | Writes the brief and the product config; removes the parts the idea does not need | `npm run check:brief`         |
+| `/brand`            | Colours, corners and typeface, from one file, for web and app                     | `npm run theme:check`         |
+| `/feature <name>`   | One slice end to end: table, API, tests, page, screen                             | `npm run check`               |
+| `/site`             | Landing, pricing, FAQ and legal pages from the brief                              | `npm run doctor -w @app/web`  |
+| `/listing`          | App Store and Google Play listings, inside each field's limit                     | `npm run check:listing`       |
+| `/ship`             | Deploys to staging behind Cloudflare Access and checks it from outside            | `npm run smoke -- staging`    |
+| `/launch-check`     | Runs every check; lists what is ready and what waits on you                       | `product/launch-report.md`    |
+| `/go-live <domain>` | The domain, the access preset, production                                         | `npm run smoke -- production` |
+
+Almost everything about a product is set in one file, `product/product.config.ts`: its name, its
+domains, who can reach which part, how people sign in, its plans. The Worker, the pages, the
+emails, the app and the deploy scripts all read it.
+
+## What is in it
+
+- **One Worker** serving pages, sign-in, the API and everything else, with one definition of each
+  action giving a typed client, a REST endpoint and an MCP tool.
+- **Access in one map.** Each area of the product is public or internal (Cloudflare Access), and
+  separately needs a sign-in or not. Four presets: `private` (the default), `internal-tool`,
+  `private-beta`, `public-product`. The Worker, the edge and a generated test all read the same map.
+- **Sign-in**: before launch the Cloudflare Access email is the sign-in. After launch: an emailed
+  code, and Google and Apple once their keys are set. Sign-up open, closed, by allowlist or by domain.
+- **Account pages**: where you are signed in, sign out a device, delete the account. An admin page.
+- **An MCP server** (`docs/MCP.md`): assistants connect with OAuth, a consent page and a permission per tool.
+- **An iOS and Android app** (`docs/MOBILE.md`): one Expo codebase, the same sign-in and the same typed API.
+- **Three optional modules**, each off until its keys are set: payments (Stripe), AI (Claude, with
+  a monthly spending cap that cannot be overshot), analytics (PostHog, no cookie until allowed).
+- **One brand** for web and app, with contrast tested in light and dark.
+- **Protections on every request**: a content security policy with a per-page nonce, refusal of
+  writes from other sites, a size limit, rate limits, caps on mail.
+- **Everything optional comes out cleanly**: `npm run remove -- <mobile|mcp|site|payments|ai|analytics>`.
+  Each removal is proven by doing it on a copy and running the full check and build.
+- **An agent set up to work here**: short rules, a guard hook, a reviewer, and the skills above.
 
 ## Run it
 
@@ -58,12 +72,8 @@ npm run dev
 Open the address it prints. The default preset is `private`, so the whole product is internal, and
 on your machine `DEV_ACCESS_EMAIL` from `.dev.vars` plays the part of Cloudflare Access: you are
 signed in as that address. To try the product as it will be after launch, add
-`DEV_PRESET=public-product` to `.dev.vars`; sign-in then asks for an emailed code, which you read
-from the local outbox:
-
-```bash
-cd apps/web && npx wrangler d1 execute DB --local --command "select subject from email_outbox order by id desc limit 1"
-```
+`DEV_PRESET=public-product` to `.dev.vars`; sign-in then asks for an emailed code, which lands in
+the local `email_outbox` table instead of being sent.
 
 ## Check it
 
@@ -71,18 +81,25 @@ cd apps/web && npx wrangler d1 execute DB --local --command "select subject from
 npm run check
 ```
 
-To check the assistant connection end to end, build and start the Worker, then run the script in
-a second terminal:
+Lint, types, the repository's own rules, and the tests that run on the Workers runtime.
 
-```bash
-npm run build && npm start -w @app/web
-```
+## What you still supply
 
-```bash
-npm run mcp:test
-```
+The template cannot know or do these: the idea; a Cloudflare API token and a Zero Trust
+organization; the people allowed in before launch; and, before going public, a domain, Google and
+Apple sign-in keys, Stripe keys, store accounts and builds, icon artwork, and a legal read of the
+generated privacy and terms pages.
 
 ## Where things are
 
-See `AGENTS.md` for the layout and the rules, and `docs/PLAN.md` for the full design and what is
-still to come.
+| Read                   | For                                                                          |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| `AGENTS.md`            | The layout, the commands and the rules. Agents read it first                 |
+| `docs/ARCHITECTURE.md` | How it fits together, and why                                                |
+| `docs/AUTH.md`         | Sign-in, sign-up, sessions, limits                                           |
+| `docs/OPERATIONS.md`   | Shipping, environments, secrets, backups, what to do when something is wrong |
+| `docs/MCP.md`          | Connecting AI assistants                                                     |
+| `docs/MOBILE.md`       | The iOS and Android app                                                      |
+| `docs/UPGRADING.md`    | Bringing a product up to a newer template                                    |
+| `.claude/README.md`    | How the agent is set up: hooks, rules, skills, plugins                       |
+| `docs/PLAN.md`         | The original design                                                          |

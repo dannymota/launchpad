@@ -1,9 +1,7 @@
 // The Worker entry. Every HTTP request arrives here; router.ts decides who answers it.
 // The cron trigger in wrangler.jsonc runs the daily clean-up.
 import { type Env, productOf, runScheduled } from "@app/backend";
-// >>> mcp
 import { createMcp } from "@app/mcp";
-// <<< mcp
 import pages from "vinext/server/fetch-handler";
 import { createRouter, type Pages } from "./router";
 

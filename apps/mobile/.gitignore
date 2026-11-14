@@ -1,8 +1,10 @@
 node_modules
 .expo
 dist
-ios
-android
+# The native projects `expo prebuild` generates, at the app's root only: store/ios and
+# store/android hold the store listings and are committed.
+/ios
+/android
 expo-env.d.ts
 *.jks
 *.p8

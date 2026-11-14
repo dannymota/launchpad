@@ -8,7 +8,6 @@ import type { McpServerDefinition } from "../registry";
 
 export const main: McpServerDefinition = {
   route: "/mcp",
-  name: "Launchpad",
   version: "0.1.0",
   tools: {
     "system.ping": "app:read",

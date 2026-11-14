@@ -1,8 +1,6 @@
 // Labs: pages still being worked on (Astryx template: blank). Internal in every preset, so
 // work in progress under /labs is never public. Add a page as app/labs/<name>/page.tsx.
-// >>> ai
 import { Button } from "@astryxdesign/core/Button";
-// <<< ai
 import { EmptyState } from "@astryxdesign/core/EmptyState";
 import { HStack, Layout, LayoutContent, LayoutHeader, StackItem } from "@astryxdesign/core/Layout";
 import { Heading } from "@astryxdesign/core/Text";

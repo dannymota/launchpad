@@ -5,6 +5,7 @@
 //   node scripts/check-removal.mjs <name> [<name> ...]   one copy per name
 //   node scripts/check-removal.mjs --all                 every part in scripts/removable.mjs
 //   node scripts/check-removal.mjs a+b                   remove several from the same copy
+//   node scripts/check-removal.mjs --feature note [a]    scaffold a feature first (`npm run new:feature`)
 //
 // CI runs one name per job (.github/workflows/check.yml).
 import { execFileSync } from "node:child_process";
@@ -17,7 +18,10 @@ import { PARTS } from "./removable.mjs";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
 const keep = args.includes("--keep");
-const names = args.includes("--all") ? Object.keys(PARTS) : args.filter((arg) => !arg.startsWith("--"));
+/** `--feature note` scaffolds a feature on the copy first, which proves the generator too. */
+const feature = args.includes("--feature") ? args[args.indexOf("--feature") + 1] : undefined;
+const named = args.filter((arg, index) => !arg.startsWith("--") && args[index - 1] !== "--feature");
+const names = args.includes("--all") ? Object.keys(PARTS) : named.length || !feature ? named : ["nothing"];
 if (names.length === 0) {
   console.error(`Usage: node scripts/check-removal.mjs <name>... | --all   (parts: ${Object.keys(PARTS).join(", ")})`);
   process.exit(1);
@@ -57,21 +61,26 @@ function leftoverMarkers(copy, parts) {
     .toString("utf8")
     .split("\0")
     .filter(Boolean);
+  // These describe the markers, so they contain them.
+  const about = ["scripts/remove.mjs", "scripts/removable.mjs", "tests/removable.test.ts", ".claude/rules/modules.md"];
   return files.filter((file) => {
-    if (!/\.(ts|tsx|mjs|js|json|jsonc|md|css|yml|yaml|example)$/.test(file) || file === "scripts/remove.mjs")
-      return false;
+    if (!/\.(ts|tsx|mjs|js|json|jsonc|md|css|yml|yaml|example)$/.test(file) || about.includes(file)) return false;
     const text = readFileSync(join(copy, file), "utf8");
-    return parts.some((part) => new RegExp(`(>>>|<<<) ${part}(?![\\w-])`).test(text));
+    // A marker is a comment on a line of its own.
+    return parts.some((part) =>
+      new RegExp(`^\\s*(?://|#|\\{/\\*|/\\*|<!--)\\s*(?:>>>|<<<)\\s*${part}(?![\\w-])`, "m").test(text),
+    );
   });
 }
 
 const failed = [];
 for (const name of names) {
-  const parts = name.split("+");
+  const parts = name === "nothing" ? [] : name.split("+");
   console.log(`\n=== ${name}: removing on a copy ===`);
   const copy = copyOfRepo();
   try {
     if (!existsSync(join(copy, "node_modules"))) sh(copy, "npm", ["ci", "--no-audit", "--no-fund"]);
+    if (feature) sh(copy, "node", ["scripts/new-feature.mjs", feature]);
     for (const part of parts) sh(copy, "node", ["scripts/remove.mjs", part]);
     const left = leftoverMarkers(copy, parts);
     if (left.length) throw new Error(`markers remain in: ${left.join(", ")}`);

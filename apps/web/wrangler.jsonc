@@ -9,6 +9,8 @@
   // URLs that clients supply, so fetch must never reach private addresses.
   "compatibility_flags": ["nodejs_compat", "enable_request_signal", "global_fetch_strictly_public"],
   "workers_dev": true,
+  // A preview address is a host Cloudflare Access does not cover, so there are none.
+  "preview_urls": false,
   "assets": {
     "directory": "dist/client",
     "binding": "ASSETS",
@@ -20,17 +22,16 @@
     // What a deployed Worker is. Local runs get APP_ENV=local from .dev.vars, which is never
     // deployed, so a deployed Worker can never run with local shortcuts (plain-http cookies,
     // the mail outbox, a stand-in Access identity). Secrets live in .dev.vars locally and in
-    // Worker secrets when deployed.
+    // Worker secrets when deployed (`npm run setup` sets them).
     "APP_ENV": "production",
-    // The address mail is sent from. Empty = no mail, so no email-code sign-in when deployed.
+    // An address to send mail from, if not no-reply@ the sending domain in the product config.
     "EMAIL_FROM": "",
-    // Cloudflare Access: the team domain ("acme.cloudflareaccess.com") and this Worker's
-    // application audience tags, comma-separated. Empty = internal areas answer 404 to everyone.
-    "ACCESS_TEAM_DOMAIN": "",
-    "ACCESS_AUD": "",
     // Cloudflare Turnstile on the sign-in code form. Set with TURNSTILE_SECRET_KEY (a secret) to turn it on.
     "TURNSTILE_SITE_KEY": ""
   },
+  // Cloudflare Access is not set here: `npm run access:apply` stores the team domain and this
+  // Worker's audience tags as the secrets ACCESS_TEAM_DOMAIN and ACCESS_AUD. Until then,
+  // internal areas answer 404 to everyone.
   // No ids: wrangler finds the database by name and provisions the KV namespace on first deploy.
   "d1_databases": [
     {
@@ -53,5 +54,27 @@
     "enabled": true,
     "logs": { "enabled": true, "invocation_logs": true, "head_sampling_rate": 1 },
     "traces": { "enabled": true, "head_sampling_rate": 0.1 }
+  },
+  "env": {
+    // A second, complete copy of the product for trying a change before it goes live: its own
+    // Worker, database, secrets and Cloudflare Access application. Bindings are not inherited
+    // from above, so each is listed again. `npm run config:apply` keeps the names in step
+    // with product/product.config.ts.
+    "staging": {
+      "name": "launchpad-staging",
+      "vars": { "APP_ENV": "staging", "EMAIL_FROM": "", "TURNSTILE_SITE_KEY": "" },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "launchpad-staging-db",
+          "migrations_dir": "../../packages/backend/migrations"
+        }
+      ],
+      // >>> mcp
+      "kv_namespaces": [{ "binding": "OAUTH_KV" }],
+      // <<< mcp
+      "version_metadata": { "binding": "CF_VERSION_METADATA" },
+      "ratelimits": [{ "name": "API_LIMITER", "namespace_id": "1002", "simple": { "limit": 300, "period": 60 } }]
+    }
   }
 }

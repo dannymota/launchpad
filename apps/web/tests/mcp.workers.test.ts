@@ -223,7 +223,7 @@ describe("tools", () => {
       params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "0" } },
     });
     expect(init.status).toBe(200);
-    expect(init.message.result.serverInfo.name).toBe("Launchpad");
+    expect(init.message.result.serverInfo.name).toBe("Test Product");
 
     const listed = await mcp(tokens.access_token, { id: 2, method: "tools/list", params: {} });
     const names = (listed.message.result.tools as { name: string }[]).map((tool) => tool.name).sort();

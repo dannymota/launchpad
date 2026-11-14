@@ -3,7 +3,6 @@
 // Registers the optional modules before anything asks the registry.
 import "./modules";
 
-// >>> mcp
 export {
   type ActiveGrant,
   activeGrant,
@@ -17,7 +16,6 @@ export {
   revokeProviderGrant,
   takeConsent,
 } from "./accounts/assistants";
-// <<< mcp
 export { AUTH_BASE_PATH, type Auth, getAuth } from "./accounts/auth";
 export {
   // >>> mcp
@@ -26,9 +24,7 @@ export {
   type Principal,
   requestPrincipal,
 } from "./accounts/session";
-// >>> mobile
 export { appLinks } from "./api/app-links";
-// <<< mobile
 export type { ApiContext } from "./api/base";
 export { apiContext, handleApi, isApiPath, REST_PREFIX, RPC_PREFIX } from "./api/handlers";
 export { type Health, health } from "./api/health";

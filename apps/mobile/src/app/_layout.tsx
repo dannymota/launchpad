@@ -5,9 +5,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-// >>> analytics
 import { AnalyticsProvider } from "@/lib/analytics";
-// <<< analytics
 import { SessionProvider, useSession } from "@/lib/session";
 import { useTheme } from "@/theme";
 

@@ -118,8 +118,8 @@ export async function getAuth(env: Env, origin: string) {
         if (!(await accountExists(env, email)) && !signUpAdmitted(env, email)) return;
         await sendEmail(env, {
           to: email,
-          subject: `Your sign-in code is ${code}`,
-          text: `Your sign-in code is ${code}\n\nIt works for ${CODE_SECONDS / 60} minutes. If you did not ask for it, ignore this message.`,
+          subject: `${code} is your ${product.name} sign-in code`,
+          text: `Your sign-in code for ${product.name} is ${code}\n\nIt works for ${CODE_SECONDS / 60} minutes. If you did not ask for it, ignore this message.`,
         });
       },
     }),

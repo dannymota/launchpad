@@ -15,9 +15,11 @@ The core asks the registry what modules add and never imports one by name.
 - **Everything a module adds outside its folder sits between markers**, so `npm run remove` can cut
   it: `// >>> name` and `// <<< name` (in JSX `{/* >>> name */}`, in `.dev.vars.example` `# >>> name`).
   Mark whole statements, properties or list items, never part of an expression.
-- **Do not split an import or export from one source across markers**: the formatter merges them.
-  Put the marker around one line of a multi-line list instead. An import left unused by a cut is
-  removed by the script.
+- **Never put a marker around an import or a whole `export ... from` line.** The formatter sorts
+  those lines and would carry the marker away. There is no need: the script drops every import
+  and re-export of a deleted file, and every import a cut leaves unused. Mark the code that uses
+  the import instead. The one exception is a single name inside a multi-line export list from a
+  file that stays (`packages/backend/src/index.ts` has one).
 - **List the module's own files and packages in `scripts/removable.mjs`.** The same goes for the
   surfaces (`mobile`, `mcp`, `site`).
 - **Prove it**: `npm test` checks the list and the markers; `node scripts/check-removal.mjs <name>`
