@@ -114,6 +114,7 @@ The template cannot know or do these:
 | ---------------------- | ---------------------------------------------------------------------------- |
 | `AGENTS.md`            | The layout, the commands and the rules. Agents read it first                 |
 | `docs/ARCHITECTURE.md` | How it fits together, and why                                                |
+| `docs/LAYOUTS.md`      | Page layouts to start from: regions, rules, where to begin, sources          |
 | `docs/AUTH.md`         | Sign-in, sign-up, sessions, limits                                           |
 | `docs/OPERATIONS.md`   | Shipping, environments, secrets, backups, what to do when something is wrong |
 | `docs/MCP.md`          | Connecting assistants over MCP                                               |

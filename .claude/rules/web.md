@@ -8,9 +8,11 @@ paths:
 
 Run every `astryx` command from `apps/web`, as `npx astryx <cmd>`.
 
-- **Start a page from a template, never from scratch.** `npx astryx build "<idea>"` names the
-  template; `npx astryx template <name> --type page <path>` scaffolds it. Keep its frame, gap and
-  padding; replace the content. Changing a page that exists? Keep it, and add blocks inside it.
+- **Start a page from a layout, never from scratch.** `docs/LAYOUTS.md` has the layout for each
+  kind of page: its regions in order, its rules, and the Astryx template or blocks to begin from.
+  `npx astryx template <name> --type page <path>` scaffolds a template; keep its frame, gap and
+  padding and replace the content. `npx astryx build "<idea>"` suggests one when the catalogue has
+  no match. Changing a page that exists? Keep it, and add blocks inside it.
 - **Read a component's props before using it**: `npx astryx component <Name>`. Find one with
   `npx astryx search "<words>"`. Do not guess a prop.
 - **No `<div>` or `<span>`, no `style={{}}`, no raw hex or px, no arbitrary values** (`p-[13px]`).

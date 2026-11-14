@@ -20,8 +20,10 @@ behind Cloudflare Access with the rest until then.
 
 ## Rules
 
-- **Start each page from a template**: `npx astryx build "<what the page is for>"`, run from
-  `apps/web`. Keep the frame; replace every word and number with the product's.
+- **Start each page from its layout in `docs/LAYOUTS.md`** ("The website"): the sections a page of
+  that kind needs, in order, with the rules that make it work and the Astryx template or blocks to
+  begin from. Where it names a template, `npx astryx template <id>` (run from `apps/web`) prints
+  it; keep the frame and replace every word and number with the product's.
 - **Take facts from the config, not from memory**: name and tagline from `productOf(getEnv())`,
   the support address as `support@` the sending domain.
   Plans come from `product.plans`.
