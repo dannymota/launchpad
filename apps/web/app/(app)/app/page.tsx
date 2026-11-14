@@ -2,7 +2,7 @@
 import { Button } from "@astryxdesign/core/Button";
 import { Code } from "@astryxdesign/core/Code";
 import { HStack, Layout, LayoutContent, VStack } from "@astryxdesign/core/Layout";
-import { List, ListItem } from "@astryxdesign/core/List";
+import { MetadataList, MetadataListItem } from "@astryxdesign/core/MetadataList";
 import { Heading, Text } from "@astryxdesign/core/Text";
 import type { Metadata } from "next";
 import { api, requireUser } from "@/lib/server";
@@ -24,10 +24,12 @@ export default async function AppHome() {
               <Heading level={1}>Home</Heading>
               <Text color="secondary">You're signed in. Your product's first screen goes here.</Text>
             </VStack>
-            <List hasDividers header="Account">
-              <ListItem label="Email" endContent={<Text>{me.email}</Text>} />
-              <ListItem label="Account ID" endContent={<Code>{me.id}</Code>} />
-            </List>
+            <MetadataList title="Account">
+              <MetadataListItem label="Email">{me.email}</MetadataListItem>
+              <MetadataListItem label="Account ID">
+                <Code>{me.id}</Code>
+              </MetadataListItem>
+            </MetadataList>
             <HStack gap={3}>
               <Button label="Settings" href="/settings" />
               <SignOutButton identity={principal.via === "access" ? "access" : "session"} />

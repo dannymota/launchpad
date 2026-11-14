@@ -210,10 +210,10 @@ One accent, and neutrals that carry everything else. Each role has a light and a
 
 ### Neutral
 
-- **Background** (${pair("background")}) and **Surface** (${pair("surface")}): the page, and what sits on it.
+- **Surface** (${pair("surface")}): the page itself. **Background** (${pair("background")}): the frame an app shell draws behind a page, and quiet fills.
 - **Text** (${pair("text")}), **Secondary text** (${pair("text-secondary")}), **Disabled text** (${pair("text-disabled")}).
 - **Border** (${pair("border")}) and **Strong border** (${pair("border-strong")}).
-- **Danger** (${pair("danger")}) and **Success** (${pair("success")}): state, only where it carries meaning.
+- **Danger** (${pair("danger")}) and **Success** (${pair("success")}): state, only where it carries meaning. The four status colours of banners (info, success, warning, error) come with the component library, not from the brand: \`/labs/brand\` shows them beside the accent.
 
 ### Named Rules
 

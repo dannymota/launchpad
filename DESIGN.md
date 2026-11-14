@@ -95,10 +95,10 @@ One accent, and neutrals that carry everything else. Each role has a light and a
 
 ### Neutral
 
-- **Background** (#f1f1f1 in light, #1b1b1b in dark) and **Surface** (#ffffff in light, #262626 in dark): the page, and what sits on it.
+- **Surface** (#ffffff in light, #262626 in dark): the page itself. **Background** (#f1f1f1 in light, #1b1b1b in dark): the frame an app shell draws behind a page, and quiet fills.
 - **Text** (#000000 in light, #ffffff in dark), **Secondary text** (#474747 in light, #9e9e9e in dark), **Disabled text** (#919191 in light, #525252 in dark).
 - **Border** (#00000014 in light, #ffffff1a in dark) and **Strong border** (#d4d4d4 in light, #525252 in dark).
-- **Danger** (#c0262c in light, #ffaea7 in dark) and **Success** (#2f7d33 in light, #90ca90 in dark): state, only where it carries meaning.
+- **Danger** (#c0262c in light, #ffaea7 in dark) and **Success** (#2f7d33 in light, #90ca90 in dark): state, only where it carries meaning. The four status colours of banners (info, success, warning, error) come with the component library, not from the brand: `/labs/brand` shows them beside the accent.
 
 ### Named Rules
 

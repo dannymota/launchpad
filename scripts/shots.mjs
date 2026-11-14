@@ -139,7 +139,8 @@ async function main(argv) {
     for (const path of signedOut) await visit(path);
 
     // Sign in, with a picture of the code step on the way.
-    const email = `shots-${Date.now()}@example.com`;
+    // As long as real addresses get, so a row that cannot hold one shows up in the pictures.
+    const email = `firstname.lastname-${Date.now()}@a-long-company-name.example.com`;
     await page.goto(`${ORIGIN}/sign-in`, { waitUntil: "networkidle" });
     await page.getByLabel("Email").fill(email);
     await page.getByRole("button", { name: "Send code" }).click();

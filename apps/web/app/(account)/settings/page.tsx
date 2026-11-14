@@ -4,7 +4,7 @@ import { Button } from "@astryxdesign/core/Button";
 import { Divider } from "@astryxdesign/core/Divider";
 import { Grid } from "@astryxdesign/core/Grid";
 import { HStack, Layout, LayoutContent, LayoutHeader, StackItem, VStack } from "@astryxdesign/core/Layout";
-import { List, ListItem } from "@astryxdesign/core/List";
+import { MetadataList, MetadataListItem } from "@astryxdesign/core/MetadataList";
 import { Heading, Text } from "@astryxdesign/core/Text";
 import type { Metadata } from "next";
 import { api, requireUser } from "@/lib/server";
@@ -58,13 +58,12 @@ export default async function SettingsPage() {
         <LayoutContent padding={4}>
           <VStack gap={4}>
             <Section title="Account" about="The email address you sign in with.">
-              <List hasDividers>
-                <ListItem label="Email" endContent={<Text>{principal.email}</Text>} />
-                <ListItem
-                  label="Sign-in"
-                  endContent={<Text>{viaAccess ? "Cloudflare Access" : "This product's own sign-in"}</Text>}
-                />
-              </List>
+              <MetadataList>
+                <MetadataListItem label="Email">{principal.email}</MetadataListItem>
+                <MetadataListItem label="Sign-in">
+                  {viaAccess ? "Cloudflare Access" : "This product's own sign-in"}
+                </MetadataListItem>
+              </MetadataList>
             </Section>
 
             {!viaAccess && (
